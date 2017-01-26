@@ -15,8 +15,6 @@
  */
 package edu.amherst.acdc.trellis.rosid;
 
-import org.apache.commons.rdf.api.IRI;
-
 /**
  * @author acoburn
  */
@@ -24,10 +22,10 @@ public class NonRdfSource extends AbstractBaseResource {
 
     /**
      * Instantiate a NonRdfSource resource
-     * @param identifier the identifier
+     * @param resolver the resolver
      */
-    public NonRdfSource(final IRI identifier) {
-        super(identifier);
+    public NonRdfSource(final ResourceReader resolver) {
+        super(resolver);
     }
 
     @Override

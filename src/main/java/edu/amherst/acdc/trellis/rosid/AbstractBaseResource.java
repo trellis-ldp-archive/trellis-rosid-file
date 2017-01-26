@@ -15,14 +15,21 @@
  */
 package edu.amherst.acdc.trellis.rosid;
 
+import static edu.amherst.acdc.trellis.api.Resource.TripleContext.FEDORA_INBOUND_REFERENCES;
+import static edu.amherst.acdc.trellis.api.Resource.TripleContext.LDP_CONTAINMENT;
+import static edu.amherst.acdc.trellis.api.Resource.TripleContext.LDP_MEMBERSHIP;
+import static edu.amherst.acdc.trellis.api.Resource.TripleContext.USER_MANAGED;
+
 import java.time.Instant;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import edu.amherst.acdc.trellis.api.MementoLink;
 import edu.amherst.acdc.trellis.api.Resource;
-import edu.amherst.acdc.trellis.vocabulary.LDP;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Triple;
 
@@ -31,74 +38,70 @@ import org.apache.commons.rdf.api.Triple;
  */
 public abstract class AbstractBaseResource implements Resource {
 
-    final protected IRI identifier;
-    final protected Instant created;
-    final protected Instant modified;
+    final protected ResourceReader resolver;
+
+    final protected Map<Resource.TripleContext, Supplier<Stream<Triple>>> mapper = new HashMap<>();
 
     /**
      * Instantiate a new RdfSource object
-     * @param identifier the identifier
+     * @param resolver the resolved resource
      */
-    public AbstractBaseResource(final IRI identifier) {
-        this.identifier = identifier;
-        this.created = Instant.now();
-        this.modified = Instant.now();
+    public AbstractBaseResource(final ResourceReader resolver) {
+        this.resolver = resolver;
+        mapper.put(LDP_CONTAINMENT, resolver::getContainmentTriples);
+        mapper.put(LDP_MEMBERSHIP, resolver::getMembershipTriples);
+        mapper.put(FEDORA_INBOUND_REFERENCES, resolver::getInboundTriples);
+        mapper.put(USER_MANAGED, resolver::getUserTriples);
     }
 
     @Override
     public IRI getIdentifier() {
-        return identifier;
+        return resolver.getIdentifier();
+    }
+
+    @Override
+    public IRI getOriginalResource() {
+        return resolver.getOriginalResource();
     }
 
     @Override
     public Optional<IRI> getParent() {
-        // TODO
-        // parent in memory
-        return Optional.empty();
+        return resolver.getParent();
     }
 
     @Override
     public Stream<MementoLink> getTimeMap() {
-        // TODO
-        // timemap in memory
-        return Stream.empty();
+        return resolver.getTimeMap();
     }
 
     @Override
     public <T extends Resource.TripleCategory> Stream<Triple> stream(final Collection<T> category) {
-        // TODO
-        // fetch the triples from storage
-        return Stream.empty();
+        return category.stream().filter(mapper::containsKey).map(mapper::get).map(Supplier::get)
+                .reduce(Stream.empty(), Stream::concat);
     }
 
     @Override
     public Optional<IRI> getInbox() {
-        // TODO
-        // fetch from memory
-        return Optional.empty();
+        return resolver.getInbox();
     }
 
     @Override
     public Optional<IRI> getAccessControl() {
-        // TODO
-        // fetch from memory
-        return Optional.empty();
+        return resolver.getAccessControl();
     }
 
     @Override
     public Stream<IRI> getTypes() {
-        // TODO
-        // fetch from memory
-        return Stream.of(LDP.RDFSource);
+        return resolver.getTypes();
     }
 
     @Override
     public Instant getCreated() {
-        return created;
+        return resolver.getCreated();
     }
 
     @Override
     public Instant getModified() {
-        return modified;
+        return resolver.getModified();
     }
 }

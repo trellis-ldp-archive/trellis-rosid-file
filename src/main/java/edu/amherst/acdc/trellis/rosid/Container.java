@@ -15,8 +15,6 @@
  */
 package edu.amherst.acdc.trellis.rosid;
 
-import org.apache.commons.rdf.api.IRI;
-
 /**
  * @author acoburn
  */
@@ -24,10 +22,10 @@ public class Container extends RdfSource {
 
     /**
      * Create an LDP Container object
-     * @param identifier the identifier
+     * @param resolver the resolved resource
      */
-    public Container(final IRI identifier) {
-        super(identifier);
+    public Container(final ResourceReader resolver) {
+        super(resolver);
     }
 
     @Override

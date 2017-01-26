@@ -28,7 +28,7 @@ import org.apache.commons.rdf.api.Triple;
  *
  * @author acoburn
  */
-interface ResourceReader {
+public interface ResourceReader {
 
     IRI getIdentifier();
 

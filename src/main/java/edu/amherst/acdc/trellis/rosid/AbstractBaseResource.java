@@ -60,18 +60,24 @@ public abstract class AbstractBaseResource implements Resource {
     }
 
     @Override
-    public IRI getOriginalResource() {
-        return resolver.getOriginalResource();
+    public IRI getOriginal() {
+        return resolver.getOriginal();
     }
 
     @Override
-    public Optional<IRI> getParent() {
-        return resolver.getParent();
+    public Optional<IRI> getTimeMap() {
+        // todo
+        return Optional.empty();
     }
 
     @Override
-    public Stream<MementoLink> getTimeMap() {
-        return resolver.getTimeMap();
+    public Optional<IRI> getContainedBy() {
+        return resolver.getContainedBy();
+    }
+
+    @Override
+    public Stream<MementoLink> getMementos() {
+        return resolver.getMementos();
     }
 
     @Override
@@ -86,8 +92,8 @@ public abstract class AbstractBaseResource implements Resource {
     }
 
     @Override
-    public Optional<IRI> getAccessControl() {
-        return resolver.getAccessControl();
+    public Optional<IRI> getAcl() {
+        return resolver.getAcl();
     }
 
     @Override

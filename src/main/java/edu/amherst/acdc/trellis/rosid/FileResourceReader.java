@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+//import com.fasterxml.jackson.databind.JsonNode;
 import edu.amherst.acdc.trellis.api.MementoLink;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Triple;
@@ -59,8 +60,8 @@ class FileResourceReader implements ResourceReader {
     }
 
     @Override
-    public IRI getOriginalResource() {
-        return data.getOrDefault("canonical", identifier);
+    public IRI getOriginal() {
+        return data.getOrDefault("original", identifier);
     }
 
     @Override
@@ -74,12 +75,12 @@ class FileResourceReader implements ResourceReader {
     }
 
     @Override
-    public Optional<IRI> getParent() {
-        return ofNullable(data.get("parent"));
+    public Optional<IRI> getContainedBy() {
+        return ofNullable(data.get("containedBy"));
     }
 
     @Override
-    public Optional<IRI> getAccessControl() {
+    public Optional<IRI> getAcl() {
         return ofNullable(data.get("acl"));
     }
 
@@ -118,7 +119,7 @@ class FileResourceReader implements ResourceReader {
     }
 
     @Override
-    public Stream<MementoLink> getTimeMap() {
+    public Stream<MementoLink> getMementos() {
         // TODO
         return Stream.empty();
     }

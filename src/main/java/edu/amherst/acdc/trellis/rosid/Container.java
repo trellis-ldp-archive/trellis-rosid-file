@@ -15,6 +15,9 @@
  */
 package edu.amherst.acdc.trellis.rosid;
 
+import org.apache.commons.rdf.api.IRI;
+import edu.amherst.acdc.trellis.vocabulary.LDP;
+
 /**
  * @author acoburn
  */
@@ -29,8 +32,7 @@ public class Container extends RdfSource {
     }
 
     @Override
-    public Boolean isContainer() {
-        return true;
+    public IRI getInteractionModel() {
+        return LDP.Container;
     }
-
 }

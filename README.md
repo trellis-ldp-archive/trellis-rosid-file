@@ -1,6 +1,6 @@
 # trellis-rosid
 
-[![Build Status](https://travis-ci.org/acoburn/trellis-rosid.png?branch=master)](https://travis-ci.org/acoburn/trellis-rosid)
+[![Build Status](https://travis-ci.org/trellis-ldp/trellis-rosid.png?branch=master)](https://travis-ci.org/trellis-ldp/trellis-rosid)
 
 An implementation of the Trellis API, based on Kafka and a distributed data store.
 

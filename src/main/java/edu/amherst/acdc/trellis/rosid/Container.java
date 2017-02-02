@@ -15,6 +15,9 @@
  */
 package edu.amherst.acdc.trellis.rosid;
 
+import java.util.Optional;
+import java.util.stream.Stream;
+
 import org.apache.commons.rdf.api.IRI;
 import edu.amherst.acdc.trellis.vocabulary.LDP;
 
@@ -35,4 +38,30 @@ public class Container extends RdfSource {
     public IRI getInteractionModel() {
         return LDP.Container;
     }
+
+    @Override
+    public Optional<IRI> getMembershipResource() {
+        return resolver.getMembershipResource();
+    }
+
+    @Override
+    public Optional<IRI> getMemberRelation() {
+        return resolver.getMemberRelation();
+    }
+
+    @Override
+    public Optional<IRI> getMemberOfRelation() {
+        return resolver.getMemberOfRelation();
+    }
+
+    @Override
+    public Optional<IRI> getInsertedContentRelation() {
+        return resolver.getInsertedContentRelation();
+    }
+
+    @Override
+    public Stream<IRI> getContains() {
+        return resolver.getContains();
+    }
+
 }

@@ -27,6 +27,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 //import com.fasterxml.jackson.databind.JsonNode;
+import edu.amherst.acdc.trellis.api.Datastream;
 import edu.amherst.acdc.trellis.api.MementoLink;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Triple;
@@ -61,22 +62,42 @@ class FileResourceReader implements ResourceReader {
 
     @Override
     public IRI getOriginal() {
-        return data.getOrDefault("original", identifier);
+        return data.getOrDefault("identifier", identifier);
     }
 
     @Override
-    public Instant getCreated() {
-        return created;
-    }
-
-    @Override
-    public Instant getModified() {
-        return modified;
+    public Optional<IRI> getTimeMap() {
+        // TODO
+        return Optional.empty();
     }
 
     @Override
     public Optional<IRI> getContainedBy() {
         return ofNullable(data.get("containedBy"));
+    }
+
+    @Override
+    public Stream<MementoLink> getMementos() {
+        // TODO
+        return Stream.empty();
+    }
+
+    @Override
+    public Boolean isMemento() {
+        // TODO
+        return false;
+    }
+
+    @Override
+    public Boolean isPage() {
+        // TODO
+        return false;
+    }
+
+    @Override
+    public Optional<IRI> getNext() {
+        // TODO
+        return Optional.empty();
     }
 
     @Override
@@ -92,6 +113,53 @@ class FileResourceReader implements ResourceReader {
     @Override
     public Stream<IRI> getTypes() {
         return types.stream();
+    }
+
+    @Override
+    public Optional<Datastream> getDatastream() {
+        // TODO
+        return Optional.empty();
+    }
+
+    @Override
+    public Stream<IRI> getContains() {
+        // TODO
+        return Stream.empty();
+    }
+
+    @Override
+    public Optional<IRI> getMembershipResource() {
+        return ofNullable(data.get("membershipResource"));
+    }
+
+    @Override
+    public Optional<IRI> getMemberRelation() {
+        return ofNullable(data.get("hasMemberRelation"));
+    }
+
+    @Override
+    public Optional<IRI> getMemberOfRelation() {
+        return ofNullable(data.get("isMemberOfRelation"));
+    }
+
+    @Override
+    public Optional<IRI> getInsertedContentRelation() {
+        return ofNullable(data.get("insertedContentRelation"));
+    }
+
+    @Override
+    public Optional<IRI> getCreator() {
+        return ofNullable(data.get("creator"));
+    }
+
+    @Override
+    public Instant getCreated() {
+        return created;
+    }
+
+    @Override
+    public Instant getModified() {
+        return modified;
     }
 
     @Override
@@ -118,9 +186,4 @@ class FileResourceReader implements ResourceReader {
         return Stream.empty();
     }
 
-    @Override
-    public Stream<MementoLink> getMementos() {
-        // TODO
-        return Stream.empty();
-    }
 }

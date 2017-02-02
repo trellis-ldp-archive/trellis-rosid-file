@@ -19,6 +19,7 @@ import java.time.Instant;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import edu.amherst.acdc.trellis.api.Datastream;
 import edu.amherst.acdc.trellis.api.MementoLink;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Triple;
@@ -43,6 +44,72 @@ public interface ResourceReader {
     IRI getOriginal();
 
     /**
+     * Get the URI for the timemap for the corresponding resource
+     * @return the timemap URI
+     */
+    Optional<IRI> getTimeMap();
+
+    /**
+     * Get the identifier of the resource that contains this resource
+     * @return the containing resource identifier
+     */
+    Optional<IRI> getContainedBy();
+
+    /**
+     * Get identifiers for the contained resources
+     * @return the ldp:contains resource identifiers
+     */
+    Stream<IRI> getContains();
+
+    /**
+     * Get a stream of MementoLinks
+     * @return the Memento URIs
+     */
+    Stream<MementoLink> getMementos();
+
+    /**
+     * Test whether the object is a Memento
+     * @return whether the resource is a Memento
+     */
+    Boolean isMemento();
+
+    /**
+     * Test whether the object is an ldp:Page
+     * @return whether the resource is an ldp:Page
+     */
+    Boolean isPage();
+
+    /**
+     * Get the next page if there is one
+     * @return the URI for the next page
+     */
+    Optional<IRI> getNext();
+
+    /**
+     * Get the inbox resource identifier
+     * @return the inbox resource identifier
+     */
+    Optional<IRI> getInbox();
+
+    /**
+     * Get the ACL resource identifier
+     * @return the identifier for the acl
+     */
+    Optional<IRI> getAcl();
+
+    /**
+     * Get the resource types
+     * @return a stream of resource types
+     */
+    Stream<IRI> getTypes();
+
+    /**
+     * Get the creator of the resource
+     * @return the creator
+     */
+    Optional<IRI> getCreator();
+
+    /**
      * Get the created date for the resource
      * @return the created date
      */
@@ -55,22 +122,34 @@ public interface ResourceReader {
     Instant getModified();
 
     /**
-     * Get the identifier of the resource that contains this resource
-     * @return the containing resource identifier
+     * Get the membership resource
+     * @return the membership resource
      */
-    Optional<IRI> getContainedBy();
+    Optional<IRI> getMembershipResource();
 
     /**
-     * Get the ACL resource identifier
-     * @return the identifier for the acl
+     * Get the member relation
+     * @return the member relation
      */
-    Optional<IRI> getAcl();
+    Optional<IRI> getMemberRelation();
 
     /**
-     * Get the inbox resource identifier
-     * @return the inbox resource identifier
+     * Get the member of relation
+     * @return the member of relation
      */
-    Optional<IRI> getInbox();
+    Optional<IRI> getMemberOfRelation();
+
+    /**
+     * Get the inserted content relation
+     * @return the inserted content relation
+     */
+    Optional<IRI> getInsertedContentRelation();
+
+    /**
+     * Get the datastream
+     * @return the datastream
+     */
+    Optional<Datastream> getDatastream();
 
     /**
      * Get the containment triples
@@ -95,16 +174,4 @@ public interface ResourceReader {
      * @return a stream of user-created triples
      */
     Stream<Triple> getUserTriples();
-
-    /**
-     * Get the resource types
-     * @return a stream of resource types
-     */
-    Stream<IRI> getTypes();
-
-    /**
-     * Get the Memento link resources
-     * @return a stream of Memento resources
-     */
-    Stream<MementoLink> getMementos();
 }

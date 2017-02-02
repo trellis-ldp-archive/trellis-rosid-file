@@ -66,8 +66,7 @@ public abstract class AbstractBaseResource implements Resource {
 
     @Override
     public Optional<IRI> getTimeMap() {
-        // todo
-        return Optional.empty();
+        return resolver.getTimeMap();
     }
 
     @Override
@@ -81,9 +80,18 @@ public abstract class AbstractBaseResource implements Resource {
     }
 
     @Override
-    public <T extends Resource.TripleCategory> Stream<Triple> stream(final Collection<T> category) {
-        return category.stream().filter(mapper::containsKey).map(mapper::get).map(Supplier::get)
-                .reduce(Stream.empty(), Stream::concat);
+    public Boolean isMemento() {
+        return resolver.isMemento();
+    }
+
+    @Override
+    public Boolean isPage() {
+        return resolver.isPage();
+    }
+
+    @Override
+    public Optional<IRI> getNext() {
+        return resolver.getNext();
     }
 
     @Override
@@ -102,6 +110,11 @@ public abstract class AbstractBaseResource implements Resource {
     }
 
     @Override
+    public Optional<IRI> getCreator() {
+        return resolver.getCreator();
+    }
+
+    @Override
     public Instant getCreated() {
         return resolver.getCreated();
     }
@@ -109,5 +122,11 @@ public abstract class AbstractBaseResource implements Resource {
     @Override
     public Instant getModified() {
         return resolver.getModified();
+    }
+
+    @Override
+    public <T extends Resource.TripleCategory> Stream<Triple> stream(final Collection<T> category) {
+        return category.stream().filter(mapper::containsKey).map(mapper::get).map(Supplier::get)
+                .reduce(Stream.empty(), Stream::concat);
     }
 }

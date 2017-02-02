@@ -15,6 +15,7 @@
  */
 package edu.amherst.acdc.trellis.rosid;
 
+import static java.util.Objects.nonNull;
 import static java.util.Optional.ofNullable;
 import static edu.amherst.acdc.trellis.api.Resource.TripleContext.FEDORA_INBOUND_REFERENCES;
 import static edu.amherst.acdc.trellis.api.Resource.TripleContext.LDP_CONTAINMENT;
@@ -46,7 +47,7 @@ import org.apache.commons.rdf.jena.JenaRDF;
  *
  * @author acoburn
  */
-class FileResourceReader implements Resource {
+public class FileResourceReader implements Resource {
 
     private final JenaRDF rdf = new JenaRDF();
     private final IRI identifier;
@@ -54,11 +55,31 @@ class FileResourceReader implements Resource {
     private final List<IRI> types;
     private final Instant created;
     private final Instant modified;
+    private final String version;
+    private final String page;
 
     final protected Map<Resource.TripleContext, Supplier<Stream<Triple>>> mapper = new HashMap<>();
 
+    /**
+     * Create a File-based resource reader
+     * @param base the data storage directory
+     * @param identifier the resource to retrieve
+     */
     public FileResourceReader(final File base, final IRI identifier) {
+        this(base, identifier, null, null);
+    }
+
+    /**
+     * Create a File-based resource reader
+     * @param base the data storage directory
+     * @param identifier the resource to retrieve
+     * @param version the version to retreive
+     * @param page a session-scoped identifier for the page stream in use
+     */
+    public FileResourceReader(final File base, final IRI identifier, final String version, final String page) {
         this.identifier = identifier;
+        this.version = version;
+        this.page = page;
         this.data = new HashMap<>();
         this.types = new ArrayList<>();
 
@@ -140,19 +161,18 @@ class FileResourceReader implements Resource {
 
     @Override
     public Boolean isMemento() {
-        // TODO -- from constructor
-        return false;
+        return nonNull(version);
     }
 
     @Override
     public Boolean isPage() {
-        // TODO -- from constructor
-        return false;
+        return nonNull(page);
     }
 
     @Override
     public Optional<IRI> getNext() {
-        // TODO -- getIdentifier() + "?page=blahblahblah"
+        // TODO -- getIdentifier() + "?page=" + this.page
+        // check that there are still triples to consume
         return Optional.empty();
     }
 

@@ -86,6 +86,18 @@ public interface ResourceReader {
     Optional<IRI> getNext();
 
     /**
+     * Get the describedby identifier
+     * @return the describedby identifier
+     */
+    Optional<IRI> getDescribedBy();
+
+    /**
+     * Get the describes identifier
+     * @return the describes identifier
+     */
+    Optional<IRI> getDescribes();
+
+    /**
      * Get the inbox resource identifier
      * @return the inbox resource identifier
      */

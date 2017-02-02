@@ -15,6 +15,8 @@
  */
 package edu.amherst.acdc.trellis.rosid;
 
+import java.util.Optional;
+
 import org.apache.commons.rdf.api.IRI;
 import edu.amherst.acdc.trellis.vocabulary.LDP;
 
@@ -34,5 +36,10 @@ public class RdfSource extends AbstractBaseResource {
     @Override
     public IRI getInteractionModel() {
         return LDP.RDFSource;
+    }
+
+    @Override
+    public Optional<IRI> getDescribes() {
+        return resolver.getDescribes();
     }
 }

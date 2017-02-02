@@ -109,32 +109,46 @@ class FileResourceReader implements ResourceReader {
     }
 
     @Override
+    public Optional<IRI> getDescribedBy() {
+        // TODO -- only for NonRDFSource resources,
+        // i.e. getOriginal() + "?format=description"
+        return Optional.empty();
+    }
+
+    @Override
+    public Optional<IRI> getDescribes() {
+        // TODO -- only for NonRDFSource descriptions
+        // i.e. getOriginal() ???
+        return Optional.empty();
+    }
+
+    @Override
     public Optional<IRI> getTimeMap() {
-        // TODO
+        // TODO -- getOriginal() + "?format=timemap"
         return Optional.empty();
     }
 
     @Override
     public Stream<MementoLink> getMementos() {
-        // TODO
+        // TODO -- get from storage layer
         return Stream.empty();
     }
 
     @Override
     public Boolean isMemento() {
-        // TODO
+        // TODO -- from constructor
         return false;
     }
 
     @Override
     public Boolean isPage() {
-        // TODO
+        // TODO -- from constructor
         return false;
     }
 
     @Override
     public Optional<IRI> getNext() {
-        // TODO
+        // TODO -- getIdentifier() + "?page=blahblahblah"
         return Optional.empty();
     }
 
@@ -145,13 +159,19 @@ class FileResourceReader implements ResourceReader {
 
     @Override
     public Optional<Datastream> getDatastream() {
-        // TODO
+        // TODO -- this comes from data properties, assembled
+        // id = getOriginal() ???
+        // format = "format"
+        // size = "size"
+        // created = "INSTANT"
+        // modified = "INSTANT"
+        // ^^^ build Datastream object from that
         return Optional.empty();
     }
 
     @Override
     public Stream<IRI> getContains() {
-        // TODO
+        // TODO -- read from the data storage
         return Stream.empty();
     }
 
@@ -172,20 +192,19 @@ class FileResourceReader implements ResourceReader {
 
     @Override
     public Stream<Triple> getMembershipTriples() {
-        // TODO
+        // TODO -- read from data storage
         return Stream.empty();
     }
 
     @Override
     public Stream<Triple> getInboundTriples() {
-        // TODO
+        // TODO -- read from data storage
         return Stream.empty();
     }
 
     @Override
     public Stream<Triple> getUserTriples() {
-        // TODO
+        // TODO -- read from data storage
         return Stream.empty();
     }
-
 }

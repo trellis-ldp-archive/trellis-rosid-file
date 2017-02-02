@@ -44,4 +44,8 @@ public class NonRdfSource extends AbstractBaseResource {
         return resolver.getDatastream();
     }
 
+    @Override
+    public Optional<IRI> getDescribedBy() {
+        return resolver.getDescribedBy();
+    }
 }

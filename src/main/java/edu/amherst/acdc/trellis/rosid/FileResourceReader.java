@@ -16,17 +16,24 @@
 package edu.amherst.acdc.trellis.rosid;
 
 import static java.util.Optional.ofNullable;
+import static edu.amherst.acdc.trellis.api.Resource.TripleContext.FEDORA_INBOUND_REFERENCES;
+import static edu.amherst.acdc.trellis.api.Resource.TripleContext.LDP_CONTAINMENT;
+import static edu.amherst.acdc.trellis.api.Resource.TripleContext.LDP_MEMBERSHIP;
+import static edu.amherst.acdc.trellis.api.Resource.TripleContext.USER_MANAGED;
 
 import java.io.File;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 //import com.fasterxml.jackson.databind.JsonNode;
+import edu.amherst.acdc.trellis.api.Resource;
 import edu.amherst.acdc.trellis.api.Datastream;
 import edu.amherst.acdc.trellis.api.MementoLink;
 import edu.amherst.acdc.trellis.vocabulary.LDP;
@@ -39,7 +46,7 @@ import org.apache.commons.rdf.jena.JenaRDF;
  *
  * @author acoburn
  */
-class FileResourceReader implements ResourceReader {
+class FileResourceReader implements Resource {
 
     private final JenaRDF rdf = new JenaRDF();
     private final IRI identifier;
@@ -47,6 +54,8 @@ class FileResourceReader implements ResourceReader {
     private final List<IRI> types;
     private final Instant created;
     private final Instant modified;
+
+    final protected Map<Resource.TripleContext, Supplier<Stream<Triple>>> mapper = new HashMap<>();
 
     public FileResourceReader(final File base, final IRI identifier) {
         this.identifier = identifier;
@@ -56,11 +65,20 @@ class FileResourceReader implements ResourceReader {
         // Load the data from a file....
         this.created = Instant.now();
         this.modified = Instant.now();
+        mapper.put(LDP_CONTAINMENT, this::getContainmentTriples);
+        mapper.put(LDP_MEMBERSHIP, this::getMembershipTriples);
+        mapper.put(FEDORA_INBOUND_REFERENCES, this::getInboundTriples);
+        mapper.put(USER_MANAGED, this::getUserTriples);
     }
 
     @Override
     public IRI getIdentifier() {
         return identifier;
+    }
+
+    @Override
+    public IRI getInteractionModel() {
+        return data.get("interactionModel");
     }
 
     @Override
@@ -106,20 +124,6 @@ class FileResourceReader implements ResourceReader {
     @Override
     public Optional<IRI> getInbox() {
         return ofNullable(data.get("inbox"));
-    }
-
-    @Override
-    public Optional<IRI> getDescribedBy() {
-        // TODO -- only for NonRDFSource resources,
-        // i.e. getOriginal() + "?format=description"
-        return Optional.empty();
-    }
-
-    @Override
-    public Optional<IRI> getDescribes() {
-        // TODO -- only for NonRDFSource descriptions
-        // i.e. getOriginal() ???
-        return Optional.empty();
     }
 
     @Override
@@ -186,24 +190,26 @@ class FileResourceReader implements ResourceReader {
     }
 
     @Override
-    public Stream<Triple> getContainmentTriples() {
+    public <T extends Resource.TripleCategory> Stream<Triple> stream(final Collection<T> category) {
+        return category.stream().filter(mapper::containsKey).map(mapper::get).map(Supplier::get)
+                .reduce(Stream.empty(), Stream::concat);
+    }
+
+    private Stream<Triple> getContainmentTriples() {
         return getContains().map(uri -> rdf.createTriple(getIdentifier(), LDP.contains, uri));
     }
 
-    @Override
-    public Stream<Triple> getMembershipTriples() {
+    private Stream<Triple> getMembershipTriples() {
         // TODO -- read from data storage
         return Stream.empty();
     }
 
-    @Override
-    public Stream<Triple> getInboundTriples() {
+    private Stream<Triple> getInboundTriples() {
         // TODO -- read from data storage
         return Stream.empty();
     }
 
-    @Override
-    public Stream<Triple> getUserTriples() {
+    private Stream<Triple> getUserTriples() {
         // TODO -- read from data storage
         return Stream.empty();
     }

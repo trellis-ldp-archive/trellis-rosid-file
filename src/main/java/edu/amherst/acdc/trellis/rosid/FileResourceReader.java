@@ -29,8 +29,10 @@ import java.util.stream.Stream;
 //import com.fasterxml.jackson.databind.JsonNode;
 import edu.amherst.acdc.trellis.api.Datastream;
 import edu.amherst.acdc.trellis.api.MementoLink;
+import edu.amherst.acdc.trellis.vocabulary.LDP;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Triple;
+import org.apache.commons.rdf.jena.JenaRDF;
 
 /**
  * A resource reader, based on static files.
@@ -39,6 +41,7 @@ import org.apache.commons.rdf.api.Triple;
  */
 class FileResourceReader implements ResourceReader {
 
+    private final JenaRDF rdf = new JenaRDF();
     private final IRI identifier;
     private final Map<String, IRI> data;
     private final List<IRI> types;
@@ -66,65 +69,8 @@ class FileResourceReader implements ResourceReader {
     }
 
     @Override
-    public Optional<IRI> getTimeMap() {
-        // TODO
-        return Optional.empty();
-    }
-
-    @Override
     public Optional<IRI> getContainedBy() {
         return ofNullable(data.get("containedBy"));
-    }
-
-    @Override
-    public Stream<MementoLink> getMementos() {
-        // TODO
-        return Stream.empty();
-    }
-
-    @Override
-    public Boolean isMemento() {
-        // TODO
-        return false;
-    }
-
-    @Override
-    public Boolean isPage() {
-        // TODO
-        return false;
-    }
-
-    @Override
-    public Optional<IRI> getNext() {
-        // TODO
-        return Optional.empty();
-    }
-
-    @Override
-    public Optional<IRI> getAcl() {
-        return ofNullable(data.get("acl"));
-    }
-
-    @Override
-    public Optional<IRI> getInbox() {
-        return ofNullable(data.get("inbox"));
-    }
-
-    @Override
-    public Stream<IRI> getTypes() {
-        return types.stream();
-    }
-
-    @Override
-    public Optional<Datastream> getDatastream() {
-        // TODO
-        return Optional.empty();
-    }
-
-    @Override
-    public Stream<IRI> getContains() {
-        // TODO
-        return Stream.empty();
     }
 
     @Override
@@ -153,6 +99,63 @@ class FileResourceReader implements ResourceReader {
     }
 
     @Override
+    public Optional<IRI> getAcl() {
+        return ofNullable(data.get("acl"));
+    }
+
+    @Override
+    public Optional<IRI> getInbox() {
+        return ofNullable(data.get("inbox"));
+    }
+
+    @Override
+    public Optional<IRI> getTimeMap() {
+        // TODO
+        return Optional.empty();
+    }
+
+    @Override
+    public Stream<MementoLink> getMementos() {
+        // TODO
+        return Stream.empty();
+    }
+
+    @Override
+    public Boolean isMemento() {
+        // TODO
+        return false;
+    }
+
+    @Override
+    public Boolean isPage() {
+        // TODO
+        return false;
+    }
+
+    @Override
+    public Optional<IRI> getNext() {
+        // TODO
+        return Optional.empty();
+    }
+
+    @Override
+    public Stream<IRI> getTypes() {
+        return types.stream();
+    }
+
+    @Override
+    public Optional<Datastream> getDatastream() {
+        // TODO
+        return Optional.empty();
+    }
+
+    @Override
+    public Stream<IRI> getContains() {
+        // TODO
+        return Stream.empty();
+    }
+
+    @Override
     public Instant getCreated() {
         return created;
     }
@@ -164,8 +167,7 @@ class FileResourceReader implements ResourceReader {
 
     @Override
     public Stream<Triple> getContainmentTriples() {
-        // TODO
-        return Stream.empty();
+        return getContains().map(uri -> rdf.createTriple(getIdentifier(), LDP.contains, uri));
     }
 
     @Override

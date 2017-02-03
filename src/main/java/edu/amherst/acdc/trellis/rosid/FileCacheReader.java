@@ -74,7 +74,7 @@ public class FileCacheReader implements Resource {
         this.identifier = identifier;
 
         // Load the data from a file....
-        // TODO this needs to be an actual file...
+        // TODO this needs to be an actual file based on the identifier
         json = MAPPER.readTree(base);
 
         // define mappings for triple contexts

@@ -23,6 +23,7 @@ import static edu.amherst.acdc.trellis.api.Resource.TripleContext.LDP_MEMBERSHIP
 import static edu.amherst.acdc.trellis.api.Resource.TripleContext.USER_MANAGED;
 
 import java.io.File;
+import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -33,12 +34,14 @@ import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-//import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.amherst.acdc.trellis.api.Resource;
 import edu.amherst.acdc.trellis.api.Datastream;
 import edu.amherst.acdc.trellis.api.MementoLink;
 import edu.amherst.acdc.trellis.vocabulary.LDP;
 import org.apache.commons.rdf.api.IRI;
+import org.apache.commons.rdf.api.RDF;
 import org.apache.commons.rdf.api.Triple;
 import org.apache.commons.rdf.jena.JenaRDF;
 
@@ -49,23 +52,26 @@ import org.apache.commons.rdf.jena.JenaRDF;
  */
 public class FileResourceReader implements Resource {
 
-    private final JenaRDF rdf = new JenaRDF();
+    private static final ObjectMapper MAPPER = new ObjectMapper();
+    private static final RDF rdf = new JenaRDF();
+
     private final IRI identifier;
-    private final Map<String, IRI> data;
+    private final JsonNode json;
     private final List<IRI> types;
     private final Instant created;
     private final Instant modified;
     private final String version;
     private final String page;
 
-    final protected Map<Resource.TripleContext, Supplier<Stream<Triple>>> mapper = new HashMap<>();
+    protected final Map<Resource.TripleContext, Supplier<Stream<Triple>>> mapper = new HashMap<>();
 
     /**
      * Create a File-based resource reader
      * @param base the data storage directory
      * @param identifier the resource to retrieve
+     * @throws IOException if the JSON parsing goes wrong
      */
-    public FileResourceReader(final File base, final IRI identifier) {
+    public FileResourceReader(final File base, final IRI identifier) throws IOException {
         this(base, identifier, null, null);
     }
 
@@ -75,17 +81,22 @@ public class FileResourceReader implements Resource {
      * @param identifier the resource to retrieve
      * @param version the version to retreive
      * @param page a session-scoped identifier for the page stream in use
+     * @throws IOException if the JSON parsing goes wrong
      */
-    public FileResourceReader(final File base, final IRI identifier, final String version, final String page) {
+    public FileResourceReader(final File base, final IRI identifier, final String version, final String page)
+            throws IOException {
         this.identifier = identifier;
         this.version = version;
         this.page = page;
-        this.data = new HashMap<>();
         this.types = new ArrayList<>();
 
         // Load the data from a file....
+        // TODO this needs to be an actual file...
+        json = MAPPER.readTree(base);
         this.created = Instant.now();
         this.modified = Instant.now();
+
+        // define mappings for triple contexts
         mapper.put(LDP_CONTAINMENT, this::getContainmentTriples);
         mapper.put(LDP_MEMBERSHIP, this::getMembershipTriples);
         mapper.put(FEDORA_INBOUND_REFERENCES, this::getInboundTriples);
@@ -99,52 +110,62 @@ public class FileResourceReader implements Resource {
 
     @Override
     public IRI getInteractionModel() {
-        return data.get("interactionModel");
+        return ofNullable(json.get("interactionModel")).filter(JsonNode::isTextual)
+            .map(JsonNode::asText).map(rdf::createIRI).orElse(LDP.Resource);
     }
 
     @Override
     public IRI getOriginal() {
-        return data.getOrDefault("identifier", identifier);
+        return ofNullable(json.get("identifier")).filter(JsonNode::isTextual)
+            .map(JsonNode::asText).map(rdf::createIRI).orElse(identifier);
     }
 
     @Override
     public Optional<IRI> getContainedBy() {
-        return ofNullable(data.get("containedBy"));
+        return ofNullable(json.get("containedBy")).filter(JsonNode::isTextual)
+            .map(JsonNode::asText).map(rdf::createIRI);
     }
 
     @Override
     public Optional<IRI> getMembershipResource() {
-        return ofNullable(data.get("membershipResource"));
+        return ofNullable(json.get("membershipResource")).filter(JsonNode::isTextual)
+            .map(JsonNode::asText).map(rdf::createIRI);
     }
 
     @Override
     public Optional<IRI> getMemberRelation() {
-        return ofNullable(data.get("hasMemberRelation"));
+        return ofNullable(json.get("hasMemberRelation")).filter(JsonNode::isTextual)
+            .map(JsonNode::asText).map(rdf::createIRI);
     }
 
     @Override
     public Optional<IRI> getMemberOfRelation() {
-        return ofNullable(data.get("isMemberOfRelation"));
+        return ofNullable(json.get("isMemberOfRelation")).filter(JsonNode::isTextual)
+            .map(JsonNode::asText).map(rdf::createIRI);
     }
 
     @Override
     public Optional<IRI> getInsertedContentRelation() {
-        return ofNullable(data.get("insertedContentRelation"));
+        return ofNullable(json.get("insertedContentRelation")).filter(JsonNode::isTextual)
+            .map(JsonNode::asText).map(rdf::createIRI);
     }
 
     @Override
     public Optional<IRI> getCreator() {
-        return ofNullable(data.get("creator"));
+        return ofNullable(json.get("creator")).filter(JsonNode::isTextual)
+            .map(JsonNode::asText).map(rdf::createIRI);
     }
 
     @Override
     public Optional<IRI> getAcl() {
-        return ofNullable(data.get("acl"));
+        return ofNullable(json.get("acl")).filter(JsonNode::isTextual)
+            .map(JsonNode::asText).map(rdf::createIRI);
     }
 
     @Override
     public Optional<IRI> getInbox() {
-        return ofNullable(data.get("inbox"));
+        return ofNullable(json.get("inbox")).filter(JsonNode::isTextual)
+            .map(JsonNode::asText).map(rdf::createIRI);
     }
 
     @Override
@@ -178,6 +199,7 @@ public class FileResourceReader implements Resource {
 
     @Override
     public Stream<IRI> getTypes() {
+        // TODO -- this should be read from the json object
         return types.stream();
     }
 

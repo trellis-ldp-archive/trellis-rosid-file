@@ -30,6 +30,7 @@ ext {
     trellisApiVersion = '0.1.0-SNAPSHOT'
     trellisSpiVersion = '0.1.0-SNAPSHOT'
     commonsRdfVersion = '0.3.0-incubating'
+    jacksonVersion = '2.8.5'
     zookeeperVersion = '3.4.9'
     kafkaVersion = '0.10.1.1'
     slf4jVersion = '1.7.21'
@@ -49,6 +50,7 @@ dependencies {
     compile group: 'org.apache.kafka', name: 'kafka-clients', version: kafkaVersion
     compile group: 'org.apache.kafka', name: 'kafka-streams', version: kafkaVersion
     compile group: 'org.slf4j', name: 'slf4j-api', version: slf4jVersion
+    compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: jacksonVersion
     compile group: 'org.apache.commons', name: 'commons-rdf-api', version: commonsRdfVersion
     compile group: 'org.apache.commons', name: 'commons-rdf-jena', version: commonsRdfVersion
 

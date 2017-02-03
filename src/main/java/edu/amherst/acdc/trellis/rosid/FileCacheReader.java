@@ -15,8 +15,10 @@
  */
 package edu.amherst.acdc.trellis.rosid;
 
+import static java.time.Instant.parse;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
+import static java.util.stream.Stream.builder;
 import static java.util.stream.Stream.empty;
 import static edu.amherst.acdc.trellis.api.Resource.TripleContext.FEDORA_INBOUND_REFERENCES;
 import static edu.amherst.acdc.trellis.api.Resource.TripleContext.LDP_CONTAINMENT;
@@ -26,10 +28,8 @@ import static edu.amherst.acdc.trellis.api.Resource.TripleContext.USER_MANAGED;
 import java.io.File;
 import java.io.IOException;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -58,8 +58,6 @@ public class FileCacheReader implements Resource {
 
     private final IRI identifier;
     private final JsonNode json;
-    private final Instant created;
-    private final Instant modified;
 
     protected final Map<Resource.TripleContext, Supplier<Stream<Triple>>> mapper = new HashMap<>();
 
@@ -78,8 +76,6 @@ public class FileCacheReader implements Resource {
         // Load the data from a file....
         // TODO this needs to be an actual file...
         json = MAPPER.readTree(base);
-        this.created = Instant.now();
-        this.modified = Instant.now();
 
         // define mappings for triple contexts
         mapper.put(LDP_CONTAINMENT, this::getContainmentTriples);
@@ -154,6 +150,37 @@ public class FileCacheReader implements Resource {
     }
 
     @Override
+    public Stream<IRI> getTypes() {
+        return ofNullable(json.get("@type")).map(this::jsonNodeToStream).orElse(empty()).map(rdf::createIRI);
+    }
+
+    @Override
+    public Optional<Datastream> getDatastream() {
+        return ofNullable(json.get("datastream")).map(node ->
+            new DatastreamImpl(rdf.createIRI(node.get("@id").asText()),
+                parse(node.get("created").asText()),
+                parse(node.get("modified").asText()),
+                ofNullable(node.get("format")).map(JsonNode::asText).orElse(null),
+                ofNullable(node.get("size")).map(JsonNode::asLong).orElse(null)));
+    }
+
+    @Override
+    public Instant getCreated() {
+        return parse(json.get("created").asText());
+    }
+
+    @Override
+    public Instant getModified() {
+        return parse(json.get("modified").asText());
+    }
+
+    @Override
+    public <T extends Resource.TripleCategory> Stream<Triple> stream(final Collection<T> category) {
+        return category.stream().filter(mapper::containsKey).map(mapper::get).map(Supplier::get)
+                .reduce(Stream.empty(), Stream::concat);
+    }
+
+    @Override
     public Optional<IRI> getTimeMap() {
         // TODO -- getOriginal() + "?format=timemap"
         return Optional.empty();
@@ -166,50 +193,21 @@ public class FileCacheReader implements Resource {
     }
 
     @Override
-    public Stream<IRI> getTypes() {
-        return ofNullable(json.get("@type")).filter(JsonNode::isArray)
-            .map(arr -> {
-                final List<String> types = new ArrayList<>();
-                for (final JsonNode type : arr) {
-                    types.add(type.asText());
-                }
-                return types.stream().map(rdf::createIRI);
-            })
-            .orElse(empty());
-    }
-
-    @Override
-    public Optional<Datastream> getDatastream() {
-        // TODO -- this comes from data properties, assembled
-        // id = getOriginal() ???
-        // format = "format"
-        // size = "size"
-        // created = "INSTANT"
-        // modified = "INSTANT"
-        // ^^^ build Datastream object from that
-        return Optional.empty();
-    }
-
-    @Override
     public Stream<IRI> getContains() {
         // TODO -- read from the data storage
         return Stream.empty();
     }
 
-    @Override
-    public Instant getCreated() {
-        return created;
-    }
-
-    @Override
-    public Instant getModified() {
-        return modified;
-    }
-
-    @Override
-    public <T extends Resource.TripleCategory> Stream<Triple> stream(final Collection<T> category) {
-        return category.stream().filter(mapper::containsKey).map(mapper::get).map(Supplier::get)
-                .reduce(Stream.empty(), Stream::concat);
+    private Stream<String> jsonNodeToStream(final JsonNode node) {
+        final Stream.Builder<JsonNode> items = builder();
+        if (node.isArray()) {
+            for (final JsonNode item : node) {
+                items.accept(item);
+            }
+        } else {
+            items.accept(node);
+        }
+        return items.build().filter(JsonNode::isTextual).map(JsonNode::asText);
     }
 
     private Stream<Triple> getContainmentTriples() {

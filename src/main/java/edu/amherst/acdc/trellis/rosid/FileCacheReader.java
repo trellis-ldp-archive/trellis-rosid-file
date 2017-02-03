@@ -15,8 +15,9 @@
  */
 package edu.amherst.acdc.trellis.rosid;
 
-import static java.util.Objects.nonNull;
+import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
+import static java.util.stream.Stream.empty;
 import static edu.amherst.acdc.trellis.api.Resource.TripleContext.FEDORA_INBOUND_REFERENCES;
 import static edu.amherst.acdc.trellis.api.Resource.TripleContext.LDP_CONTAINMENT;
 import static edu.amherst.acdc.trellis.api.Resource.TripleContext.LDP_MEMBERSHIP;
@@ -50,18 +51,15 @@ import org.apache.commons.rdf.jena.JenaRDF;
  *
  * @author acoburn
  */
-public class FileResourceReader implements Resource {
+public class FileCacheReader implements Resource {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private static final RDF rdf = new JenaRDF();
 
     private final IRI identifier;
     private final JsonNode json;
-    private final List<IRI> types;
     private final Instant created;
     private final Instant modified;
-    private final String version;
-    private final String page;
 
     protected final Map<Resource.TripleContext, Supplier<Stream<Triple>>> mapper = new HashMap<>();
 
@@ -71,24 +69,11 @@ public class FileResourceReader implements Resource {
      * @param identifier the resource to retrieve
      * @throws IOException if the JSON parsing goes wrong
      */
-    public FileResourceReader(final File base, final IRI identifier) throws IOException {
-        this(base, identifier, null, null);
-    }
+    public FileCacheReader(final File base, final IRI identifier) throws IOException {
+        requireNonNull(base, "The data directory cannot be null!");
+        requireNonNull(identifier, "The identifier cannot be null!");
 
-    /**
-     * Create a File-based resource reader
-     * @param base the data storage directory
-     * @param identifier the resource to retrieve
-     * @param version the version to retreive
-     * @param page a session-scoped identifier for the page stream in use
-     * @throws IOException if the JSON parsing goes wrong
-     */
-    public FileResourceReader(final File base, final IRI identifier, final String version, final String page)
-            throws IOException {
         this.identifier = identifier;
-        this.version = version;
-        this.page = page;
-        this.types = new ArrayList<>();
 
         // Load the data from a file....
         // TODO this needs to be an actual file...
@@ -181,26 +166,16 @@ public class FileResourceReader implements Resource {
     }
 
     @Override
-    public Boolean isMemento() {
-        return nonNull(version);
-    }
-
-    @Override
-    public Boolean isPage() {
-        return nonNull(page);
-    }
-
-    @Override
-    public Optional<IRI> getNext() {
-        // TODO -- getIdentifier() + "?page=" + this.page
-        // check that there are still triples to consume
-        return Optional.empty();
-    }
-
-    @Override
     public Stream<IRI> getTypes() {
-        // TODO -- this should be read from the json object
-        return types.stream();
+        return ofNullable(json.get("@type")).filter(JsonNode::isArray)
+            .map(arr -> {
+                final List<String> types = new ArrayList<>();
+                for (final JsonNode type : arr) {
+                    types.add(type.asText());
+                }
+                return types.stream().map(rdf::createIRI);
+            })
+            .orElse(empty());
     }
 
     @Override

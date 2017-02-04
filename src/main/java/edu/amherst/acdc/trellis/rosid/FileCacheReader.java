@@ -24,7 +24,6 @@ import static edu.amherst.acdc.trellis.api.Resource.TripleContext.FEDORA_INBOUND
 import static edu.amherst.acdc.trellis.api.Resource.TripleContext.LDP_CONTAINMENT;
 import static edu.amherst.acdc.trellis.api.Resource.TripleContext.LDP_MEMBERSHIP;
 import static edu.amherst.acdc.trellis.api.Resource.TripleContext.USER_MANAGED;
-import static org.apache.commons.codec.digest.DigestUtils.md5Hex;
 
 import java.io.File;
 import java.io.IOException;
@@ -35,7 +34,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
-import java.util.zip.CRC32;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -65,18 +63,16 @@ public class FileCacheReader implements Resource {
 
     /**
      * Create a File-based resource reader
-     * @param base the data storage directory
+     * @param directory the data storage directory
      * @param identifier the resource to retrieve
      * @throws IOException if the JSON parsing goes wrong
      */
-    public FileCacheReader(final File base, final IRI identifier) throws IOException {
-        requireNonNull(base, "The data directory cannot be null!");
+    public FileCacheReader(final File directory, final IRI identifier) throws IOException {
+        requireNonNull(directory, "The data directory cannot be null!");
         requireNonNull(identifier, "The identifier cannot be null!");
 
         this.identifier = identifier;
 
-        // Load the data from a file
-        final File directory = new File(base, pathFromIdentifier(identifier));
         // TODO verify that this path exists
         json = MAPPER.readTree(new File(directory, "resource_cache.json"));
 
@@ -85,15 +81,6 @@ public class FileCacheReader implements Resource {
         mapper.put(LDP_MEMBERSHIP, this::getMembershipTriples);
         mapper.put(FEDORA_INBOUND_REFERENCES, this::getInboundTriples);
         mapper.put(USER_MANAGED, this::getUserTriples);
-    }
-
-    private static String pathFromIdentifier(final IRI identifier) {
-        final CRC32 hasher = new CRC32();
-        hasher.update(identifier.getIRIString().getBytes());
-        final String directory = Long.toHexString(hasher.getValue());
-        final String path = md5Hex(identifier.getIRIString());
-        // TODO - split the directory into 2-char segments
-        return directory + "/" + path;
     }
 
     @Override

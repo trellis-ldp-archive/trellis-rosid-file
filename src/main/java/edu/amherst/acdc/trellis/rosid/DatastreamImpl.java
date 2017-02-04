@@ -27,7 +27,7 @@ import org.apache.commons.rdf.api.IRI;
 /**
  * @author acoburn
  */
-class DatastreamImpl implements Datastream {
+public class DatastreamImpl implements Datastream {
 
     private final IRI identifier;
     private final String mimeType;
@@ -35,6 +35,14 @@ class DatastreamImpl implements Datastream {
     private final Instant created;
     private final Instant modified;
 
+    /**
+     * A simple Datastream object
+     * @param identifier the identifier
+     * @param created the created date
+     * @param modified the modified date
+     * @param mimeType the mimeType
+     * @param size the size
+     */
     public DatastreamImpl(final IRI identifier, final Instant created, final Instant modified,
             final String mimeType, final Long size) {
         requireNonNull(identifier);

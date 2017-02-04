@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.amherst.acdc.trellis.rosid;
+package edu.amherst.acdc.trellis.rosid.file;
 
 import static java.time.Instant.parse;
 import static java.util.Objects.requireNonNull;
@@ -40,6 +40,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.amherst.acdc.trellis.api.Resource;
 import edu.amherst.acdc.trellis.api.Datastream;
 import edu.amherst.acdc.trellis.api.MementoLink;
+import edu.amherst.acdc.trellis.rosid.DatastreamImpl;
 import edu.amherst.acdc.trellis.vocabulary.LDP;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.RDF;

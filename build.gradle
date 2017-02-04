@@ -36,6 +36,11 @@ ext {
     kafkaVersion = '0.10.1.1'
     slf4jVersion = '1.7.21'
 
+    /* Testing */
+    junitVersion = '4.12'
+    mockitoVersion = '1.10.19'
+    logbackVersion = '1.1.7'
+
     /* OSGi */
     projectOsgiVersion = project.version.replaceAll("-SNAPSHOT", ".SNAPSHOT")
 }
@@ -55,6 +60,11 @@ dependencies {
     compile group: 'commons-codec', name: 'commons-codec', version: commonsCodec
     compile group: 'org.apache.commons', name: 'commons-rdf-api', version: commonsRdfVersion
     compile group: 'org.apache.commons', name: 'commons-rdf-jena', version: commonsRdfVersion
+
+    testCompile group: 'org.apache.commons', name: 'commons-rdf-jena', version: commonsRdfVersion
+    testCompile group: 'junit', name: 'junit', version: junitVersion
+    testCompile group: 'org.mockito', name: 'mockito-core', version: mockitoVersion
+    testCompile group: 'ch.qos.logback', name: 'logback-classic', version: logbackVersion
 
     buildToolsConfig 'edu.amherst.acdc:acrepo-build-tools:0.2.0'
 }

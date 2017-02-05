@@ -39,7 +39,6 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import edu.amherst.acdc.trellis.api.Resource;
 import edu.amherst.acdc.trellis.api.Datastream;
 import edu.amherst.acdc.trellis.api.MementoLink;
-import edu.amherst.acdc.trellis.rosid.DatastreamImpl;
 import edu.amherst.acdc.trellis.vocabulary.LDP;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.RDF;

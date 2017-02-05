@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.amherst.acdc.trellis.rosid;
+package edu.amherst.acdc.trellis.rosid.file;
 
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
@@ -27,7 +27,7 @@ import org.apache.commons.rdf.api.IRI;
 /**
  * @author acoburn
  */
-public class DatastreamImpl implements Datastream {
+class DatastreamImpl implements Datastream {
 
     private final IRI identifier;
     private final String mimeType;

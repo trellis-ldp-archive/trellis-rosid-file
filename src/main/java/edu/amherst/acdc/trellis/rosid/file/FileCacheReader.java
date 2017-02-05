@@ -15,15 +15,14 @@
  */
 package edu.amherst.acdc.trellis.rosid.file;
 
-import static java.time.Instant.parse;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
-import static java.util.stream.Stream.builder;
 import static java.util.stream.Stream.empty;
 import static edu.amherst.acdc.trellis.api.Resource.TripleContext.FEDORA_INBOUND_REFERENCES;
 import static edu.amherst.acdc.trellis.api.Resource.TripleContext.LDP_CONTAINMENT;
 import static edu.amherst.acdc.trellis.api.Resource.TripleContext.LDP_MEMBERSHIP;
 import static edu.amherst.acdc.trellis.api.Resource.TripleContext.USER_MANAGED;
+import static com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS;
 
 import java.io.File;
 import java.io.IOException;
@@ -35,8 +34,8 @@ import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import edu.amherst.acdc.trellis.api.Resource;
 import edu.amherst.acdc.trellis.api.Datastream;
 import edu.amherst.acdc.trellis.api.MementoLink;
@@ -55,10 +54,16 @@ import org.apache.commons.rdf.jena.JenaRDF;
 public class FileCacheReader implements Resource {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
+
+    static {
+        MAPPER.configure(WRITE_DATES_AS_TIMESTAMPS, false);
+        MAPPER.registerModule(new JavaTimeModule());
+    }
+
     private static final RDF rdf = new JenaRDF();
 
     private final IRI identifier;
-    private final JsonNode json;
+    private final JsonResource json;
 
     protected final Map<Resource.TripleContext, Supplier<Stream<Triple>>> mapper = new HashMap<>();
 
@@ -75,7 +80,7 @@ public class FileCacheReader implements Resource {
         this.identifier = identifier;
 
         // TODO verify that this path exists
-        json = MAPPER.readTree(new File(directory, "resource_cache.json"));
+        json = MAPPER.readValue(new File(directory, "resource_cache.json"), JsonResource.class);
 
         // define mappings for triple contexts
         mapper.put(LDP_CONTAINMENT, this::getContainmentTriples);
@@ -91,87 +96,74 @@ public class FileCacheReader implements Resource {
 
     @Override
     public IRI getInteractionModel() {
-        return ofNullable(json.get("interactionModel")).filter(JsonNode::isTextual)
-            .map(JsonNode::asText).map(rdf::createIRI).orElse(LDP.Resource);
+        return ofNullable(json.ldpType).map(rdf::createIRI).orElse(LDP.Resource);
     }
 
     @Override
     public IRI getOriginal() {
-        return ofNullable(json.get("identifier")).filter(JsonNode::isTextual)
-            .map(JsonNode::asText).map(rdf::createIRI).orElse(identifier);
+        return ofNullable(json.id).map(rdf::createIRI).orElse(identifier);
     }
 
     @Override
     public Optional<IRI> getContainedBy() {
-        return ofNullable(json.get("containedBy")).filter(JsonNode::isTextual)
-            .map(JsonNode::asText).map(rdf::createIRI);
+        return ofNullable(json.containedBy).map(rdf::createIRI);
     }
 
     @Override
     public Optional<IRI> getMembershipResource() {
-        return ofNullable(json.get("membershipResource")).filter(JsonNode::isTextual)
-            .map(JsonNode::asText).map(rdf::createIRI);
+        return ofNullable(json.membershipResource).map(rdf::createIRI);
     }
 
     @Override
     public Optional<IRI> getMemberRelation() {
-        return ofNullable(json.get("hasMemberRelation")).filter(JsonNode::isTextual)
-            .map(JsonNode::asText).map(rdf::createIRI);
+        return ofNullable(json.hasMemberRelation).map(rdf::createIRI);
     }
 
     @Override
     public Optional<IRI> getMemberOfRelation() {
-        return ofNullable(json.get("isMemberOfRelation")).filter(JsonNode::isTextual)
-            .map(JsonNode::asText).map(rdf::createIRI);
+        return ofNullable(json.isMemberOfRelation).map(rdf::createIRI);
     }
 
     @Override
     public Optional<IRI> getInsertedContentRelation() {
-        return ofNullable(json.get("insertedContentRelation")).filter(JsonNode::isTextual)
-            .map(JsonNode::asText).map(rdf::createIRI);
+        return ofNullable(json.insertedContentRelation).map(rdf::createIRI);
     }
 
     @Override
     public Optional<IRI> getCreator() {
-        return ofNullable(json.get("creator")).filter(JsonNode::isTextual)
-            .map(JsonNode::asText).map(rdf::createIRI);
+        return Optional.empty();
     }
 
     @Override
     public Optional<IRI> getAcl() {
-        return ofNullable(json.get("acl")).filter(JsonNode::isTextual)
-            .map(JsonNode::asText).map(rdf::createIRI);
+        return ofNullable(json.accessControl).map(rdf::createIRI);
     }
 
     @Override
     public Optional<IRI> getInbox() {
-        return ofNullable(json.get("inbox")).filter(JsonNode::isTextual)
-            .map(JsonNode::asText).map(rdf::createIRI);
+        return ofNullable(json.inbox).map(rdf::createIRI);
     }
 
     @Override
     public Stream<IRI> getTypes() {
-        return ofNullable(json.get("@type")).map(this::jsonNodeToStream).orElse(empty()).map(rdf::createIRI);
+        return ofNullable(json.userTypes).map(types -> types.stream().map(rdf::createIRI)).orElse(empty());
     }
 
     @Override
     public Optional<Datastream> getDatastream() {
-        return ofNullable(json.get("datastream")).map(node ->
-            new DatastreamImpl(rdf.createIRI(node.get("@id").asText()),
-                parse(node.get("created").asText()),
-                parse(node.get("modified").asText()),
-                ofNullable(node.get("format")).map(JsonNode::asText).orElse(null),
-                ofNullable(node.get("size")).map(JsonNode::asLong).orElse(null)));
+        return ofNullable(json.datastream).map(ds ->
+            new DatastreamImpl(rdf.createIRI(ds.id),
+                    ds.created, ds.modified, ds.format, ds.size));
     }
 
     @Override
     public Instant getCreated() {
-        return parse(json.get("created").asText());
+        return json.created;
     }
 
     @Override
     public Instant getModified() {
-        return parse(json.get("modified").asText());
+        return json.modified;
     }
 
     @Override
@@ -196,18 +188,6 @@ public class FileCacheReader implements Resource {
     public Stream<IRI> getContains() {
         // TODO -- read from the data storage
         return Stream.empty();
-    }
-
-    private Stream<String> jsonNodeToStream(final JsonNode node) {
-        final Stream.Builder<JsonNode> items = builder();
-        if (node.isArray()) {
-            for (final JsonNode item : node) {
-                items.accept(item);
-            }
-        } else {
-            items.accept(node);
-        }
-        return items.build().filter(JsonNode::isTextual).map(JsonNode::asText);
     }
 
     private Stream<Triple> getContainmentTriples() {

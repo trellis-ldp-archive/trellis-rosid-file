@@ -1,0 +1,17 @@
+{
+    "@context" : "http://acdc.amherst.edu/ns/trellisresource" ,
+    "@id" : "info:trellis/resource1" ,
+    "@type" : "http://www.w3.org/ns/ldp#Container" ,
+    "containedBy" : "info:trellis/" ,
+    "datastream" : {
+        "@id" : "file:/path/to/datastream" ,
+        "format" : "image/jpeg" ,
+        "size" : 103527,
+        "created" : "2017-02-05T09:31:12Z" ,
+        "modified" : "2017-02-07T12:18:10Z" } ,
+    "type" : ["http://example.org/ns/CustomType"] ,
+    "inbox" : "http://receiver.example.org/inbox" ,
+    "accessControl" : "info:trellis/acl/public" ,
+    "created" : "2017-02-05T09:31:12Z" ,
+    "modified" : "2017-02-07T12:19:42Z"
+}

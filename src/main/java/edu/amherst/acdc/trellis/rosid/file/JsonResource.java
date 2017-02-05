@@ -84,5 +84,6 @@ class JsonResource {
     @JsonProperty("insertedContentRelation")
     public String insertedContentRelation;
 
-
+    @JsonProperty("creator")
+    public String creator;
 }

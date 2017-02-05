@@ -130,7 +130,7 @@ public class FileCacheReader implements Resource {
 
     @Override
     public Optional<IRI> getCreator() {
-        return Optional.empty();
+        return ofNullable(json.creator).map(rdf::createIRI);
     }
 
     @Override

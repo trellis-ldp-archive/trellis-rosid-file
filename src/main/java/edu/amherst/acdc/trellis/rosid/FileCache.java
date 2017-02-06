@@ -22,6 +22,7 @@ import static edu.amherst.acdc.trellis.api.Resource.TripleContext.FEDORA_INBOUND
 import static edu.amherst.acdc.trellis.api.Resource.TripleContext.LDP_CONTAINMENT;
 import static edu.amherst.acdc.trellis.api.Resource.TripleContext.LDP_MEMBERSHIP;
 import static edu.amherst.acdc.trellis.api.Resource.TripleContext.USER_MANAGED;
+import static edu.amherst.acdc.trellis.rosid.Constants.RESOURCE_CACHE;
 import static com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS;
 
 import java.io.File;
@@ -50,7 +51,7 @@ import org.apache.commons.rdf.jena.JenaRDF;
  *
  * @author acoburn
  */
-class FileCacheReader implements Resource {
+class FileCache implements Resource {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
@@ -72,20 +73,23 @@ class FileCacheReader implements Resource {
      * @param identifier the resource to retrieve
      * @throws IOException if the JSON parsing goes wrong
      */
-    public FileCacheReader(final File directory, final IRI identifier) throws IOException {
+    public FileCache(final File directory, final IRI identifier) throws IOException {
         requireNonNull(directory, "The data directory cannot be null!");
         requireNonNull(identifier, "The identifier cannot be null!");
 
         this.identifier = identifier;
 
-        // TODO verify that this path exists
-        json = MAPPER.readValue(new File(directory, "resource_cache.json"), JsonResource.class);
+        json = MAPPER.readValue(new File(directory, RESOURCE_CACHE), JsonResource.class);
 
         // define mappings for triple contexts
         mapper.put(LDP_CONTAINMENT, this::getContainmentTriples);
         mapper.put(LDP_MEMBERSHIP, this::getMembershipTriples);
         mapper.put(FEDORA_INBOUND_REFERENCES, this::getInboundTriples);
         mapper.put(USER_MANAGED, this::getUserTriples);
+    }
+
+    public static void write(final File directory, final JsonResource json) throws IOException {
+        MAPPER.writeValue(new File(directory, RESOURCE_CACHE), json);
     }
 
     @Override

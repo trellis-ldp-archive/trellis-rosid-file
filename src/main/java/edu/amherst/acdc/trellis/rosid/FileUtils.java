@@ -17,11 +17,16 @@ package edu.amherst.acdc.trellis.rosid;
 
 import static java.io.File.separator;
 import static java.util.Objects.requireNonNull;
+import static java.util.Optional.of;
 import static java.util.stream.IntStream.range;
+import static edu.amherst.acdc.trellis.rosid.Constants.PREFIX;
 import static org.apache.commons.codec.digest.DigestUtils.md5Hex;
 
+import java.net.URI;
 import java.util.StringJoiner;
 import java.util.zip.CRC32;
+
+import org.apache.commons.rdf.api.IRI;
 
 /**
  * @author acoburn
@@ -46,6 +51,16 @@ class FileUtils {
 
         joiner.add(md5Hex(identifier));
         return joiner.toString();
+    }
+
+    public static String asPath(final IRI identifier) {
+        return asPath(identifier.getIRIString());
+    }
+
+    public static String asPath(final String identifier) {
+        return of(identifier).filter(uri -> uri.startsWith(PREFIX)).map(uri -> uri.substring(PREFIX.length()))
+            .map(URI::create).map(URI::getPath).orElseThrow(() ->
+                    new IllegalArgumentException("Invalid identifier: " + identifier));
     }
 
     private FileUtils() {

@@ -23,8 +23,6 @@ import static org.apache.commons.codec.digest.DigestUtils.md5Hex;
 import java.util.StringJoiner;
 import java.util.zip.CRC32;
 
-import org.apache.commons.rdf.api.IRI;
-
 /**
  * @author acoburn
  */
@@ -32,20 +30,21 @@ class FileUtils {
 
     // The length of the CRC directory partition
     public final static int LENGTH = 2;
+    public final static int MAX = 3;
 
-    public static String partition(final IRI identifier) {
+    public static String partition(final String identifier) {
         requireNonNull(identifier, "identifier must not be null!");
 
         final StringJoiner joiner = new StringJoiner(separator);
         final CRC32 hasher = new CRC32();
-        hasher.update(identifier.getIRIString().getBytes());
+        hasher.update(identifier.getBytes());
         final String intermediate = Long.toHexString(hasher.getValue());
 
         final int count = intermediate.length() / LENGTH;
 
-        range(0, count).forEach(i -> joiner.add(intermediate.substring(i * LENGTH, (i + 1) * LENGTH)));
+        range(0, count).limit(MAX).forEach(i -> joiner.add(intermediate.substring(i * LENGTH, (i + 1) * LENGTH)));
 
-        joiner.add(md5Hex(identifier.getIRIString()));
+        joiner.add(md5Hex(identifier));
         return joiner.toString();
     }
 

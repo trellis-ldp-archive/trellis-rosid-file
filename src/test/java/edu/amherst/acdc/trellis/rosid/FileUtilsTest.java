@@ -19,9 +19,6 @@ import static java.io.File.separator;
 import static java.lang.String.join;
 import static org.junit.Assert.assertEquals;
 
-import org.apache.commons.rdf.api.RDF;
-import org.apache.commons.rdf.jena.JenaRDF;
-
 import org.junit.Test;
 
 /**
@@ -29,14 +26,12 @@ import org.junit.Test;
  */
 public class FileUtilsTest {
 
-    private static final RDF rdf = new JenaRDF();
-
     @Test
     public void testPartition() {
 
-        assertEquals(join(separator, "e4", "3d", "d2", "19", "3c11fdfba716fe4a8c2ad59720f73b3e"),
-                FileUtils.partition(rdf.createIRI("info:trellis/resource")));
-        assertEquals(join(separator, "56", "02", "ed", "ef", "94db502039137b6017bd7089ceaf8ad1"),
-                FileUtils.partition(rdf.createIRI("info:trellis/other")));
+        assertEquals(join(separator, "e4", "3d", "d2", "3c11fdfba716fe4a8c2ad59720f73b3e"),
+                FileUtils.partition("info:trellis/resource"));
+        assertEquals(join(separator, "56", "02", "ed", "94db502039137b6017bd7089ceaf8ad1"),
+                FileUtils.partition("info:trellis/other"));
     }
 }

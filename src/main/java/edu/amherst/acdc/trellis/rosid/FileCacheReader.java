@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.amherst.acdc.trellis.rosid.file;
+package edu.amherst.acdc.trellis.rosid;
 
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
@@ -50,7 +50,7 @@ import org.apache.commons.rdf.jena.JenaRDF;
  *
  * @author acoburn
  */
-public class FileCacheReader implements Resource {
+class FileCacheReader implements Resource {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
 

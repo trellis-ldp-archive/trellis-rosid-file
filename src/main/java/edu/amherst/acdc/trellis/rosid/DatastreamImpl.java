@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.amherst.acdc.trellis.rosid.file;
+package edu.amherst.acdc.trellis.rosid;
 
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;

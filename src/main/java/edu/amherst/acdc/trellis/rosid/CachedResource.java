@@ -15,32 +15,48 @@
  */
 package edu.amherst.acdc.trellis.rosid;
 
+import static edu.amherst.acdc.trellis.rosid.Constants.RESOURCE_CACHE;
+import static com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import edu.amherst.acdc.trellis.api.MementoLink;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Triple;
 
 /**
- * An object that mediates access to the resource version files.
+ * An object that mediates access to the resource cache files.
  *
  * @author acoburn
  */
-class FileVersion extends AbstractFileResource {
+class CachedResource extends AbstractFileResource {
+
+    private static final ObjectMapper MAPPER = new ObjectMapper();
+
+    static {
+        MAPPER.configure(WRITE_DATES_AS_TIMESTAMPS, false);
+        MAPPER.registerModule(new JavaTimeModule());
+    }
 
     /**
-     * Create a File-based versioned resource reader
-     * @param directory the directory
-     * @param identifier the resource identifier
-     * @throws IOException if the parsing failed
+     * Create a File-based resource reader
+     * @param directory the data storage directory
+     * @param identifier the resource to retrieve
+     * @throws IOException if the JSON parsing goes wrong
      */
-    public FileVersion(final File directory, final IRI identifier) throws IOException {
+    public CachedResource(final File directory, final IRI identifier) throws IOException {
         super(directory, identifier);
 
-        // TODO -- read from journal to set this.data
+        this.data = MAPPER.readValue(new File(directory, RESOURCE_CACHE), ResourceData.class);
+    }
+
+    public static void write(final File directory, final ResourceData json) throws IOException {
+        MAPPER.writeValue(new File(directory, RESOURCE_CACHE), json);
     }
 
     @Override

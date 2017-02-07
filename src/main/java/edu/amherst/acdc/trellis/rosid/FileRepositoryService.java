@@ -144,7 +144,7 @@ public class FileRepositoryService implements ResourceService {
         // TODO -- this naively ignores the session (e.g. batch ops), and ignores a version-based reader
         return directory -> {
             try {
-                final Resource res = new FileCache(directory, identifier);
+                final Resource res = new CachedResource(directory, identifier);
                 return of(res);
             } catch (final IOException ex) {
                 LOGGER.error("Error reading resource from disk!: " + ex.getMessage());

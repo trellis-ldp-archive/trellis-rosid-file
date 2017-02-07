@@ -20,6 +20,7 @@ import static com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -47,16 +48,23 @@ class CachedResource extends AbstractFileResource {
      * Create a File-based resource reader
      * @param directory the data storage directory
      * @param identifier the resource to retrieve
-     * @throws IOException if the JSON parsing goes wrong
      */
-    public CachedResource(final File directory, final IRI identifier) throws IOException {
+    public CachedResource(final File directory, final IRI identifier) {
         super(directory, identifier);
 
-        this.data = MAPPER.readValue(new File(directory, RESOURCE_CACHE), ResourceData.class);
+        try {
+            this.data = MAPPER.readValue(new File(directory, RESOURCE_CACHE), ResourceData.class);
+        } catch (final IOException ex) {
+            throw new UncheckedIOException(ex);
+        }
     }
 
-    public static void write(final File directory, final ResourceData json) throws IOException {
-        MAPPER.writeValue(new File(directory, RESOURCE_CACHE), json);
+    public static void write(final File directory, final ResourceData json) {
+        try {
+            MAPPER.writeValue(new File(directory, RESOURCE_CACHE), json);
+        } catch (final IOException ex) {
+            throw new UncheckedIOException(ex);
+        }
     }
 
     @Override

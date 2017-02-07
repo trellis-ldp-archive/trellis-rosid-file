@@ -24,7 +24,6 @@ import static edu.amherst.acdc.trellis.rosid.FileUtils.partition;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.File;
-import java.io.IOException;
 import java.time.Duration;
 import java.util.Optional;
 import java.util.function.Function;
@@ -131,25 +130,20 @@ public class FileRepositoryService implements ResourceService {
     @Override
     public Optional<Session> resume(final IRI identifier) {
         // TODO
-        return Optional.empty();
+        return empty();
     }
 
     @Override
     public Optional<Session> extend(final Session session, final Duration duration) {
         // TODO
-        return Optional.empty();
+        return empty();
     }
 
     private Function<File, Optional<Resource>> getResource(final Session session, final IRI identifier) {
         // TODO -- this naively ignores the session (e.g. batch ops), and ignores a version-based reader
         return directory -> {
-            try {
-                final Resource res = new CachedResource(directory, identifier);
-                return of(res);
-            } catch (final IOException ex) {
-                LOGGER.error("Error reading resource from disk!: " + ex.getMessage());
-            }
-            return empty();
+            final Resource res = new CachedResource(directory, identifier);
+            return of(res);
         };
     }
 }

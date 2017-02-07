@@ -149,8 +149,7 @@ abstract class AbstractFileResource implements Resource {
 
     @Override
     public <T extends Resource.TripleCategory> Stream<Triple> stream(final Collection<T> category) {
-        return category.stream().filter(mapper::containsKey).map(mapper::get).map(Supplier::get)
-                .reduce(Stream.empty(), Stream::concat);
+        return category.stream().filter(mapper::containsKey).map(mapper::get).flatMap(Supplier::get);
     }
 
     protected Stream<Triple> getContainmentTriples() {

@@ -75,4 +75,9 @@ class FileVersion extends AbstractFileResource {
         // TODO -- read from data storage
         return Stream.empty();
     }
+
+    protected Stream<Triple> getAuditTriples() {
+        // TODO -- read from data storage
+        return Stream.empty();
+    }
 }

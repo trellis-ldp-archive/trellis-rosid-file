@@ -21,6 +21,7 @@ import static java.util.stream.Stream.empty;
 import static edu.amherst.acdc.trellis.api.Resource.TripleContext.FEDORA_INBOUND_REFERENCES;
 import static edu.amherst.acdc.trellis.api.Resource.TripleContext.LDP_CONTAINMENT;
 import static edu.amherst.acdc.trellis.api.Resource.TripleContext.LDP_MEMBERSHIP;
+import static edu.amherst.acdc.trellis.api.Resource.TripleContext.TRELLIS_AUDIT;
 import static edu.amherst.acdc.trellis.api.Resource.TripleContext.USER_MANAGED;
 
 import java.io.File;
@@ -67,7 +68,7 @@ abstract class AbstractFileResource implements Resource {
         mapper.put(LDP_MEMBERSHIP, this::getMembershipTriples);
         mapper.put(FEDORA_INBOUND_REFERENCES, this::getInboundTriples);
         mapper.put(USER_MANAGED, this::getUserTriples);
-
+        mapper.put(TRELLIS_AUDIT, this::getAuditTriples);
     }
 
     @Override
@@ -133,8 +134,7 @@ abstract class AbstractFileResource implements Resource {
     @Override
     public Optional<Datastream> getDatastream() {
         return ofNullable(data.datastream).map(ds ->
-            new DatastreamImpl(rdf.createIRI(ds.id),
-                    ds.created, ds.modified, ds.format, ds.size));
+            new DatastreamImpl(rdf.createIRI(ds.id), ds.created, ds.modified, ds.format, ds.size));
     }
 
     @Override
@@ -162,4 +162,6 @@ abstract class AbstractFileResource implements Resource {
     protected abstract Stream<Triple> getInboundTriples();
 
     protected abstract Stream<Triple> getUserTriples();
+
+    protected abstract Stream<Triple> getAuditTriples();
 }

@@ -31,7 +31,7 @@ import org.junit.Test;
 /**
  * @author acoburn
  */
-public class JsonResourceTest {
+public class ResourceDataTest {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
@@ -42,8 +42,8 @@ public class JsonResourceTest {
 
     @Test
     public void testDeserialize() throws IOException {
-        final JsonResource res = MAPPER.readValue(getClass().getResourceAsStream("/resource1.json"),
-                JsonResource.class);
+        final ResourceData res = MAPPER.readValue(getClass().getResourceAsStream("/resource1.json"),
+                ResourceData.class);
 
         assertEquals("info:trellis/resource1", res.id);
         assertEquals(LDP.Container.getIRIString(), res.ldpType);

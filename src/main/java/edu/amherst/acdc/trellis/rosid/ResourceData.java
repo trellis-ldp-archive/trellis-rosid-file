@@ -23,9 +23,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 /**
  * @author acoburn
  */
-class JsonResource {
+class ResourceData {
 
-    static class JsonDatastream {
+    static class DatastreamData {
         @JsonProperty("@id")
         public String id;
 
@@ -55,7 +55,7 @@ class JsonResource {
     public String containedBy;
 
     @JsonProperty("datastream")
-    public JsonDatastream datastream;
+    public DatastreamData datastream;
 
     @JsonProperty("type")
     public List<String> userTypes;

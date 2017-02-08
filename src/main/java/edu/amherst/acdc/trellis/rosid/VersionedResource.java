@@ -15,26 +15,17 @@
  */
 package edu.amherst.acdc.trellis.rosid;
 
-import static java.lang.String.join;
-import static java.lang.System.lineSeparator;
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.nio.file.Files.newBufferedWriter;
-import static java.nio.file.StandardOpenOption.APPEND;
 import static edu.amherst.acdc.trellis.rosid.Constants.RESOURCE_JOURNAL;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.io.Writer;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.stream.Stream;
 
 import edu.amherst.acdc.trellis.api.MementoLink;
-import edu.amherst.acdc.trellis.vocabulary.DC;
 import edu.amherst.acdc.trellis.vocabulary.XSD;
 import org.apache.commons.rdf.api.IRI;
+import org.apache.commons.rdf.api.Literal;
 import org.apache.commons.rdf.api.Triple;
 
 /**
@@ -51,9 +42,7 @@ class VersionedResource extends AbstractFileResource {
      */
     public VersionedResource(final File directory, final IRI identifier) {
         super(directory, identifier);
-
-        // TODO -- read from journal to set this.data
-
+        this.data = read(directory);
     }
 
     /**
@@ -67,30 +56,21 @@ class VersionedResource extends AbstractFileResource {
     public static void write(final File directory, final Stream<String> statements, final IRI identifier,
             final Instant time, final IRI agent) {
         final File journal = new File(directory, RESOURCE_JOURNAL);
-        try (final BufferedWriter writer = newBufferedWriter(journal.toPath(), UTF_8, APPEND)) {
-            final String created = join(" ", identifier.ntriplesString(), DC.created.ntriplesString(),
-                    rdf.createLiteral(time.toString(), XSD.dateTime).ntriplesString(), ".");
-            final String creator = join(" ", identifier.ntriplesString(), DC.creator.ntriplesString(),
-                    agent.ntriplesString(), ".");
-
-            writer.write("BEGIN # " + created + lineSeparator());
-            writer.write("# " + creator + lineSeparator());
-            statements.forEach(statement -> {
-                uncheckedWrite(writer, statement + lineSeparator());
-            });
-            writer.write("END # " + created + lineSeparator());
-        } catch (final IOException ex) {
-            throw new UncheckedIOException(ex);
-        }
+        final Literal literal = rdf.createLiteral(time.toString(), XSD.dateTime);
+        RDFPatch.write(journal, statements, identifier, literal, agent);
     }
 
     private static ResourceData read(final File directory, final Instant time) {
+        // TODO -- populate rd with triple data
         final ResourceData rd = new ResourceData();
+        final Stream<Triple> triples = RDFPatch.read(new File(directory, RESOURCE_JOURNAL));
         return rd;
     }
 
     private static ResourceData read(final File directory) {
+        // TODO -- populate rd with triple data
         final ResourceData rd = new ResourceData();
+        final Stream<Triple> triples = RDFPatch.read(new File(directory, RESOURCE_JOURNAL));
         return rd;
     }
 
@@ -136,13 +116,4 @@ class VersionedResource extends AbstractFileResource {
         // TODO -- read from data storage
         return Stream.empty();
     }
-
-    private static void uncheckedWrite(final Writer writer, final String string) {
-        try {
-            writer.write(string);
-        } catch (final IOException ex) {
-            throw new UncheckedIOException(ex);
-        }
-    }
-
 }

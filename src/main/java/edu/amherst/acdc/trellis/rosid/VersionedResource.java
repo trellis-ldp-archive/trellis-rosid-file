@@ -27,11 +27,13 @@ import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.io.Writer;
+import java.time.Instant;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.stream.Stream;
 
 import edu.amherst.acdc.trellis.api.MementoLink;
+import edu.amherst.acdc.trellis.vocabulary.DC;
+import edu.amherst.acdc.trellis.vocabulary.XSD;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Triple;
 
@@ -51,38 +53,45 @@ class VersionedResource extends AbstractFileResource {
         super(directory, identifier);
 
         // TODO -- read from journal to set this.data
-    }
 
-    private static Function<Triple, String> ntriplesString = triple ->
-        join(" ", triple.getSubject().ntriplesString(), triple.getPredicate().ntriplesString(),
-                triple.getObject().ntriplesString(), ".");
-
-    private static void uncheckedWrite(final Writer writer, final String string) {
-        try {
-            writer.write(string);
-        } catch (final IOException ex) {
-            throw new UncheckedIOException(ex);
-        }
     }
 
     /**
      * Write new triples to a journaled resource file
      * @param directory the directory
-     * @param add the triples to add
-     * @param remove the triples to remove
+     * @param statements the RDF-Patch statements
+     * @param identifier the identifier
+     * @param time the time
+     * @param agent the agent
      */
-    public static void write(final File directory, final Stream<Triple> add, final Stream<Triple> remove) {
+    public static void write(final File directory, final Stream<String> statements, final IRI identifier,
+            final Instant time, final IRI agent) {
         final File journal = new File(directory, RESOURCE_JOURNAL);
         try (final BufferedWriter writer = newBufferedWriter(journal.toPath(), UTF_8, APPEND)) {
-            remove.map(ntriplesString).forEach(ntriple -> {
-                uncheckedWrite(writer, join(" ", "D", ntriple, lineSeparator()));
+            final String created = join(" ", identifier.ntriplesString(), DC.created.ntriplesString(),
+                    rdf.createLiteral(time.toString(), XSD.dateTime).ntriplesString(), ".");
+            final String creator = join(" ", identifier.ntriplesString(), DC.creator.ntriplesString(),
+                    agent.ntriplesString(), ".");
+
+            writer.write("BEGIN # " + created + lineSeparator());
+            writer.write("# " + creator + lineSeparator());
+            statements.forEach(statement -> {
+                uncheckedWrite(writer, statement + lineSeparator());
             });
-            add.map(ntriplesString).forEach(ntriple -> {
-                uncheckedWrite(writer, join(" ", "A", ntriple, lineSeparator()));
-            });
+            writer.write("END # " + created + lineSeparator());
         } catch (final IOException ex) {
             throw new UncheckedIOException(ex);
         }
+    }
+
+    private static ResourceData read(final File directory, final Instant time) {
+        final ResourceData rd = new ResourceData();
+        return rd;
+    }
+
+    private static ResourceData read(final File directory) {
+        final ResourceData rd = new ResourceData();
+        return rd;
     }
 
     @Override
@@ -127,4 +136,13 @@ class VersionedResource extends AbstractFileResource {
         // TODO -- read from data storage
         return Stream.empty();
     }
+
+    private static void uncheckedWrite(final Writer writer, final String string) {
+        try {
+            writer.write(string);
+        } catch (final IOException ex) {
+            throw new UncheckedIOException(ex);
+        }
+    }
+
 }

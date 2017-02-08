@@ -29,7 +29,8 @@ ext {
     /* Dependencies */
     trellisApiVersion = '0.1.0-SNAPSHOT'
     trellisSpiVersion = '0.1.0-SNAPSHOT'
-    commonsCodec = '1.10'
+    commonsCodecVersion = '1.10'
+    commonsIoVersion = '2.5'
     commonsRdfVersion = '0.3.0-incubating'
     jacksonVersion = '2.8.5'
     zookeeperVersion = '3.4.9'
@@ -59,7 +60,8 @@ dependencies {
     compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: jacksonVersion
     compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: jacksonVersion
     compile group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jsr310', version: jacksonVersion
-    compile group: 'commons-codec', name: 'commons-codec', version: commonsCodec
+    compile group: 'commons-codec', name: 'commons-codec', version: commonsCodecVersion
+    compile group: 'commons-io', name: 'commons-io', version: commonsIoVersion
     compile group: 'org.apache.commons', name: 'commons-rdf-api', version: commonsRdfVersion
     compile group: 'org.apache.commons', name: 'commons-rdf-jena', version: commonsRdfVersion
 

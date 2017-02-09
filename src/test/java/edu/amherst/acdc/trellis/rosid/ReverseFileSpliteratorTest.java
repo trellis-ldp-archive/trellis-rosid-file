@@ -17,6 +17,7 @@ package edu.amherst.acdc.trellis.rosid;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static java.time.Instant.parse;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.StreamSupport.stream;
 
@@ -46,5 +47,20 @@ public class ReverseFileSpliteratorTest {
         assertEquals("3", data.get(7));
         assertEquals("2", data.get(8));
         assertEquals("1", data.get(9));
+    }
+
+    @Test
+    public void testReadBackwards2() throws Exception {
+
+        final File file = new File(getClass().getResource("/file2.txt").toURI());
+        final List<String> data = stream(new ReverseFileSpliterator(file, parse("2017-02-09T09:23:15Z")), false)
+            .collect(toList());
+
+        assertTrue(data.size() == 5);
+        assertEquals("5", data.get(0));
+        assertEquals("4", data.get(1));
+        assertEquals("3", data.get(2));
+        assertEquals("2", data.get(3));
+        assertEquals("1", data.get(4));
     }
 }

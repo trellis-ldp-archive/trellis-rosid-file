@@ -21,6 +21,10 @@ package edu.amherst.acdc.trellis.rosid;
 class Constants {
     public static final String PREFIX = "info:trellis/";
 
+    public static final String AUDIT_CACHE = "audit.cache";
+
+    public static final String AUDIT_JOURNAL = "audit.journal";
+
     public static final String RESOURCE_CACHE = "resource.json";
 
     public static final String RESOURCE_JOURNAL = "resource.journal";

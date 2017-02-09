@@ -73,11 +73,8 @@ class RDFPatch {
         try (final BufferedWriter writer = newBufferedWriter(file.toPath(), UTF_8, APPEND)) {
             final String created = join(" ", identifier.ntriplesString(), DC.created.ntriplesString(),
                     time.ntriplesString(), ".");
-            final String creator = join(" ", identifier.ntriplesString(), DC.creator.ntriplesString(),
-                    agent.ntriplesString(), ".");
 
             writer.write("BEGIN # " + created + lineSeparator());
-            writer.write("# " + creator + lineSeparator());
             statements.forEach(statement -> {
                 uncheckedWrite(writer, statement + lineSeparator());
             });

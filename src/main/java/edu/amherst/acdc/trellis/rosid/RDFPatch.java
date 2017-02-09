@@ -50,7 +50,6 @@ class RDFPatch {
         return Stream.empty();
     }
 
-
     /**
      * Read the triples from the journal for the current state of the resource
      * @param file the file

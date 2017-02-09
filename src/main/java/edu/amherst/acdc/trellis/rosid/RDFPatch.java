@@ -15,11 +15,12 @@
  */
 package edu.amherst.acdc.trellis.rosid;
 
-import static java.lang.String.join;
 import static java.lang.System.lineSeparator;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.Files.newBufferedWriter;
 import static java.nio.file.StandardOpenOption.APPEND;
+import static java.time.Instant.now;
+import static java.util.stream.StreamSupport.stream;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -28,11 +29,6 @@ import java.io.UncheckedIOException;
 import java.io.Writer;
 import java.time.Instant;
 import java.util.stream.Stream;
-
-import edu.amherst.acdc.trellis.vocabulary.DC;
-import org.apache.commons.rdf.api.IRI;
-import org.apache.commons.rdf.api.Literal;
-import org.apache.commons.rdf.api.Triple;
 
 /**
  * @author acoburn
@@ -43,42 +39,34 @@ class RDFPatch {
      * Read the triples from the journal that existed up to (and including) the specified time
      * @param file the file
      * @param time the time
-     * @return a stream of RDF Triples
+     * @return a stream of RDF Patch statements
      */
-    public static Stream<Triple> read(final File file, final Instant time) {
-        // TODO
-        return Stream.empty();
+    public static Stream<String> read(final File file, final Instant time) {
+        return stream(new ReverseFileSpliterator(file, time), false);
     }
 
     /**
      * Read the triples from the journal for the current state of the resource
      * @param file the file
-     * @return a stream of RDF Triples
+     * @return a stream of RDF Patch statements
      */
-    public static Stream<Triple> read(final File file) {
-        // TODO
-        return Stream.empty();
+    public static Stream<String> read(final File file) {
+        return read(file, now());
     }
 
     /**
      * Write RDF Patch statements to the specified file
      * @param file the file
      * @param statements the statements
-     * @param identifier the identifier
      * @param time the time
-     * @param agent the agent
      */
-    public static void write(final File file, final Stream<String> statements, final IRI identifier,
-            final Literal time, final IRI agent) {
+    public static void write(final File file, final Stream<String> statements, final Instant time) {
         try (final BufferedWriter writer = newBufferedWriter(file.toPath(), UTF_8, APPEND)) {
-            final String created = join(" ", identifier.ntriplesString(), DC.created.ntriplesString(),
-                    time.ntriplesString(), ".");
-
-            writer.write("BEGIN # " + created + lineSeparator());
+            writer.write("BEGIN # " + time.toString() + lineSeparator());
             statements.forEach(statement -> {
                 uncheckedWrite(writer, statement + lineSeparator());
             });
-            writer.write("END # " + created + lineSeparator());
+            writer.write("END # " + time.toString() + lineSeparator());
         } catch (final IOException ex) {
             throw new UncheckedIOException(ex);
         }

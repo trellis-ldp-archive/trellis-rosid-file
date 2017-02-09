@@ -23,9 +23,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import edu.amherst.acdc.trellis.api.MementoLink;
-import edu.amherst.acdc.trellis.vocabulary.XSD;
 import org.apache.commons.rdf.api.IRI;
-import org.apache.commons.rdf.api.Literal;
 import org.apache.commons.rdf.api.Triple;
 
 /**
@@ -42,7 +40,7 @@ class VersionedResource extends AbstractFileResource {
      */
     public VersionedResource(final File directory, final IRI identifier) {
         super(directory, identifier);
-        this.data = read(directory);
+        this.data = read(directory, identifier);
     }
 
     /**
@@ -53,24 +51,24 @@ class VersionedResource extends AbstractFileResource {
      * @param time the time
      * @param agent the agent
      */
-    public static void write(final File directory, final Stream<String> statements, final IRI identifier,
-            final Instant time, final IRI agent) {
+    public static void write(final File directory, final Stream<String> statements, final Instant time) {
         final File journal = new File(directory, RESOURCE_JOURNAL);
-        final Literal literal = rdf.createLiteral(time.toString(), XSD.dateTime);
-        RDFPatch.write(journal, statements, identifier, literal, agent);
+        RDFPatch.write(journal, statements, time);
     }
 
-    private static ResourceData read(final File directory, final Instant time) {
+    private static ResourceData read(final File directory, final IRI identifier, final Instant time) {
         // TODO -- populate rd with triple data
         final ResourceData rd = new ResourceData();
-        final Stream<Triple> triples = RDFPatch.read(new File(directory, RESOURCE_JOURNAL));
+        final Stream<Triple> triples = RDFPatch.read(new File(directory, RESOURCE_JOURNAL))
+            .flatMap(readNTriple(identifier));
         return rd;
     }
 
-    private static ResourceData read(final File directory) {
+    private static ResourceData read(final File directory, final IRI identifier) {
         // TODO -- populate rd with triple data
         final ResourceData rd = new ResourceData();
-        final Stream<Triple> triples = RDFPatch.read(new File(directory, RESOURCE_JOURNAL));
+        final Stream<Triple> triples = RDFPatch.read(new File(directory, RESOURCE_JOURNAL))
+            .flatMap(readNTriple(identifier));
         return rd;
     }
 

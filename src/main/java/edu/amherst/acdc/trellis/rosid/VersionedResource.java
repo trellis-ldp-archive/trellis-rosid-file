@@ -15,15 +15,34 @@
  */
 package edu.amherst.acdc.trellis.rosid;
 
+import static java.time.Instant.now;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.mapping;
+import static java.util.stream.Collectors.partitioningBy;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Stream.empty;
 import static edu.amherst.acdc.trellis.rosid.Constants.RESOURCE_JOURNAL;
 
 import java.io.File;
 import java.time.Instant;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import edu.amherst.acdc.trellis.api.MementoLink;
+import edu.amherst.acdc.trellis.vocabulary.ACL;
+import edu.amherst.acdc.trellis.vocabulary.DC;
+import edu.amherst.acdc.trellis.vocabulary.LDP;
+import edu.amherst.acdc.trellis.vocabulary.RDF;
+import edu.amherst.acdc.trellis.vocabulary.Trellis;
+import org.apache.commons.rdf.api.Graph;
 import org.apache.commons.rdf.api.IRI;
+import org.apache.commons.rdf.api.RDFTerm;
 import org.apache.commons.rdf.api.Triple;
 
 /**
@@ -37,10 +56,20 @@ class VersionedResource extends AbstractFileResource {
      * Create a File-based versioned resource
      * @param directory the directory
      * @param identifier the resource identifier
+     * @param time the time
+     */
+    public VersionedResource(final File directory, final IRI identifier, final Instant time) {
+        super(directory, identifier);
+        this.data = read(directory, identifier, time);
+    }
+
+    /**
+     * Create a File-based versioned resource
+     * @param directory the directory
+     * @param identifier the resource identifier
      */
     public VersionedResource(final File directory, final IRI identifier) {
-        super(directory, identifier);
-        this.data = read(directory, identifier);
+        this(directory, identifier, now());
     }
 
     /**
@@ -56,20 +85,53 @@ class VersionedResource extends AbstractFileResource {
         RDFPatch.write(journal, statements, time);
     }
 
-    private static ResourceData read(final File directory, final IRI identifier, final Instant time) {
-        // TODO -- populate rd with triple data
+    public static ResourceData read(final File directory, final IRI identifier, final Instant time) {
+        final Graph graph = rdf.createGraph();
+        RDFPatch.read(new File(directory, RESOURCE_JOURNAL), time)
+                .flatMap(readNTriple(identifier)).forEach(graph::add);
+
+        final Map<IRI, List<RDFTerm>> data = graph.stream(identifier, null, null)
+            .collect(groupingBy(Triple::getPredicate, mapping(Triple::getObject, toList())));
+
+        final Map<Boolean, List<String>> types = getStringStream(data.getOrDefault(RDF.type,
+                    singletonList(LDP.Resource))).collect(partitioningBy(str -> str.startsWith(LDP.uri)));
+
         final ResourceData rd = new ResourceData();
-        final Stream<Triple> triples = RDFPatch.read(new File(directory, RESOURCE_JOURNAL))
-            .flatMap(readNTriple(identifier));
+        rd.id = identifier.getIRIString();
+        rd.containedBy = getFirstAsString(data.get(Trellis.containedBy));
+        rd.ldpType = types.get(true).get(0);
+        rd.userTypes = types.get(false);
+        rd.accessControl = getFirstAsString(data.get(ACL.accessControl));
+        rd.inbox = getFirstAsString(data.get(LDP.inbox));
+        rd.membershipResource = getFirstAsString(data.get(LDP.membershipResource));
+        rd.hasMemberRelation = getFirstAsString(data.get(LDP.hasMemberRelation));
+        rd.isMemberOfRelation = getFirstAsString(data.get(LDP.isMemberOfRelation));
+        rd.insertedContentRelation = getFirstAsString(data.get(LDP.insertedContentRelation));
+        rd.creator = getFirstAsString(data.get(DC.creator));
+        // TODO -- populate rd with triple data
+        //rd.created; // Instant
+        //rd.modified; // Instant
+        //rd.datastream;
         return rd;
     }
 
+    private static String getFirstAsString(final List<RDFTerm> list) {
+        return getStringStream(list).findFirst().orElse(null);
+    }
+
+    private static Stream<String> getStringStream(final List<RDFTerm> list) {
+        return ofNullable(list).orElse(emptyList()).stream().flatMap(uriTermToString);
+    }
+
+    private static Function<RDFTerm, Stream<String>> uriTermToString = term -> {
+        if (term instanceof IRI) {
+            return Stream.of(((IRI) term).getIRIString());
+        }
+        return empty();
+    };
+
     private static ResourceData read(final File directory, final IRI identifier) {
-        // TODO -- populate rd with triple data
-        final ResourceData rd = new ResourceData();
-        final Stream<Triple> triples = RDFPatch.read(new File(directory, RESOURCE_JOURNAL))
-            .flatMap(readNTriple(identifier));
-        return rd;
+        return read(directory, identifier, now());
     }
 
     @Override
@@ -97,21 +159,25 @@ class VersionedResource extends AbstractFileResource {
 
     protected Stream<Triple> getMembershipTriples() {
         // TODO -- read from data storage
+        // visibility?
         return Stream.empty();
     }
 
     protected Stream<Triple> getInboundTriples() {
         // TODO -- read from data storage
+        // visibility?
         return Stream.empty();
     }
 
     protected Stream<Triple> getUserTriples() {
         // TODO -- read from data storage
+        // visibility?
         return Stream.empty();
     }
 
     protected Stream<Triple> getAuditTriples() {
         // TODO -- read from data storage
+        // visibility?
         return Stream.empty();
     }
 }

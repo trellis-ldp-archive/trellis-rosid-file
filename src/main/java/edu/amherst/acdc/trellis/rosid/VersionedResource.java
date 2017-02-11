@@ -81,8 +81,9 @@ class VersionedResource extends AbstractFileResource {
      * @param agent the agent
      */
     public static void write(final File directory, final Stream<String> statements, final Instant time) {
+        // TODO -- rework this
         final File journal = new File(directory, RESOURCE_JOURNAL);
-        RDFPatch.write(journal, statements, time);
+        //RDFPatch.write(journal, statements, time);
     }
 
     public static ResourceData read(final File directory, final IRI identifier, final Instant time) {

@@ -15,6 +15,7 @@
  */
 package edu.amherst.acdc.trellis.rosid;
 
+import static java.lang.String.join;
 import static java.lang.System.lineSeparator;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.Files.newBufferedWriter;
@@ -29,6 +30,8 @@ import java.io.UncheckedIOException;
 import java.io.Writer;
 import java.time.Instant;
 import java.util.stream.Stream;
+
+import org.apache.commons.rdf.api.Triple;
 
 /**
  * @author acoburn
@@ -55,16 +58,59 @@ class RDFPatch {
     }
 
     /**
-     * Write RDF Patch statements to the specified file
+     * Replace RDF Patch statements to the specified file
      * @param file the file
-     * @param statements the statements
+     * @param triples the triples
      * @param time the time
      */
-    public static void write(final File file, final Stream<String> statements, final Instant time) {
+    public static void replace(final File file, final Stream<Triple> triples, final Instant time) {
         try (final BufferedWriter writer = newBufferedWriter(file.toPath(), UTF_8, APPEND)) {
             writer.write("BEGIN # " + time.toString() + lineSeparator());
-            statements.forEach(statement -> {
-                uncheckedWrite(writer, statement + lineSeparator());
+            writer.write("D ANY ANY ANY ." + lineSeparator());
+            triples.forEach(triple -> {
+                uncheckedWrite(writer, join(" ", "A", triple.getSubject().ntriplesString(),
+                            triple.getPredicate().ntriplesString(), triple.getObject().ntriplesString(), ".") +
+                        lineSeparator());
+            });
+            writer.write("END # " + time.toString() + lineSeparator());
+        } catch (final IOException ex) {
+            throw new UncheckedIOException(ex);
+        }
+    }
+
+    /**
+     * Delete RDF Patch statements from the specified file
+     * @param file the file
+     * @param triples the triples
+     * @param time the time
+     */
+    public static void delete(final File file, final Stream<Triple> triples, final Instant time) {
+        try (final BufferedWriter writer = newBufferedWriter(file.toPath(), UTF_8, APPEND)) {
+            writer.write("BEGIN # " + time.toString() + lineSeparator());
+            triples.forEach(triple -> {
+                uncheckedWrite(writer, join(" ", "D", triple.getSubject().ntriplesString(),
+                            triple.getPredicate().ntriplesString(), triple.getObject().ntriplesString(), ".") +
+                        lineSeparator());
+            });
+            writer.write("END # " + time.toString() + lineSeparator());
+        } catch (final IOException ex) {
+            throw new UncheckedIOException(ex);
+        }
+    }
+
+    /**
+     * Add RDF Patch statements to the specified file
+     * @param file the file
+     * @param triples the triples
+     * @param time the time
+     */
+    public static void add(final File file, final Stream<Triple> triples, final Instant time) {
+        try (final BufferedWriter writer = newBufferedWriter(file.toPath(), UTF_8, APPEND)) {
+            writer.write("BEGIN # " + time.toString() + lineSeparator());
+            triples.forEach(triple -> {
+                uncheckedWrite(writer, join(" ", "A", triple.getSubject().ntriplesString(),
+                            triple.getPredicate().ntriplesString(), triple.getObject().ntriplesString(), ".") +
+                        lineSeparator());
             });
             writer.write("END # " + time.toString() + lineSeparator());
         } catch (final IOException ex) {

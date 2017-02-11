@@ -33,9 +33,9 @@ import org.apache.commons.rdf.api.IRI;
 import org.slf4j.Logger;
 
 import edu.amherst.acdc.trellis.api.Resource;
-import edu.amherst.acdc.trellis.api.RuntimeRepositoryException;
 import edu.amherst.acdc.trellis.spi.EventService;
 import edu.amherst.acdc.trellis.spi.ResourceService;
+import edu.amherst.acdc.trellis.spi.RuntimeRepositoryException;
 import edu.amherst.acdc.trellis.spi.Session;
 
 /**

@@ -1,0 +1,19 @@
+BEGIN # 2017-01-15T09:14:00Z
+D ANY ANY ANY .
+A <info:trellis/resource> <http://purl.org/dc/terms/title> "Some title"@en .
+A <info:trellis/resource> <http://purl.org/dc/terms/description> "A longer description"@en .
+A <info:trellis/resource> <http://purl.org/dc/terms/subject> <http://example.org/subject/foo> .
+A <info:trellis/resource> <http://purl.org/dc/terms/subject> <http://example.org/subject/bar> .
+END # 2017-01-15T09:14:00Z
+BEGIN # 2017-01-27T12:35:00Z
+A <info:trellis/resource> <http://purl.org/dc/terms/spatial> <http://example.org/location/foo> .
+A <info:trellis/resource> <http://purl.org/dc/terms/extent> "27 Hectares" .
+END # 2017-01-27T12:35:00Z
+BEGIN # 2017-02-02T05:20:00Z
+D ANY ANY ANY .
+A <info:trellis/resource> <http://www.w3.org/2004/02/skos/core#prefLabel> "A resource"@en .
+A <info:trellis/resource> <http://purl.org/dc/terms/isPartOf> <info:trellis/collection> .
+END # 2017-02-02T05:20:00Z
+BEGIN # 2017-02-10T15:12:00Z
+D <info:trellis/resource> <http://purl.org/dc/terms/isPartOf> <info:trellis/collection> .
+END # 2017-02-10T15:12:00Z

@@ -23,20 +23,13 @@ import static edu.amherst.acdc.trellis.api.Resource.TripleContext.LDP_CONTAINMEN
 import static edu.amherst.acdc.trellis.api.Resource.TripleContext.LDP_MEMBERSHIP;
 import static edu.amherst.acdc.trellis.api.Resource.TripleContext.TRELLIS_AUDIT;
 import static edu.amherst.acdc.trellis.api.Resource.TripleContext.USER_MANAGED;
-import static org.apache.jena.riot.Lang.NTRIPLES;
-import static org.apache.commons.rdf.jena.JenaRDF.asTriple;
-import static org.apache.jena.riot.system.StreamRDFLib.sinkTriples;
 
 import java.io.File;
-import java.io.StringReader;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -47,9 +40,6 @@ import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.RDF;
 import org.apache.commons.rdf.api.Triple;
 import org.apache.commons.rdf.jena.JenaRDF;
-import org.apache.jena.atlas.lib.SinkToCollection;
-import org.apache.jena.riot.RDFParserRegistry;
-import org.apache.jena.riot.ReaderRIOT;
 
 /**
  * An object to mediate access to a file-based resource representation
@@ -58,7 +48,6 @@ import org.apache.jena.riot.ReaderRIOT;
 abstract class AbstractFileResource implements Resource {
 
     protected static final RDF rdf = new JenaRDF();
-    protected static final ReaderRIOT READER = RDFParserRegistry.getFactory(NTRIPLES).create(NTRIPLES);
 
     protected final IRI identifier;
     protected final File directory;
@@ -175,12 +164,4 @@ abstract class AbstractFileResource implements Resource {
 
     protected abstract Stream<Triple> getAuditTriples();
 
-    protected static Function<String, Stream<Triple>> readNTriple(final IRI identifier) {
-        return line -> {
-            final List<org.apache.jena.graph.Triple> c = new ArrayList<>();
-            READER.read(new StringReader(line), identifier.getIRIString(), NTRIPLES.getContentType(),
-                    sinkTriples(new SinkToCollection<>(c)), null);
-            return c.stream().map(triple -> asTriple(rdf, triple));
-        };
-    }
 }

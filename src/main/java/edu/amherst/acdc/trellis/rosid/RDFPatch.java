@@ -31,6 +31,7 @@ import java.io.Writer;
 import java.time.Instant;
 import java.util.stream.Stream;
 
+import org.apache.commons.rdf.api.RDF;
 import org.apache.commons.rdf.api.Triple;
 
 /**
@@ -44,8 +45,8 @@ class RDFPatch {
      * @param time the time
      * @return a stream of RDF Patch statements
      */
-    public static Stream<String> read(final File file, final Instant time) {
-        return stream(new ReverseFileSpliterator(file, time), false);
+    public static Stream<Triple> read(final RDF rdf, final File file, final Instant time) {
+        return stream(new RDFPatchStream(rdf, file, time), false);
     }
 
     /**
@@ -53,8 +54,8 @@ class RDFPatch {
      * @param file the file
      * @return a stream of RDF Patch statements
      */
-    public static Stream<String> read(final File file) {
-        return read(file, now());
+    public static Stream<Triple> read(final RDF rdf, final File file) {
+        return read(rdf, file, now());
     }
 
     /**

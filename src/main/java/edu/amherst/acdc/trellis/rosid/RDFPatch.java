@@ -31,6 +31,7 @@ import java.io.Writer;
 import java.time.Instant;
 import java.util.stream.Stream;
 
+import org.apache.commons.rdf.api.Graph;
 import org.apache.commons.rdf.api.RDF;
 import org.apache.commons.rdf.api.Triple;
 
@@ -45,8 +46,8 @@ class RDFPatch {
      * @param time the time
      * @return a stream of RDF Patch statements
      */
-    public static Stream<Triple> read(final RDF rdf, final File file, final Instant time) {
-        return stream(new RDFPatchStream(rdf, file, time), false);
+    public static Stream<Triple> asStream(final RDF rdf, final File file, final Instant time) {
+        return stream(new RDFPatchStreamReader(rdf, file, time), false);
     }
 
     /**
@@ -54,8 +55,17 @@ class RDFPatch {
      * @param file the file
      * @return a stream of RDF Patch statements
      */
-    public static Stream<Triple> read(final RDF rdf, final File file) {
-        return read(rdf, file, now());
+    public static Stream<Triple> asStream(final RDF rdf, final File file) {
+        return asStream(rdf, file, now());
+    }
+
+    public static Graph asGraph(final RDF rdf, final File file) {
+        return asGraph(rdf, file, now());
+    }
+
+    public static Graph asGraph(final RDF rdf, final File file, final Instant time) {
+        final RDFPatchGraphReader reader = new RDFPatchGraphReader(rdf, file, time);
+        return reader.getGraph();
     }
 
     /**

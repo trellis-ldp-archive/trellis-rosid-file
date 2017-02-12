@@ -88,7 +88,7 @@ class VersionedResource extends AbstractFileResource {
 
     public static ResourceData read(final File directory, final IRI identifier, final Instant time) {
         final Graph graph = rdf.createGraph();
-        RDFPatch.read(rdf, new File(directory, RESOURCE_JOURNAL), time).forEach(graph::add);
+        RDFPatch.asStream(rdf, new File(directory, RESOURCE_JOURNAL), time).forEach(graph::add);
 
         final Map<IRI, List<RDFTerm>> data = graph.stream(identifier, null, null)
             .collect(groupingBy(Triple::getPredicate, mapping(Triple::getObject, toList())));

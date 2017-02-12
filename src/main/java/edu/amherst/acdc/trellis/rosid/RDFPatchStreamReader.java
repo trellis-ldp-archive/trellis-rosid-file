@@ -44,13 +44,12 @@ import org.apache.jena.atlas.lib.SinkToCollection;
 import org.apache.jena.riot.RDFParserRegistry;
 import org.apache.jena.riot.ReaderRIOT;
 
-
 /**
  * A spliterator class that allows reading files line-by-line in reverse
  *
  * @author acoburn
  */
-class RDFPatchStream implements Spliterator<Triple> {
+class RDFPatchStreamReader implements Spliterator<Triple> {
 
     protected static final ReaderRIOT READER = RDFParserRegistry.getFactory(NTRIPLES).create(NTRIPLES);
 
@@ -65,7 +64,7 @@ class RDFPatchStream implements Spliterator<Triple> {
      * Create a spliterator that reads a file line-by-line in reverse
      * @param file the file
      */
-    public RDFPatchStream(final RDF rdf, final File file) {
+    public RDFPatchStreamReader(final RDF rdf, final File file) {
         this(rdf, file, now());
     }
 
@@ -73,7 +72,7 @@ class RDFPatchStream implements Spliterator<Triple> {
      * Create a spliterator that reads a file line-by-line in reverse
      * @param file the file
      */
-    public RDFPatchStream(final RDF rdf, final File file, final Instant time) {
+    public RDFPatchStreamReader(final RDF rdf, final File file, final Instant time) {
         this.rdf = rdf;
         this.time = time;
         try {
@@ -150,6 +149,7 @@ class RDFPatchStream implements Spliterator<Triple> {
         return ORDERED | NONNULL | IMMUTABLE;
     }
 
+    // TODO move this to a static utility method (see RDFPatchGraphReader)
     private Triple stringToTriple(final String line) {
         final List<org.apache.jena.graph.Triple> c = new ArrayList<>();
         READER.read(new StringReader(line), null, NTRIPLES.getContentType(),

@@ -36,9 +36,15 @@ import java.io.UncheckedIOException;
 import java.io.Writer;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.Iterator;
+import java.util.Spliterator;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
+
+import org.apache.commons.io.input.ReversedLinesFileReader;
 
 import org.apache.commons.rdf.api.Graph;
 import org.apache.commons.rdf.api.RDF;
@@ -54,6 +60,7 @@ class RDFPatch {
 
     private static final ReaderRIOT READER = RDFParserRegistry.getFactory(NTRIPLES).create(NTRIPLES);
 
+
     /**
      * Read the triples from the journal that existed up to (and including) the specified time
      * @param file the file
@@ -61,7 +68,7 @@ class RDFPatch {
      * @return a stream of RDF Patch statements
      */
     public static Stream<Triple> asStream(final RDF rdf, final File file, final Instant time) {
-        return stream(new RDFPatchStreamReader(rdf, file, time), false);
+        return stream(new StreamReader(rdf, file, time), false);
     }
 
     /**
@@ -177,6 +184,114 @@ class RDFPatch {
         return asTriple(rdf, c.get(0));
     }
 
+    private static class StreamReader implements Spliterator<Triple> {
+
+        protected static final ReaderRIOT READER = RDFParserRegistry.getFactory(NTRIPLES).create(NTRIPLES);
+
+        private final Set<Triple> deleted = new HashSet<>();
+        private final ReversedLinesFileReader reader;
+        private final Instant time;
+        private final RDF rdf;
+
+        private Boolean inRegion = false;
+
+        /**
+         * Create a spliterator that reads a file line-by-line in reverse
+         * @param file the file
+         */
+        public StreamReader(final RDF rdf, final File file) {
+            this(rdf, file, now());
+        }
+
+        /**
+         * Create a spliterator that reads a file line-by-line in reverse
+         * @param file the file
+         */
+        public StreamReader(final RDF rdf, final File file, final Instant time) {
+            this.rdf = rdf;
+            this.time = time;
+            try {
+                this.reader = new ReversedLinesFileReader(file, UTF_8);
+            } catch (final IOException ex) {
+                throw new UncheckedIOException(ex);
+            }
+        }
+
+        @Override
+        public void forEachRemaining(final Consumer<? super Triple> action) {
+            try {
+                for (String line = reader.readLine(); line != null; line = reader.readLine()) {
+                    if (line.startsWith("D ANY ANY ANY") && inRegion) {
+                        break;
+                    } else if (line.startsWith("END # ")) {
+                        final String[] parts = line.split(" # ", 2);
+                        if (!time.isBefore(parse(parts[1]))) {
+                            inRegion = true;
+                        }
+                    } else if (inRegion && (line.startsWith("A ") || line.startsWith("D "))) {
+                        final String[] parts = line.split(" ", 2);
+                        final Triple triple = stringToTriple(parts[1]);
+                        if (parts[0].equals("D")) {
+                            deleted.add(triple);
+                        } else if (parts[0].equals("A") && !deleted.contains(triple)) {
+                            action.accept((Triple) triple);
+                        }
+                    }
+                }
+            } catch (final IOException ex) {
+                throw new UncheckedIOException(ex);
+            }
+        }
+
+        @Override
+        public boolean tryAdvance(final Consumer<? super Triple> action) {
+            try {
+                final String line = reader.readLine();
+                if (line != null && !(line.startsWith("D ANY ANY ANY") && inRegion)) {
+                    if (line.startsWith("END ")) {
+                        final String[] parts = line.split(" # ", 2);
+                        if (parts.length == 2 && !time.isBefore(parse(parts[1]))) {
+                            inRegion = true;
+                        }
+                    } else if (inRegion && (line.startsWith("A ") || line.startsWith("D "))) {
+                        final String[] parts = line.split(" ", 2);
+                        final Triple triple = stringToTriple(parts[1]);
+                        if (parts[0].equals("D")) {
+                            deleted.add(triple);
+                        } else if (parts[0].equals("A") && !deleted.contains(triple)) {
+                            action.accept((Triple) triple);
+                        }
+                    }
+                }
+                return false;
+            } catch (final IOException ex) {
+                throw new UncheckedIOException(ex);
+            }
+        }
+
+        @Override
+        public Spliterator<Triple> trySplit() {
+            return null;
+        }
+
+        @Override
+        public long estimateSize() {
+            return Long.MAX_VALUE;
+        }
+
+        @Override
+        public int characteristics() {
+            return ORDERED | NONNULL | IMMUTABLE;
+        }
+
+        // TODO move this to a static utility method (see RDFPatchGraphReader)
+        private Triple stringToTriple(final String line) {
+            final List<org.apache.jena.graph.Triple> c = new ArrayList<>();
+            READER.read(new StringReader(line), null, NTRIPLES.getContentType(),
+                    sinkTriples(new SinkToCollection<>(c)), null);
+            return asTriple(rdf, c.get(0));
+        }
+    }
     private RDFPatch() {
         // prevent instantiation
     }

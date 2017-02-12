@@ -92,7 +92,7 @@ class RDFPatch {
                 if (line.startsWith("D ANY ANY ANY")) {
                     graph.clear();
                 } else if (line.startsWith("BEGIN # ")) {
-                    if (time.isAfter(parse(line.split(" # ", 2)[1]))) {
+                    if (time.isBefore(parse(line.split(" # ", 2)[1]))) {
                         break;
                     }
                 } else if (line.startsWith("A ")) {

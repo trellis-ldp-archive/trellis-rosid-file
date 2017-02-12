@@ -90,4 +90,53 @@ public class RDFPatchTest {
         assertTrue(graph.contains(identifier, DC.subject, null));
         assertEquals(2L, graph.stream(identifier, DC.subject, null).count());
     }
+
+    @Test
+    public void testStream5() throws Exception {
+        final File file = new File(getClass().getResource("/journal1.txt").toURI());
+        final Instant time = parse("2017-02-11T02:51:35Z");
+        final Graph graph = RDFPatch.asGraph(rdf, file, time);
+        assertEquals(1L, graph.size());
+        assertTrue(graph.contains(identifier, rdf.createIRI("http://www.w3.org/2004/02/skos/core#prefLabel"), null));
+    }
+
+    @Test
+    public void testStream6() throws Exception {
+        final File file = new File(getClass().getResource("/journal1.txt").toURI());
+        final Instant time = parse("2017-02-09T02:51:35Z");
+        final Graph graph = RDFPatch.asGraph(rdf, file, time);
+        assertEquals(2L, graph.size());
+        assertTrue(graph.contains(identifier, rdf.createIRI("http://www.w3.org/2004/02/skos/core#prefLabel"), null));
+        assertTrue(graph.contains(identifier, DC.isPartOf, null));
+    }
+
+    @Test
+    public void testStream7() throws Exception {
+        final File file = new File(getClass().getResource("/journal1.txt").toURI());
+        final Instant time = parse("2017-01-30T02:51:35Z");
+        final Graph graph = RDFPatch.asGraph(rdf, file, time);
+        assertEquals(6L, graph.size());
+        assertFalse(graph.contains(identifier, rdf.createIRI("http://www.w3.org/2004/02/skos/core#prefLabel"), null));
+        assertTrue(graph.contains(identifier, DC.extent, null));
+        assertTrue(graph.contains(identifier, DC.spatial, null));
+        assertTrue(graph.contains(identifier, DC.title, null));
+        assertTrue(graph.contains(identifier, DC.description, null));
+        assertTrue(graph.contains(identifier, DC.subject, null));
+        assertEquals(2L, graph.stream(identifier, DC.subject, null).count());
+    }
+
+    @Test
+    public void testStream8() throws Exception {
+        final File file = new File(getClass().getResource("/journal1.txt").toURI());
+        final Instant time = parse("2017-01-15T09:14:00Z");
+        final Graph graph = RDFPatch.asGraph(rdf, file, time);
+        assertEquals(4L, graph.size());
+        assertFalse(graph.contains(identifier, rdf.createIRI("http://www.w3.org/2004/02/skos/core#prefLabel"), null));
+        assertFalse(graph.contains(identifier, DC.extent, null));
+        assertFalse(graph.contains(identifier, DC.spatial, null));
+        assertTrue(graph.contains(identifier, DC.title, null));
+        assertTrue(graph.contains(identifier, DC.description, null));
+        assertTrue(graph.contains(identifier, DC.subject, null));
+        assertEquals(2L, graph.stream(identifier, DC.subject, null).count());
+    }
 }

@@ -60,7 +60,6 @@ class RDFPatch {
 
     private static final ReaderRIOT READER = RDFParserRegistry.getFactory(NTRIPLES).create(NTRIPLES);
 
-
     /**
      * Read the triples from the journal that existed up to (and including) the specified time
      * @param file the file
@@ -186,8 +185,6 @@ class RDFPatch {
 
     private static class StreamReader implements Spliterator<Triple> {
 
-        protected static final ReaderRIOT READER = RDFParserRegistry.getFactory(NTRIPLES).create(NTRIPLES);
-
         private final Set<Triple> deleted = new HashSet<>();
         private final ReversedLinesFileReader reader;
         private final Instant time;
@@ -230,7 +227,7 @@ class RDFPatch {
                         }
                     } else if (inRegion && (line.startsWith("A ") || line.startsWith("D "))) {
                         final String[] parts = line.split(" ", 2);
-                        final Triple triple = stringToTriple(parts[1]);
+                        final Triple triple = stringToTriple(rdf, parts[1]);
                         if (parts[0].equals("D")) {
                             deleted.add(triple);
                         } else if (parts[0].equals("A") && !deleted.contains(triple)) {
@@ -255,7 +252,7 @@ class RDFPatch {
                         }
                     } else if (inRegion && (line.startsWith("A ") || line.startsWith("D "))) {
                         final String[] parts = line.split(" ", 2);
-                        final Triple triple = stringToTriple(parts[1]);
+                        final Triple triple = stringToTriple(rdf, parts[1]);
                         if (parts[0].equals("D")) {
                             deleted.add(triple);
                         } else if (parts[0].equals("A") && !deleted.contains(triple)) {
@@ -283,15 +280,8 @@ class RDFPatch {
         public int characteristics() {
             return ORDERED | NONNULL | IMMUTABLE;
         }
-
-        // TODO move this to a static utility method (see RDFPatchGraphReader)
-        private Triple stringToTriple(final String line) {
-            final List<org.apache.jena.graph.Triple> c = new ArrayList<>();
-            READER.read(new StringReader(line), null, NTRIPLES.getContentType(),
-                    sinkTriples(new SinkToCollection<>(c)), null);
-            return asTriple(rdf, c.get(0));
-        }
     }
+
     private RDFPatch() {
         // prevent instantiation
     }

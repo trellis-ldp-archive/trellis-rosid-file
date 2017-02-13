@@ -24,13 +24,18 @@ import static java.util.stream.Collectors.mapping;
 import static java.util.stream.Collectors.partitioningBy;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.empty;
+import static java.util.stream.Stream.of;
+import static edu.amherst.acdc.trellis.rosid.Constants.AUDIT_JOURNAL;
+import static edu.amherst.acdc.trellis.rosid.Constants.CONTAINMENT_JOURNAL;
+import static edu.amherst.acdc.trellis.rosid.Constants.INBOUND_JOURNAL;
+import static edu.amherst.acdc.trellis.rosid.Constants.MEMBERSHIP_JOURNAL;
 import static edu.amherst.acdc.trellis.rosid.Constants.RESOURCE_JOURNAL;
+import static edu.amherst.acdc.trellis.rosid.Constants.USER_JOURNAL;
 
 import java.io.File;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -52,6 +57,8 @@ import org.apache.commons.rdf.api.Triple;
  */
 class VersionedResource extends AbstractFileResource {
 
+    private final Instant time;
+
     /**
      * Create a File-based versioned resource
      * @param directory the directory
@@ -60,6 +67,7 @@ class VersionedResource extends AbstractFileResource {
      */
     public VersionedResource(final File directory, final IRI identifier, final Instant time) {
         super(directory, identifier);
+        this.time = time;
         this.data = read(directory, identifier, time);
     }
 
@@ -70,20 +78,6 @@ class VersionedResource extends AbstractFileResource {
      */
     public VersionedResource(final File directory, final IRI identifier) {
         this(directory, identifier, now());
-    }
-
-    /**
-     * Write new triples to a journaled resource file
-     * @param directory the directory
-     * @param statements the RDF-Patch statements
-     * @param identifier the identifier
-     * @param time the time
-     * @param agent the agent
-     */
-    public static void write(final File directory, final Stream<String> statements, final Instant time) {
-        // TODO -- rework this
-        final File journal = new File(directory, RESOURCE_JOURNAL);
-        //RDFPatch.write(journal, statements, time);
     }
 
     public static ResourceData read(final File directory, final IRI identifier, final Instant time) {
@@ -140,12 +134,6 @@ class VersionedResource extends AbstractFileResource {
     }
 
     @Override
-    public Optional<IRI> getTimeMap() {
-        // TODO -- getOriginal() + "?format=timemap"
-        return Optional.empty();
-    }
-
-    @Override
     public Stream<MementoLink> getMementos() {
         // TODO -- get from storage layer
         return Stream.empty();
@@ -153,31 +141,33 @@ class VersionedResource extends AbstractFileResource {
 
     @Override
     public Stream<IRI> getContains() {
-        // TODO -- read from the data storage
-        return Stream.empty();
+        return getContainmentTriples().map(Triple::getSubject).flatMap(subj -> {
+            if (subj instanceof IRI) {
+                return of((IRI) subj);
+            }
+            return empty();
+        });
     }
 
+    @Override
+    protected Stream<Triple> getContainmentTriples() {
+        return RDFPatch.asStream(rdf, new File(directory, CONTAINMENT_JOURNAL), time);
+    }
+
+
     protected Stream<Triple> getMembershipTriples() {
-        // TODO -- read from data storage
-        // visibility?
-        return Stream.empty();
+        return RDFPatch.asStream(rdf, new File(directory, MEMBERSHIP_JOURNAL), time);
     }
 
     protected Stream<Triple> getInboundTriples() {
-        // TODO -- read from data storage
-        // visibility?
-        return Stream.empty();
+        return RDFPatch.asStream(rdf, new File(directory, INBOUND_JOURNAL), time);
     }
 
     protected Stream<Triple> getUserTriples() {
-        // TODO -- read from data storage
-        // visibility?
-        return Stream.empty();
+        return RDFPatch.asStream(rdf, new File(directory, USER_JOURNAL), time);
     }
 
     protected Stream<Triple> getAuditTriples() {
-        // TODO -- read from data storage
-        // visibility?
-        return Stream.empty();
+        return RDFPatch.asStream(rdf, new File(directory, AUDIT_JOURNAL), time);
     }
 }

@@ -82,11 +82,6 @@ abstract class AbstractFileResource implements Resource {
     }
 
     @Override
-    public IRI getOriginal() {
-        return ofNullable(data.id).map(rdf::createIRI).orElse(identifier);
-    }
-
-    @Override
     public Optional<IRI> getContainedBy() {
         return ofNullable(data.containedBy).map(rdf::createIRI);
     }
@@ -152,9 +147,7 @@ abstract class AbstractFileResource implements Resource {
         return category.stream().filter(mapper::containsKey).map(mapper::get).flatMap(Supplier::get);
     }
 
-    protected Stream<Triple> getContainmentTriples() {
-        return getContains().map(uri -> rdf.createTriple(getIdentifier(), LDP.contains, uri));
-    }
+    protected abstract Stream<Triple> getContainmentTriples();
 
     protected abstract Stream<Triple> getMembershipTriples();
 

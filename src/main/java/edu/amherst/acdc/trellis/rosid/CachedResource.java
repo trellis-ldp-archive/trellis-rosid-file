@@ -36,13 +36,13 @@ import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import edu.amherst.acdc.trellis.api.MementoLink;
+import edu.amherst.acdc.trellis.vocabulary.LDP;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Triple;
 import org.apache.jena.atlas.lib.SinkToCollection;
@@ -89,12 +89,6 @@ class CachedResource extends AbstractFileResource {
     }
 
     @Override
-    public Optional<IRI> getTimeMap() {
-        // TODO -- getOriginal() + "?format=timemap"
-        return Optional.empty();
-    }
-
-    @Override
     public Stream<MementoLink> getMementos() {
         // TODO -- get from storage layer (memento_cache)
         return Stream.empty();
@@ -128,6 +122,11 @@ class CachedResource extends AbstractFileResource {
     protected Stream<Triple> getAuditTriples() {
         return of(new File(directory, AUDIT_CACHE)).filter(File::exists).map(File::toPath).map(uncheckedLines)
             .orElse(empty()).flatMap(readNTriple);
+    }
+
+    @Override
+    protected Stream<Triple> getContainmentTriples() {
+        return getContains().map(uri -> rdf.createTriple(getIdentifier(), LDP.contains, uri));
     }
 
     private Function<Path, Stream<String>> uncheckedLines = path -> {

@@ -18,6 +18,7 @@ package edu.amherst.acdc.trellis.rosid;
 import static java.time.Instant.now;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import static java.util.Objects.nonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.mapping;
@@ -36,6 +37,7 @@ import java.io.File;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -47,6 +49,7 @@ import edu.amherst.acdc.trellis.vocabulary.RDF;
 import edu.amherst.acdc.trellis.vocabulary.Trellis;
 import org.apache.commons.rdf.api.Graph;
 import org.apache.commons.rdf.api.IRI;
+import org.apache.commons.rdf.api.Literal;
 import org.apache.commons.rdf.api.RDFTerm;
 import org.apache.commons.rdf.api.Triple;
 
@@ -102,30 +105,28 @@ class VersionedResource extends AbstractFileResource {
         rd.isMemberOfRelation = getFirstAsString(data.get(LDP.isMemberOfRelation));
         rd.insertedContentRelation = getFirstAsString(data.get(LDP.insertedContentRelation));
         rd.creator = getFirstAsString(data.get(DC.creator));
-        // TODO -- populate rd with triple data
-        //rd.created; // Instant
-        //rd.modified; // Instant
-        //rd.datastream;
+        rd.created = getFirstAsInstant(data.get(DC.created));
+        rd.modified = getFirstAsInstant(data.get(DC.modified));
+
+        // Populate datastream, if present
+        graph.stream(identifier, DC.hasPart, null).map(Triple::getObject).findFirst().filter(id -> id instanceof IRI)
+            .map(id -> (IRI) id).ifPresent(id -> {
+                final Map<IRI, List<RDFTerm>> dsdata = graph.stream(id, null, null)
+                    .collect(groupingBy(Triple::getPredicate, mapping(Triple::getObject, toList())));
+                final Instant created = getFirstAsInstant(dsdata.get(DC.created));
+                final Instant modified = getFirstAsInstant(dsdata.get(DC.modified));
+
+                if (nonNull(created) && nonNull(modified)) {
+                    rd.datastream = new ResourceData.DatastreamData();
+                    rd.datastream.id = id.getIRIString();
+                    rd.datastream.created = created;
+                    rd.datastream.modified = modified;
+                    rd.datastream.format = getFirstAsString(dsdata.get(DC.format));
+                    rd.datastream.size = Long.parseLong(getFirstAsString(dsdata.get(DC.extent)));
+                }
+            });
+
         return rd;
-    }
-
-    private static String getFirstAsString(final List<RDFTerm> list) {
-        return getStringStream(list).findFirst().orElse(null);
-    }
-
-    private static Stream<String> getStringStream(final List<RDFTerm> list) {
-        return ofNullable(list).orElse(emptyList()).stream().flatMap(uriTermToString);
-    }
-
-    private static Function<RDFTerm, Stream<String>> uriTermToString = term -> {
-        if (term instanceof IRI) {
-            return Stream.of(((IRI) term).getIRIString());
-        }
-        return empty();
-    };
-
-    private static ResourceData read(final File directory, final IRI identifier) {
-        return read(directory, identifier, now());
     }
 
     @Override
@@ -155,20 +156,54 @@ class VersionedResource extends AbstractFileResource {
         return RDFPatch.asStream(rdf, new File(directory, CONTAINMENT_JOURNAL), time);
     }
 
-
+    @Override
     protected Stream<Triple> getMembershipTriples() {
         return RDFPatch.asStream(rdf, new File(directory, MEMBERSHIP_JOURNAL), time);
     }
 
+    @Override
     protected Stream<Triple> getInboundTriples() {
         return RDFPatch.asStream(rdf, new File(directory, INBOUND_JOURNAL), time);
     }
 
+    @Override
     protected Stream<Triple> getUserTriples() {
         return RDFPatch.asStream(rdf, new File(directory, USER_JOURNAL), time);
     }
 
+    @Override
     protected Stream<Triple> getAuditTriples() {
         return RDFPatch.asStream(rdf, new File(directory, AUDIT_JOURNAL), time);
+    }
+
+
+    private static String getFirstAsString(final List<RDFTerm> list) {
+        return getStringStream(list).findFirst().orElse(null);
+    }
+
+    private static Instant getFirstAsInstant(final List<RDFTerm> list) {
+        return ofNullable(list).orElse(emptyList()).stream().findFirst().flatMap(literalToInstant).orElse(null);
+    }
+
+    private static Stream<String> getStringStream(final List<RDFTerm> list) {
+        return ofNullable(list).orElse(emptyList()).stream().flatMap(uriTermToString);
+    }
+
+    private static Function<RDFTerm, Stream<String>> uriTermToString = term -> {
+        if (term instanceof IRI) {
+            return of((IRI) term).map(IRI::getIRIString);
+        }
+        return empty();
+    };
+
+    private static Function<RDFTerm, Optional<Instant>> literalToInstant = term -> {
+        if (term instanceof Literal) {
+            return ofNullable((Literal) term).map(Literal::getLexicalForm).map(Instant::parse);
+        }
+        return Optional.empty();
+    };
+
+    private static ResourceData read(final File directory, final IRI identifier) {
+        return read(directory, identifier, now());
     }
 }

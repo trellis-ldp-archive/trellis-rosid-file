@@ -45,7 +45,6 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import org.apache.commons.io.input.ReversedLinesFileReader;
-
 import org.apache.commons.rdf.api.Graph;
 import org.apache.commons.rdf.api.RDF;
 import org.apache.commons.rdf.api.Triple;
@@ -62,9 +61,10 @@ class RDFPatch {
 
     /**
      * Read the triples from the journal that existed up to (and including) the specified time
+     * @param rdf the rdf object
      * @param file the file
      * @param time the time
-     * @return a stream of RDF Patch statements
+     * @return a stream of RDF triples
      */
     public static Stream<Triple> asStream(final RDF rdf, final File file, final Instant time) {
         return stream(new StreamReader(rdf, file, time), false);
@@ -72,17 +72,31 @@ class RDFPatch {
 
     /**
      * Read the triples from the journal for the current state of the resource
+     * @param rdf the rdf object
      * @param file the file
-     * @return a stream of RDF Patch statements
+     * @return a stream of RDF triples
      */
     public static Stream<Triple> asStream(final RDF rdf, final File file) {
         return asStream(rdf, file, now());
     }
 
+    /**
+     * Read the triples from the journal for the current state of the resource
+     * @param rdf the rdf object
+     * @param file the file
+     * @return a graph of the RDF resource
+     */
     public static Graph asGraph(final RDF rdf, final File file) {
         return asGraph(rdf, file, now());
     }
 
+    /**
+     * Read the triples from the journal for the resource at a given point in time
+     * @param rdf the rdf object
+     * @param file the file
+     * @param time the time
+     * @return a graph of the RDF resource
+     */
     public static Graph asGraph(final RDF rdf, final File file, final Instant time) {
         final Graph graph = rdf.createGraph();
         try {
@@ -105,6 +119,15 @@ class RDFPatch {
             throw new UncheckedIOException(ex);
         }
         return graph;
+    }
+
+    /**
+     * Retrieve time values for the history of the resource
+     * @param file the file
+     * @return a stream of VersionRange objects
+     */
+    public static Stream<VersionRange> asTimeMap(final File file) {
+        return stream(new TimeMapReader(file), false);
     }
 
     /**
@@ -183,6 +206,71 @@ class RDFPatch {
         return asTriple(rdf, c.get(0));
     }
 
+    /**
+     * A class for reading an RDF Patch file into a VersionRange Spliterator
+     */
+    private static class TimeMapReader implements Spliterator<VersionRange> {
+        private final Iterator<String> dateLines;
+
+        private Instant from = null;
+
+        /**
+         * Create a time map reader
+         * @param rdf the rdf object
+         * @param identifier the identifier
+         * @param file the file
+         */
+        public TimeMapReader(final File file) {
+            try {
+                dateLines = lines(file.toPath()).filter(line -> line.startsWith("BEGIN # ")).iterator();
+            } catch (final IOException ex) {
+                throw new UncheckedIOException(ex);
+            }
+        }
+
+        @Override
+        public void forEachRemaining(final Consumer<? super VersionRange> action) {
+            while (dateLines.hasNext()) {
+                from = emit(action, dateLines.next());
+            }
+        }
+
+        @Override
+        public boolean tryAdvance(final Consumer<? super VersionRange> action) {
+            if (dateLines.hasNext()) {
+                from = emit(action, dateLines.next());
+                return true;
+            }
+            return false;
+        }
+
+        @Override
+        public Spliterator<VersionRange> trySplit() {
+            return null;
+        }
+
+        @Override
+        public long estimateSize() {
+            return Long.MAX_VALUE;
+        }
+
+        @Override
+        public int characteristics() {
+            return ORDERED | NONNULL | IMMUTABLE;
+        }
+
+        private Instant emit(final Consumer<? super VersionRange> action, final String line) {
+            final Instant time = parse(line.split(" # ")[1]);
+            if (from != null) {
+                action.accept(new VersionRange(from, time));
+            }
+            return time;
+        }
+    }
+
+    /**
+     * A class for reading an RDFPatch file into a Triple Spliterator.
+     */
     private static class StreamReader implements Spliterator<Triple> {
 
         private final Set<Triple> deleted = new HashSet<>();

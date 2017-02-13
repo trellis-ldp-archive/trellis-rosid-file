@@ -135,8 +135,9 @@ class VersionedResource extends AbstractFileResource {
 
     @Override
     public Stream<MementoLink> getMementos() {
-        // TODO -- get from storage layer
-        return Stream.empty();
+        return RDFPatch.asTimeMap(new File(directory, USER_JOURNAL)).map(range ->
+                new MementoLinkImpl(rdf.createIRI(identifier.getIRIString() + "?version=" +
+                        Long.toString(range.getUntil().getEpochSecond())), range.getFrom(), range.getUntil()));
     }
 
     @Override

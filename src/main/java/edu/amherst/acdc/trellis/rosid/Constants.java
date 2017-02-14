@@ -43,8 +43,6 @@ class Constants {
 
     public static final String MEMENTO_CACHE = "memento.cache";
 
-    public static final String MEMENTO_JOURNAL = "memento.journal";
-
     public static final String USER_CACHE = "user.cache";
 
     public static final String USER_JOURNAL = "user.journal";

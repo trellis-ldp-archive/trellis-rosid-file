@@ -16,13 +16,20 @@
 package edu.amherst.acdc.trellis.rosid;
 
 import static java.nio.file.Files.lines;
+import static java.time.Instant.parse;
+import static java.util.Objects.nonNull;
 import static java.util.Optional.of;
+import static java.util.Spliterator.IMMUTABLE;
+import static java.util.Spliterator.NONNULL;
+import static java.util.Spliterator.ORDERED;
+import static java.util.Spliterators.spliteratorUnknownSize;
 import static java.util.stream.Stream.empty;
 import static com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS;
 import static edu.amherst.acdc.trellis.rosid.Constants.AUDIT_CACHE;
 import static edu.amherst.acdc.trellis.rosid.Constants.CONTAINMENT_CACHE;
 import static edu.amherst.acdc.trellis.rosid.Constants.INBOUND_CACHE;
 import static edu.amherst.acdc.trellis.rosid.Constants.MEMBERSHIP_CACHE;
+import static edu.amherst.acdc.trellis.rosid.Constants.MEMENTO_CACHE;
 import static edu.amherst.acdc.trellis.rosid.Constants.RESOURCE_CACHE;
 import static edu.amherst.acdc.trellis.rosid.Constants.USER_CACHE;
 import static org.apache.jena.riot.Lang.NTRIPLES;
@@ -34,10 +41,13 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.io.UncheckedIOException;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -90,8 +100,10 @@ class CachedResource extends AbstractFileResource {
 
     @Override
     public Stream<MementoLink> getMementos() {
-        // TODO -- get from storage layer (memento_cache)
-        return Stream.empty();
+        return StreamSupport.stream(spliteratorUnknownSize(new MementoReader(new File(directory, MEMENTO_CACHE)),
+                    IMMUTABLE | NONNULL | ORDERED), false).map(range ->
+                new MementoLinkImpl(rdf.createIRI(identifier.getIRIString() + "?version=" +
+                        Long.toString(range.getUntil().getEpochSecond())), range.getFrom(), range.getUntil()));
     }
 
     @Override
@@ -143,4 +155,36 @@ class CachedResource extends AbstractFileResource {
                 sinkTriples(new SinkToCollection<>(c)), null);
         return c.stream().map(triple -> asTriple(rdf, triple));
     };
+
+    /**
+     * A class for reading a file of change times
+     */
+    private static class MementoReader implements Iterator<VersionRange> {
+        private final Iterator<String> dateLines;
+        private Instant from = null;
+        public MementoReader(final File file) {
+            try {
+                dateLines = lines(file.toPath()).iterator();
+                if (dateLines.hasNext()) {
+                    from = parse(dateLines.next());
+                }
+            } catch (final IOException ex) {
+                throw new UncheckedIOException(ex);
+            }
+        }
+
+        @Override
+        public boolean hasNext() {
+            return dateLines.hasNext();
+        }
+
+        @Override
+        public VersionRange next() {
+            final String line = dateLines.next();
+            if (nonNull(line)) {
+                return new VersionRange(from, parse(line));
+            }
+            return null;
+        }
+    }
 }

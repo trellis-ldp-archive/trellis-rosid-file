@@ -16,17 +16,22 @@
 package edu.amherst.acdc.trellis.rosid;
 
 import static java.io.File.separator;
+import static java.nio.file.Files.readAttributes;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static edu.amherst.acdc.trellis.rosid.Constants.RESOURCE_CACHE;
+import static edu.amherst.acdc.trellis.rosid.Constants.RESOURCE_JOURNAL;
 import static edu.amherst.acdc.trellis.rosid.FileUtils.asPath;
 import static edu.amherst.acdc.trellis.rosid.FileUtils.partition;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Optional;
-import java.util.function.Function;
 
 import org.apache.commons.rdf.api.Graph;
 import org.apache.commons.rdf.api.IRI;
@@ -35,7 +40,6 @@ import org.slf4j.Logger;
 import edu.amherst.acdc.trellis.api.Resource;
 import edu.amherst.acdc.trellis.spi.EventService;
 import edu.amherst.acdc.trellis.spi.ResourceService;
-import edu.amherst.acdc.trellis.spi.RuntimeRepositoryException;
 import edu.amherst.acdc.trellis.spi.Session;
 
 /**
@@ -65,7 +69,7 @@ public class FileRepositoryService implements ResourceService {
             directory.mkdirs();
         }
         if (!directory.canWrite()) {
-            throw new RuntimeRepositoryException("Cannot write to " + directory.getAbsolutePath());
+            throw new UncheckedIOException(new IOException("Cannot write to " + directory.getAbsolutePath()));
         }
         this.directory = directory;
     }
@@ -90,9 +94,27 @@ public class FileRepositoryService implements ResourceService {
     }
 
     @Override
+    public Boolean exists(final Session session, final IRI identifier, final Instant time) {
+        // TODO -- this naively ignores the session (e.g. batch ops)
+        final File resource = new File(directory, partition(asPath(identifier)) + separator + RESOURCE_JOURNAL);
+        try {
+            return resource.exists() && !readAttributes(resource.toPath(), BasicFileAttributes.class).creationTime()
+                .toInstant().isAfter(time);
+        } catch (final IOException ex) {
+            throw new UncheckedIOException(ex);
+        }
+    }
+
+    @Override
     public Optional<Resource> find(final Session session, final IRI identifier) {
         return of(new File(directory, partition(asPath(identifier)))).filter(File::exists)
-            .flatMap(getResource(session, identifier));
+            .flatMap(dir -> of(new CachedResource(dir, identifier)));
+    }
+
+    @Override
+    public Optional<Resource> find(final Session session, final IRI identifier, final Instant time) {
+        return of(new File(directory, partition(asPath(identifier)))).filter(File::exists)
+            .flatMap(dir -> of(new VersionedResource(dir, identifier, time)));
     }
 
     @Override
@@ -137,13 +159,5 @@ public class FileRepositoryService implements ResourceService {
     public Optional<Session> extend(final Session session, final Duration duration) {
         // TODO
         return empty();
-    }
-
-    private Function<File, Optional<Resource>> getResource(final Session session, final IRI identifier) {
-        // TODO -- this naively ignores the session (e.g. batch ops), and ignores a version-based reader
-        return directory -> {
-            final Resource res = new CachedResource(directory, identifier);
-            return of(res);
-        };
     }
 }

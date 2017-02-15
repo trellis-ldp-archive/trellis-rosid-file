@@ -153,27 +153,32 @@ class VersionedResource extends AbstractFileResource {
 
     @Override
     protected Stream<Triple> getContainmentTriples() {
-        return RDFPatch.asStream(rdf, new File(directory, CONTAINMENT_JOURNAL), time);
+        return Optional.of(new File(directory, CONTAINMENT_JOURNAL)).filter(File::exists)
+            .map(file -> RDFPatch.asStream(rdf, file, time)).orElse(empty());
     }
 
     @Override
     protected Stream<Triple> getMembershipTriples() {
-        return RDFPatch.asStream(rdf, new File(directory, MEMBERSHIP_JOURNAL), time);
+        return Optional.of(new File(directory, MEMBERSHIP_JOURNAL)).filter(File::exists)
+            .map(file -> RDFPatch.asStream(rdf, file, time)).orElse(empty());
     }
 
     @Override
     protected Stream<Triple> getInboundTriples() {
-        return RDFPatch.asStream(rdf, new File(directory, INBOUND_JOURNAL), time);
+        return Optional.of(new File(directory, INBOUND_JOURNAL)).filter(File::exists)
+            .map(file -> RDFPatch.asStream(rdf, file, time)).orElse(empty());
     }
 
     @Override
     protected Stream<Triple> getUserTriples() {
-        return RDFPatch.asStream(rdf, new File(directory, USER_JOURNAL), time);
+        return Optional.of(new File(directory, USER_JOURNAL)).filter(File::exists)
+            .map(file -> RDFPatch.asStream(rdf, file, time)).orElse(empty());
     }
 
     @Override
     protected Stream<Triple> getAuditTriples() {
-        return RDFPatch.asStream(rdf, new File(directory, AUDIT_JOURNAL), time);
+        return Optional.of(new File(directory, AUDIT_JOURNAL)).filter(File::exists)
+            .map(file -> RDFPatch.asStream(rdf, file, time)).orElse(empty());
     }
 
 

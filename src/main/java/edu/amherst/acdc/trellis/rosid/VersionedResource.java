@@ -162,7 +162,8 @@ class VersionedResource extends AbstractFileResource {
 
     @Override
     public Stream<VersionRange> getMementos() {
-        return RDFPatch.asTimeMap(new File(directory, USER_JOURNAL));
+        return Optional.of(new File(directory, USER_JOURNAL)).filter(File::exists)
+            .map(RDFPatch::asTimeMap).orElse(empty());
     }
 
     @Override

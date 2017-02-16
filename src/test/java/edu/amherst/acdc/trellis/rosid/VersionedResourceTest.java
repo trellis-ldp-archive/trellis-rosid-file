@@ -17,9 +17,12 @@ package edu.amherst.acdc.trellis.rosid;
 
 import static edu.amherst.acdc.trellis.api.Resource.TripleContext.LDP_CONTAINMENT;
 import static edu.amherst.acdc.trellis.api.Resource.TripleContext.LDP_MEMBERSHIP;
+import static edu.amherst.acdc.trellis.api.Resource.TripleContext.USER_MANAGED;
+import static edu.amherst.acdc.trellis.vocabulary.RDF.type;
 import static java.time.Instant.parse;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
+import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -27,11 +30,15 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.time.Instant;
 import java.util.EnumSet;
+import java.util.List;
 
 import edu.amherst.acdc.trellis.api.Resource;
+import edu.amherst.acdc.trellis.api.VersionRange;
 import edu.amherst.acdc.trellis.vocabulary.LDP;
+import edu.amherst.acdc.trellis.vocabulary.RDFS;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.RDF;
+import org.apache.commons.rdf.api.Triple;
 import org.apache.commons.rdf.jena.JenaRDF;
 import org.junit.Test;
 
@@ -69,8 +76,22 @@ public class VersionedResourceTest {
         assertTrue(res.getTypes().anyMatch(rdf.createIRI("http://example.org/types/Foo")::equals));
         assertTrue(res.getTypes().anyMatch(rdf.createIRI("http://example.org/types/Bar")::equals));
         assertEquals(0L, res.stream(EnumSet.of(LDP_CONTAINMENT, LDP_MEMBERSHIP)).count());
-        // TODO -- test res.getMementos()
-        // TODO -- test res.stream(USER_MANAGED)
+
+        final List<VersionRange> mementos = res.getMementos().collect(toList());
+        assertEquals(1L, mementos.size());
+        assertEquals(parse("2017-02-15T10:05:00Z"), mementos.get(0).getFrom());
+        assertEquals(parse("2017-02-15T11:15:00Z"), mementos.get(0).getUntil());
+
+        final List<Triple> triples = res.stream(USER_MANAGED).collect(toList());
+        assertEquals(4L, triples.size());
+        assertTrue(triples.contains(rdf.createTriple(identifier, LDP.inbox,
+                        rdf.createIRI("http://example.org/receiver/inbox"))));
+        assertTrue(triples.contains(rdf.createTriple(identifier, type,
+                        rdf.createIRI("http://example.org/types/Foo"))));
+        assertTrue(triples.contains(rdf.createTriple(identifier, type,
+                        rdf.createIRI("http://example.org/types/Bar"))));
+        assertTrue(triples.contains(rdf.createTriple(identifier, RDFS.label,
+                        rdf.createLiteral("A label", "eng"))));
     }
 
     @Test
@@ -100,8 +121,22 @@ public class VersionedResourceTest {
         assertTrue(res.getTypes().anyMatch(rdf.createIRI("http://example.org/types/Foo")::equals));
         assertTrue(res.getTypes().anyMatch(rdf.createIRI("http://example.org/types/Bar")::equals));
         assertEquals(0L, res.stream(EnumSet.of(LDP_CONTAINMENT, LDP_MEMBERSHIP)).count());
-        // TODO -- test res.getMementos()
-        // TODO -- test res.stream(USER_MANAGED)
+
+        final List<VersionRange> mementos = res.getMementos().collect(toList());
+        assertEquals(1L, mementos.size());
+        assertEquals(parse("2017-02-15T10:05:00Z"), mementos.get(0).getFrom());
+        assertEquals(parse("2017-02-15T11:15:00Z"), mementos.get(0).getUntil());
+
+        final List<Triple> triples = res.stream(USER_MANAGED).collect(toList());
+        assertEquals(4L, triples.size());
+        assertTrue(triples.contains(rdf.createTriple(identifier, LDP.inbox,
+                        rdf.createIRI("http://example.org/receiver/inbox"))));
+        assertTrue(triples.contains(rdf.createTriple(identifier, type,
+                        rdf.createIRI("http://example.org/types/Foo"))));
+        assertTrue(triples.contains(rdf.createTriple(identifier, type,
+                        rdf.createIRI("http://example.org/types/Bar"))));
+        assertTrue(triples.contains(rdf.createTriple(identifier, RDFS.label,
+                        rdf.createLiteral("A label", "eng"))));
     }
 
     @Test
@@ -129,8 +164,14 @@ public class VersionedResourceTest {
         assertEquals(of(rdf.createIRI("http://example.org/user/raadmin")), res.getCreator());
         assertEquals(0L, res.getTypes().count());
         assertEquals(0L, res.stream(EnumSet.of(LDP_CONTAINMENT, LDP_MEMBERSHIP)).count());
-        // TODO -- test res.getMementos()
-        // TODO -- test res.stream(USER_MANAGED)
+
+        final List<VersionRange> mementos = res.getMementos().collect(toList());
+        assertEquals(1L, mementos.size());
+        assertEquals(parse("2017-02-15T10:05:00Z"), mementos.get(0).getFrom());
+        assertEquals(parse("2017-02-15T11:15:00Z"), mementos.get(0).getUntil());
+
+        final List<Triple> triples = res.stream(USER_MANAGED).collect(toList());
+        assertEquals(0L, triples.size());
     }
 
     @Test

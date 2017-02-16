@@ -41,8 +41,8 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import edu.amherst.acdc.trellis.api.MementoLink;
 import edu.amherst.acdc.trellis.api.Resource;
+import edu.amherst.acdc.trellis.api.VersionRange;
 import edu.amherst.acdc.trellis.vocabulary.ACL;
 import edu.amherst.acdc.trellis.vocabulary.DC;
 import edu.amherst.acdc.trellis.vocabulary.LDP;
@@ -161,10 +161,8 @@ class VersionedResource extends AbstractFileResource {
     }
 
     @Override
-    public Stream<MementoLink> getMementos() {
-        return RDFPatch.asTimeMap(new File(directory, USER_JOURNAL)).map(range ->
-                new MementoLinkImpl(rdf.createIRI(identifier.getIRIString() + "?version=" +
-                        Long.toString(range.getUntil().getEpochSecond())), range.getFrom(), range.getUntil()));
+    public Stream<VersionRange> getMementos() {
+        return RDFPatch.asTimeMap(new File(directory, USER_JOURNAL));
     }
 
     @Override

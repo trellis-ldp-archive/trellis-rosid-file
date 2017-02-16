@@ -44,6 +44,7 @@ import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
+import edu.amherst.acdc.trellis.api.VersionRange;
 import org.apache.commons.io.input.ReversedLinesFileReader;
 import org.apache.commons.rdf.api.Graph;
 import org.apache.commons.rdf.api.RDF;

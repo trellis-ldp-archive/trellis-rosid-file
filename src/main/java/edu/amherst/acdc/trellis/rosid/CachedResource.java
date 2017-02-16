@@ -53,8 +53,8 @@ import java.util.stream.StreamSupport;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import edu.amherst.acdc.trellis.api.MementoLink;
 import edu.amherst.acdc.trellis.api.Resource;
+import edu.amherst.acdc.trellis.api.VersionRange;
 import edu.amherst.acdc.trellis.vocabulary.LDP;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Triple;
@@ -115,11 +115,9 @@ class CachedResource extends AbstractFileResource {
     }
 
     @Override
-    public Stream<MementoLink> getMementos() {
+    public Stream<VersionRange> getMementos() {
         return StreamSupport.stream(spliteratorUnknownSize(new MementoReader(new File(directory, MEMENTO_CACHE)),
-                    IMMUTABLE | NONNULL | ORDERED), false).map(range ->
-                new MementoLinkImpl(rdf.createIRI(identifier.getIRIString() + "?version=" +
-                        Long.toString(range.getUntil().getEpochSecond())), range.getFrom(), range.getUntil()));
+                    IMMUTABLE | NONNULL | ORDERED), false);
     }
 
     @Override

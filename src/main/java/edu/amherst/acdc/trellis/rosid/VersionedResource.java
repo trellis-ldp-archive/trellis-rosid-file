@@ -15,7 +15,6 @@
  */
 package edu.amherst.acdc.trellis.rosid;
 
-import static java.time.Instant.now;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.Objects.nonNull;
@@ -76,13 +75,14 @@ class VersionedResource extends AbstractFileResource {
     }
 
     /**
-     * Read the current state of the resource data
+     * Find the resource at a particular point in time
      * @param directory the directory
      * @param identifier the identifier
-     * @return the resource data, if it exists
+     * @param time the time
+     * @return the resource, if it exists at the given time
      */
-    public static Optional<ResourceData> read(final File directory, final IRI identifier) {
-        return read(directory, identifier, now());
+    public static Optional<Resource> find(final File directory, final IRI identifier, final Instant time) {
+        return read(directory, identifier, time).map(data -> new VersionedResource(directory, identifier, data, time));
     }
 
     /**
@@ -137,22 +137,11 @@ class VersionedResource extends AbstractFileResource {
                     }
                 });
 
-            if (rd.ldpType != null && rd.created != null) {
+            if (nonNull(rd.ldpType) && nonNull(rd.created)) {
                 return Optional.of(rd);
             }
         }
         return Optional.empty();
-    }
-
-    /**
-     * Find the resource at a particular point in time
-     * @param directory the directory
-     * @param identifier the identifier
-     * @param time the time
-     * @return the resource, if it exists at the given time
-     */
-    public static Optional<Resource> find(final File directory, final IRI identifier, final Instant time) {
-        return read(directory, identifier, time).map(data -> new VersionedResource(directory, identifier, data, time));
     }
 
     @Override

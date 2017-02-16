@@ -23,6 +23,7 @@ import static java.nio.file.Files.newBufferedWriter;
 import static java.nio.file.StandardOpenOption.APPEND;
 import static java.time.Instant.now;
 import static java.time.Instant.parse;
+import static java.util.Objects.nonNull;
 import static java.util.stream.StreamSupport.stream;
 import static org.apache.commons.rdf.jena.JenaRDF.asTriple;
 import static org.apache.jena.riot.Lang.NTRIPLES;
@@ -262,7 +263,7 @@ class RDFPatch {
 
         private Instant emit(final Consumer<? super VersionRange> action, final String line) {
             final Instant time = parse(line.split(" # ")[1]);
-            if (from != null) {
+            if (nonNull(from)) {
                 action.accept(new VersionRange(from, time));
             }
             return time;
@@ -306,7 +307,7 @@ class RDFPatch {
         @Override
         public void forEachRemaining(final Consumer<? super Triple> action) {
             try {
-                for (String line = reader.readLine(); line != null; line = reader.readLine()) {
+                for (String line = reader.readLine(); nonNull(line); line = reader.readLine()) {
                     if (line.startsWith("D ANY ANY ANY") && inRegion) {
                         break;
                     } else if (line.startsWith("END # ")) {
@@ -333,7 +334,7 @@ class RDFPatch {
         public boolean tryAdvance(final Consumer<? super Triple> action) {
             try {
                 final String line = reader.readLine();
-                if (line != null && !(line.startsWith("D ANY ANY ANY") && inRegion)) {
+                if (nonNull(line) && !(line.startsWith("D ANY ANY ANY") && inRegion)) {
                     if (line.startsWith("END ")) {
                         final String[] parts = line.split(" # ", 2);
                         if (parts.length == 2 && !time.isBefore(parse(parts[1]))) {

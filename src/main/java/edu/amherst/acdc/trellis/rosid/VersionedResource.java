@@ -75,10 +75,23 @@ class VersionedResource extends AbstractFileResource {
         this.time = time;
     }
 
+    /**
+     * Read the current state of the resource data
+     * @param directory the directory
+     * @param identifier the identifier
+     * @return the resource data, if it exists
+     */
     public static Optional<ResourceData> read(final File directory, final IRI identifier) {
         return read(directory, identifier, now());
     }
 
+    /**
+     * Read the state of the resource data at a particular point in time
+     * @param directory the directory
+     * @param identifier the identifier
+     * @param time the time
+     * @return the resource data, if it exists
+     */
     public static Optional<ResourceData> read(final File directory, final IRI identifier, final Instant time) {
         final Graph graph = rdf.createGraph();
         final File file = new File(directory, RESOURCE_JOURNAL);
@@ -131,12 +144,15 @@ class VersionedResource extends AbstractFileResource {
         return Optional.empty();
     }
 
+    /**
+     * Find the resource at a particular point in time
+     * @param directory the directory
+     * @param identifier the identifier
+     * @param time the time
+     * @return the resource, if it exists at the given time
+     */
     public static Optional<Resource> find(final File directory, final IRI identifier, final Instant time) {
         return read(directory, identifier, time).map(data -> new VersionedResource(directory, identifier, data, time));
-    }
-
-    public static Optional<Resource> find(final File directory, final IRI identifier) {
-        return find(directory, identifier, now());
     }
 
     @Override

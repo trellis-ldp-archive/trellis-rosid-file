@@ -90,6 +90,12 @@ class CachedResource extends AbstractFileResource {
         super(directory, identifier, data);
     }
 
+    /**
+     * Retrieve a cached resource, if it exists
+     * @param directory the directory
+     * @param identifier the identifier
+     * @return the resource
+     */
     public static Optional<Resource> find(final File directory, final IRI identifier) {
         try {
             final ResourceData data = MAPPER.readValue(new File(directory, RESOURCE_CACHE), ResourceData.class);

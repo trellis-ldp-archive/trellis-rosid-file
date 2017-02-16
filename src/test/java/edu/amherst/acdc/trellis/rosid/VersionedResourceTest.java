@@ -47,7 +47,7 @@ public class VersionedResourceTest {
         final File file = new File(getClass().getResource("/ldprs").toURI());
         final IRI identifier = rdf.createIRI("info:trellis/ldprs");
         final Instant time = parse("2017-02-15T11:15:00Z");
-        final Resource res = new VersionedResource(file, identifier, time);
+        final Resource res = VersionedResource.find(file, identifier, time).get();
         assertEquals(identifier, res.getIdentifier());
         assertEquals(LDP.RDFSource, res.getInteractionModel());
         assertEquals(of(rdf.createIRI("info:trellis")), res.getContainedBy());
@@ -78,7 +78,7 @@ public class VersionedResourceTest {
         final File file = new File(getClass().getResource("/ldprs").toURI());
         final IRI identifier = rdf.createIRI("info:trellis/ldprs");
         final Instant time = parse("2017-03-15T11:15:00Z");
-        final Resource res = new VersionedResource(file, identifier, time);
+        final Resource res = VersionedResource.find(file, identifier, time).get();
         assertEquals(identifier, res.getIdentifier());
         assertEquals(LDP.RDFSource, res.getInteractionModel());
         assertEquals(of(rdf.createIRI("info:trellis")), res.getContainedBy());
@@ -109,7 +109,7 @@ public class VersionedResourceTest {
         final File file = new File(getClass().getResource("/ldprs").toURI());
         final IRI identifier = rdf.createIRI("info:trellis/ldprs");
         final Instant time = parse("2017-02-15T11:00:00Z");
-        final Resource res = new VersionedResource(file, identifier, time);
+        final Resource res = VersionedResource.find(file, identifier, time).get();
         assertEquals(identifier, res.getIdentifier());
         assertEquals(LDP.RDFSource, res.getInteractionModel());
         assertEquals(of(rdf.createIRI("info:trellis")), res.getContainedBy());
@@ -131,5 +131,13 @@ public class VersionedResourceTest {
         assertEquals(0L, res.stream(EnumSet.of(LDP_CONTAINMENT, LDP_MEMBERSHIP)).count());
         // TODO -- test res.getMementos()
         // TODO -- test res.stream(USER_MANAGED)
+    }
+
+    @Test
+    public void testResourcePrehistory() throws Exception {
+        final File file = new File(getClass().getResource("/ldprs").toURI());
+        final IRI identifier = rdf.createIRI("info:trellis/ldprs");
+        final Instant time = parse("2017-01-15T11:00:00Z");
+        assertFalse(VersionedResource.find(file, identifier, time).isPresent());
     }
 }

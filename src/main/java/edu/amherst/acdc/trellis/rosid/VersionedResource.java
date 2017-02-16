@@ -42,6 +42,7 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import edu.amherst.acdc.trellis.api.MementoLink;
+import edu.amherst.acdc.trellis.api.Resource;
 import edu.amherst.acdc.trellis.vocabulary.ACL;
 import edu.amherst.acdc.trellis.vocabulary.DC;
 import edu.amherst.acdc.trellis.vocabulary.LDP;
@@ -68,65 +69,75 @@ class VersionedResource extends AbstractFileResource {
      * @param identifier the resource identifier
      * @param time the time
      */
-    public VersionedResource(final File directory, final IRI identifier, final Instant time) {
+    protected VersionedResource(final File directory, final IRI identifier, final ResourceData data,
+            final Instant time) {
         super(directory, identifier);
         this.time = time;
-        this.data = read(directory, identifier, time);
+        this.data = data;
     }
 
-    /**
-     * Create a File-based versioned resource
-     * @param directory the directory
-     * @param identifier the resource identifier
-     */
-    public VersionedResource(final File directory, final IRI identifier) {
-        this(directory, identifier, now());
+    public static Optional<ResourceData> read(final File directory, final IRI identifier) {
+        return read(directory, identifier, now());
     }
 
-    public static ResourceData read(final File directory, final IRI identifier, final Instant time) {
+    public static Optional<ResourceData> read(final File directory, final IRI identifier, final Instant time) {
         final Graph graph = rdf.createGraph();
-        RDFPatch.asStream(rdf, new File(directory, RESOURCE_JOURNAL), time).forEach(graph::add);
+        final File file = new File(directory, RESOURCE_JOURNAL);
+        if (file.exists()) {
+            RDFPatch.asStream(rdf, file, time).forEach(graph::add);
 
-        final Map<IRI, List<RDFTerm>> data = graph.stream(identifier, null, null)
-            .collect(groupingBy(Triple::getPredicate, mapping(Triple::getObject, toList())));
+            final Map<IRI, List<RDFTerm>> data = graph.stream(identifier, null, null)
+                .collect(groupingBy(Triple::getPredicate, mapping(Triple::getObject, toList())));
 
-        final Map<Boolean, List<String>> types = getStringStream(data.getOrDefault(RDF.type,
-                    singletonList(LDP.Resource))).collect(partitioningBy(str -> str.startsWith(LDP.uri)));
+            final Map<Boolean, List<String>> types = getStringStream(data.getOrDefault(RDF.type,
+                        singletonList(LDP.Resource))).collect(partitioningBy(str -> str.startsWith(LDP.uri)));
 
-        final ResourceData rd = new ResourceData();
-        rd.id = identifier.getIRIString();
-        rd.containedBy = getFirstAsString(data.get(Trellis.containedBy));
-        rd.ldpType = types.get(true).get(0);
-        rd.userTypes = types.get(false);
-        rd.accessControl = getFirstAsString(data.get(ACL.accessControl));
-        rd.inbox = getFirstAsString(data.get(LDP.inbox));
-        rd.membershipResource = getFirstAsString(data.get(LDP.membershipResource));
-        rd.hasMemberRelation = getFirstAsString(data.get(LDP.hasMemberRelation));
-        rd.isMemberOfRelation = getFirstAsString(data.get(LDP.isMemberOfRelation));
-        rd.insertedContentRelation = getFirstAsString(data.get(LDP.insertedContentRelation));
-        rd.creator = getFirstAsString(data.get(DC.creator));
-        rd.created = getFirstAsInstant(data.get(DC.created));
-        rd.modified = getFirstAsInstant(data.get(DC.modified));
+            final ResourceData rd = new ResourceData();
+            rd.id = identifier.getIRIString();
+            rd.containedBy = getFirstAsString(data.get(Trellis.containedBy));
+            rd.ldpType = types.get(true).get(0);
+            rd.userTypes = types.get(false);
+            rd.accessControl = getFirstAsString(data.get(ACL.accessControl));
+            rd.inbox = getFirstAsString(data.get(LDP.inbox));
+            rd.membershipResource = getFirstAsString(data.get(LDP.membershipResource));
+            rd.hasMemberRelation = getFirstAsString(data.get(LDP.hasMemberRelation));
+            rd.isMemberOfRelation = getFirstAsString(data.get(LDP.isMemberOfRelation));
+            rd.insertedContentRelation = getFirstAsString(data.get(LDP.insertedContentRelation));
+            rd.creator = getFirstAsString(data.get(DC.creator));
+            rd.created = getFirstAsInstant(data.get(DC.created));
+            rd.modified = getFirstAsInstant(data.get(DC.modified));
 
-        // Populate datastream, if present
-        graph.stream(identifier, DC.hasPart, null).map(Triple::getObject).findFirst().filter(id -> id instanceof IRI)
-            .map(id -> (IRI) id).ifPresent(id -> {
-                final Map<IRI, List<RDFTerm>> dsdata = graph.stream(id, null, null)
-                    .collect(groupingBy(Triple::getPredicate, mapping(Triple::getObject, toList())));
-                final Instant created = getFirstAsInstant(dsdata.get(DC.created));
-                final Instant modified = getFirstAsInstant(dsdata.get(DC.modified));
+            // Populate datastream, if present
+            graph.stream(identifier, DC.hasPart, null).map(Triple::getObject).findFirst()
+                .filter(id -> id instanceof IRI).map(id -> (IRI) id).ifPresent(id -> {
+                    final Map<IRI, List<RDFTerm>> dsdata = graph.stream(id, null, null)
+                        .collect(groupingBy(Triple::getPredicate, mapping(Triple::getObject, toList())));
+                    final Instant created = getFirstAsInstant(dsdata.get(DC.created));
+                    final Instant modified = getFirstAsInstant(dsdata.get(DC.modified));
 
-                if (nonNull(created) && nonNull(modified)) {
-                    rd.datastream = new ResourceData.DatastreamData();
-                    rd.datastream.id = id.getIRIString();
-                    rd.datastream.created = created;
-                    rd.datastream.modified = modified;
-                    rd.datastream.format = getFirstAsString(dsdata.get(DC.format));
-                    rd.datastream.size = Long.parseLong(getFirstAsString(dsdata.get(DC.extent)));
-                }
-            });
+                    if (nonNull(created) && nonNull(modified)) {
+                        rd.datastream = new ResourceData.DatastreamData();
+                        rd.datastream.id = id.getIRIString();
+                        rd.datastream.created = created;
+                        rd.datastream.modified = modified;
+                        rd.datastream.format = getFirstAsString(dsdata.get(DC.format));
+                        rd.datastream.size = Long.parseLong(getFirstAsString(dsdata.get(DC.extent)));
+                    }
+                });
 
-        return rd;
+            if (rd.ldpType != null && rd.created != null) {
+                return Optional.of(rd);
+            }
+        }
+        return Optional.empty();
+    }
+
+    public static Optional<Resource> find(final File directory, final IRI identifier, final Instant time) {
+        return read(directory, identifier, time).map(data -> new VersionedResource(directory, identifier, data, time));
+    }
+
+    public static Optional<Resource> find(final File directory, final IRI identifier) {
+        return find(directory, identifier, now());
     }
 
     @Override
@@ -207,8 +218,4 @@ class VersionedResource extends AbstractFileResource {
         }
         return Optional.empty();
     };
-
-    private static ResourceData read(final File directory, final IRI identifier) {
-        return read(directory, identifier, now());
-    }
 }

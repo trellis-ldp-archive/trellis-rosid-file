@@ -114,7 +114,7 @@ public class FileRepositoryService implements ResourceService {
     @Override
     public Optional<Resource> find(final Session session, final IRI identifier, final Instant time) {
         return of(new File(directory, partition(asPath(identifier)))).filter(File::exists)
-            .flatMap(dir -> of(new VersionedResource(dir, identifier, time)));
+            .flatMap(dir -> VersionedResource.find(dir, identifier, time));
     }
 
     @Override

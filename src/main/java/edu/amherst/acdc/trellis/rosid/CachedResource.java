@@ -35,6 +35,7 @@ import static edu.amherst.acdc.trellis.rosid.Constants.USER_CACHE;
 import static org.apache.jena.riot.Lang.NTRIPLES;
 import static org.apache.commons.rdf.jena.JenaRDF.asTriple;
 import static org.apache.jena.riot.system.StreamRDFLib.sinkTriples;
+import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.File;
 import java.io.IOException;
@@ -45,6 +46,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -52,12 +54,14 @@ import java.util.stream.StreamSupport;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import edu.amherst.acdc.trellis.api.MementoLink;
+import edu.amherst.acdc.trellis.api.Resource;
 import edu.amherst.acdc.trellis.vocabulary.LDP;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Triple;
 import org.apache.jena.atlas.lib.SinkToCollection;
 import org.apache.jena.riot.RDFParserRegistry;
 import org.apache.jena.riot.ReaderRIOT;
+import org.slf4j.Logger;
 
 /**
  * An object that mediates access to the resource cache files.
@@ -70,6 +74,8 @@ class CachedResource extends AbstractFileResource {
 
     private static final ReaderRIOT READER = RDFParserRegistry.getFactory(NTRIPLES).create(NTRIPLES);
 
+    private static final Logger LOGGER = getLogger(CachedResource.class);
+
     static {
         MAPPER.configure(WRITE_DATES_AS_TIMESTAMPS, false);
         MAPPER.registerModule(new JavaTimeModule());
@@ -80,14 +86,18 @@ class CachedResource extends AbstractFileResource {
      * @param directory the data storage directory
      * @param identifier the resource to retrieve
      */
-    public CachedResource(final File directory, final IRI identifier) {
-        super(directory, identifier);
+    protected CachedResource(final File directory, final IRI identifier, final ResourceData data) {
+        super(directory, identifier, data);
+    }
 
+    public static Optional<Resource> find(final File directory, final IRI identifier) {
         try {
-            this.data = MAPPER.readValue(new File(directory, RESOURCE_CACHE), ResourceData.class);
+            final ResourceData data = MAPPER.readValue(new File(directory, RESOURCE_CACHE), ResourceData.class);
+            return of(new CachedResource(directory, identifier, data));
         } catch (final IOException ex) {
-            throw new UncheckedIOException(ex);
+            LOGGER.warn("Error reading cached resource: {}", ex.getMessage());
         }
+        return Optional.empty();
     }
 
     public static void write(final File directory, final ResourceData json) {

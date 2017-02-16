@@ -56,12 +56,14 @@ abstract class AbstractFileResource implements Resource {
 
     protected final Map<Resource.TripleContext, Supplier<Stream<Triple>>> mapper = new HashMap<>();
 
-    protected AbstractFileResource(final File directory, final IRI identifier) {
+    protected AbstractFileResource(final File directory, final IRI identifier, final ResourceData data) {
         requireNonNull(directory, "The data directory cannot be null!");
         requireNonNull(identifier, "The identifier cannot be null!");
+        requireNonNull(data, "The resource data cannot be null!");
 
         this.identifier = identifier;
         this.directory = directory;
+        this.data = data;
 
         // define mappings for triple contexts
         mapper.put(LDP_CONTAINMENT, this::getContainmentTriples);

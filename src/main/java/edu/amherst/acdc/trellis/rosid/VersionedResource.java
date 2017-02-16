@@ -71,9 +71,8 @@ class VersionedResource extends AbstractFileResource {
      */
     protected VersionedResource(final File directory, final IRI identifier, final ResourceData data,
             final Instant time) {
-        super(directory, identifier);
+        super(directory, identifier, data);
         this.time = time;
-        this.data = data;
     }
 
     public static Optional<ResourceData> read(final File directory, final IRI identifier) {

@@ -15,26 +15,31 @@
  */
 package edu.amherst.acdc.trellis.rosid;
 
+import static java.nio.file.Files.lines;
+import static java.time.Instant.parse;
+import static java.util.Objects.nonNull;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
+import static java.util.Spliterator.IMMUTABLE;
+import static java.util.Spliterator.NONNULL;
+import static java.util.Spliterator.ORDERED;
+import static java.util.Spliterators.spliteratorUnknownSize;
 import static java.util.stream.Stream.empty;
-import static edu.amherst.acdc.trellis.api.Resource.TripleContext.FEDORA_INBOUND_REFERENCES;
-import static edu.amherst.acdc.trellis.api.Resource.TripleContext.LDP_CONTAINMENT;
-import static edu.amherst.acdc.trellis.api.Resource.TripleContext.LDP_MEMBERSHIP;
-import static edu.amherst.acdc.trellis.api.Resource.TripleContext.TRELLIS_AUDIT;
-import static edu.amherst.acdc.trellis.api.Resource.TripleContext.USER_MANAGED;
+import static edu.amherst.acdc.trellis.rosid.Constants.MEMENTO_CACHE;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.time.Instant;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Iterator;
 import java.util.Optional;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
-import edu.amherst.acdc.trellis.api.Resource;
 import edu.amherst.acdc.trellis.api.Datastream;
+import edu.amherst.acdc.trellis.api.Resource;
+import edu.amherst.acdc.trellis.api.VersionRange;
 import edu.amherst.acdc.trellis.vocabulary.LDP;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.RDF;
@@ -54,7 +59,6 @@ abstract class AbstractFileResource implements Resource {
 
     protected ResourceData data;
 
-    protected final Map<Resource.TripleContext, Supplier<Stream<Triple>>> mapper = new HashMap<>();
 
     protected AbstractFileResource(final File directory, final IRI identifier, final ResourceData data) {
         requireNonNull(directory, "The data directory cannot be null!");
@@ -65,12 +69,6 @@ abstract class AbstractFileResource implements Resource {
         this.directory = directory;
         this.data = data;
 
-        // define mappings for triple contexts
-        mapper.put(LDP_CONTAINMENT, this::getContainmentTriples);
-        mapper.put(LDP_MEMBERSHIP, this::getMembershipTriples);
-        mapper.put(FEDORA_INBOUND_REFERENCES, this::getInboundTriples);
-        mapper.put(USER_MANAGED, this::getUserTriples);
-        mapper.put(TRELLIS_AUDIT, this::getAuditTriples);
     }
 
     @Override
@@ -145,18 +143,43 @@ abstract class AbstractFileResource implements Resource {
     }
 
     @Override
-    public <T extends Resource.TripleCategory> Stream<Triple> stream(final Collection<T> category) {
-        return category.stream().filter(mapper::containsKey).map(mapper::get).flatMap(Supplier::get);
+    public Stream<VersionRange> getMementos() {
+        return StreamSupport.stream(spliteratorUnknownSize(new MementoReader(new File(directory, MEMENTO_CACHE)),
+                    IMMUTABLE | NONNULL | ORDERED), false);
     }
 
-    protected abstract Stream<Triple> getContainmentTriples();
+    @Override
+    public abstract <T extends Resource.TripleCategory> Stream<Triple> stream(Collection<T> category);
 
-    protected abstract Stream<Triple> getMembershipTriples();
+    /**
+     * A class for reading a file of change times
+     */
+    private static class MementoReader implements Iterator<VersionRange> {
+        private final Iterator<String> dateLines;
+        private Instant from = null;
+        public MementoReader(final File file) {
+            try {
+                dateLines = lines(file.toPath()).iterator();
+                if (dateLines.hasNext()) {
+                    from = parse(dateLines.next());
+                }
+            } catch (final IOException ex) {
+                throw new UncheckedIOException(ex);
+            }
+        }
 
-    protected abstract Stream<Triple> getInboundTriples();
+        @Override
+        public boolean hasNext() {
+            return dateLines.hasNext();
+        }
 
-    protected abstract Stream<Triple> getUserTriples();
-
-    protected abstract Stream<Triple> getAuditTriples();
-
+        @Override
+        public VersionRange next() {
+            final String line = dateLines.next();
+            if (nonNull(line)) {
+                return new VersionRange(from, parse(line));
+            }
+            return null;
+        }
+    }
 }

@@ -21,31 +21,21 @@ package edu.amherst.acdc.trellis.rosid;
 class Constants {
     public static final String PREFIX = "info:trellis/";
 
-    public static final String AUDIT_CACHE = "audit.nt";
+    public static final String RESOURCE_JOURNAL = "resource.rdfp";
 
-    public static final String AUDIT_JOURNAL = "audit.journal";
+    public static final String AUDIT_CACHE = "audit.nt";
 
     public static final String RESOURCE_CACHE = "resource.json";
 
-    public static final String RESOURCE_JOURNAL = "resource.journal";
-
     public static final String CONTAINMENT_CACHE = "containment.nt";
-
-    public static final String CONTAINMENT_JOURNAL = "containment.journal";
 
     public static final String MEMBERSHIP_CACHE = "membership.nt";
 
-    public static final String MEMBERSHIP_JOURNAL = "membership.journal";
-
     public static final String INBOUND_CACHE = "inbound.nt";
-
-    public static final String INBOUND_JOURNAL = "inbound.journal";
 
     public static final String MEMENTO_CACHE = "memento.cache";
 
     public static final String USER_CACHE = "user.nt";
-
-    public static final String USER_JOURNAL = "user.journal";
 
     private Constants() {
         // prevent instantiation

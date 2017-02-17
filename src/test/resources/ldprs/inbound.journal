@@ -1,9 +1,0 @@
-BEGIN # 2016-12-10T03:27:00Z
-A <info:trellis/resource> <http://purl.org/dc/terms/hasPart> <info:trellis/ldprs> .
-END # 2016-12-10T03:27:00Z
-BEGIN # 2017-01-02T14:57:00Z
-A <info:trellis/other/resource> <http://purl.org/dc/terms/relation> <info:trellis/ldprs> .
-END # 2017-01-02T14:57:00Z
-BEGIN # 2017-03-01T15:15:00Z
-A <info:trellis/other/item> <http://purl.org/dc/terms/hasPart> <info:trellis/ldprs> .
-END # 2017-03-01T15:15:00Z

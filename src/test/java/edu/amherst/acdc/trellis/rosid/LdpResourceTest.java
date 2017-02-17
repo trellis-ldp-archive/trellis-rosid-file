@@ -136,11 +136,6 @@ public class LdpResourceTest {
         assertTrue(res.getTypes().anyMatch(rdf.createIRI("http://example.org/types/Bar")::equals));
         assertEquals(0L, res.stream(EnumSet.of(LDP_CONTAINMENT, LDP_MEMBERSHIP)).count());
 
-        final List<VersionRange> mementos = res.getMementos().collect(toList());
-        assertEquals(1L, mementos.size());
-        assertEquals(parse("2017-02-15T10:05:00Z"), mementos.get(0).getFrom());
-        assertEquals(parse("2017-02-15T11:15:00Z"), mementos.get(0).getUntil());
-
         final List<Triple> triples = res.stream(USER_MANAGED).collect(toList());
         assertEquals(4L, triples.size());
         assertTrue(triples.contains(rdf.createTriple(identifier, LDP.inbox,
@@ -160,6 +155,11 @@ public class LdpResourceTest {
                         DC.relation, identifier)));
         assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("info:trellis/other/item"),
                         DC.hasPart, identifier)));
+
+        final List<VersionRange> mementos = res.getMementos().collect(toList());
+        assertEquals(1L, mementos.size());
+        assertEquals(parse("2017-02-15T10:05:00Z"), mementos.get(0).getFrom());
+        assertEquals(parse("2017-02-15T11:15:00Z"), mementos.get(0).getUntil());
     }
 
     @Test
@@ -186,11 +186,6 @@ public class LdpResourceTest {
         assertEquals(0L, res.getTypes().count());
         assertEquals(0L, res.stream(EnumSet.of(LDP_CONTAINMENT, LDP_MEMBERSHIP)).count());
 
-        final List<VersionRange> mementos = res.getMementos().collect(toList());
-        assertEquals(1L, mementos.size());
-        assertEquals(parse("2017-02-15T10:05:00Z"), mementos.get(0).getFrom());
-        assertEquals(parse("2017-02-15T11:15:00Z"), mementos.get(0).getUntil());
-
         final List<Triple> triples = res.stream(USER_MANAGED).collect(toList());
         assertEquals(0L, triples.size());
 
@@ -200,6 +195,11 @@ public class LdpResourceTest {
                         DC.hasPart, identifier)));
         assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("info:trellis/other/resource"),
                         DC.relation, identifier)));
+
+        final List<VersionRange> mementos = res.getMementos().collect(toList());
+        assertEquals(1L, mementos.size());
+        assertEquals(parse("2017-02-15T10:05:00Z"), mementos.get(0).getFrom());
+        assertEquals(parse("2017-02-15T11:15:00Z"), mementos.get(0).getUntil());
     }
 
     @Test
@@ -233,11 +233,6 @@ public class LdpResourceTest {
         assertTrue(res.getTypes().anyMatch(rdf.createIRI("http://example.org/types/Bar")::equals));
         assertEquals(0L, res.stream(EnumSet.of(LDP_CONTAINMENT, LDP_MEMBERSHIP)).count());
 
-        final List<VersionRange> mementos = res.getMementos().collect(toList());
-        assertEquals(1L, mementos.size());
-        assertEquals(parse("2017-02-15T10:05:00Z"), mementos.get(0).getFrom());
-        assertEquals(parse("2017-02-15T11:15:00Z"), mementos.get(0).getUntil());
-
         final List<Triple> triples = res.stream(USER_MANAGED).collect(toList());
         assertEquals(4L, triples.size());
         assertTrue(triples.contains(rdf.createTriple(identifier, LDP.inbox,
@@ -257,5 +252,10 @@ public class LdpResourceTest {
                         DC.relation, identifier)));
         assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("info:trellis/other/item"),
                         DC.hasPart, identifier)));
+
+        final List<VersionRange> mementos = res.getMementos().collect(toList());
+        assertEquals(1L, mementos.size());
+        assertEquals(parse("2017-02-15T10:05:00Z"), mementos.get(0).getFrom());
+        assertEquals(parse("2017-02-15T11:15:00Z"), mementos.get(0).getUntil());
     }
 }

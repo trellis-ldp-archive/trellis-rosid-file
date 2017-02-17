@@ -21,35 +21,39 @@ import static java.util.Objects.nonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.mapping;
-import static java.util.stream.Collectors.partitioningBy;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.empty;
 import static java.util.stream.Stream.of;
-import static edu.amherst.acdc.trellis.rosid.Constants.AUDIT_JOURNAL;
-import static edu.amherst.acdc.trellis.rosid.Constants.CONTAINMENT_JOURNAL;
-import static edu.amherst.acdc.trellis.rosid.Constants.INBOUND_JOURNAL;
-import static edu.amherst.acdc.trellis.rosid.Constants.MEMBERSHIP_JOURNAL;
+import static edu.amherst.acdc.trellis.api.Resource.TripleContext.FEDORA_INBOUND_REFERENCES;
+import static edu.amherst.acdc.trellis.api.Resource.TripleContext.LDP_CONTAINMENT;
+import static edu.amherst.acdc.trellis.api.Resource.TripleContext.LDP_MEMBERSHIP;
+import static edu.amherst.acdc.trellis.api.Resource.TripleContext.TRELLIS_AUDIT;
+import static edu.amherst.acdc.trellis.api.Resource.TripleContext.USER_MANAGED;
 import static edu.amherst.acdc.trellis.rosid.Constants.RESOURCE_JOURNAL;
-import static edu.amherst.acdc.trellis.rosid.Constants.USER_JOURNAL;
 
 import java.io.File;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.stream.Stream;
 
 import edu.amherst.acdc.trellis.api.Resource;
-import edu.amherst.acdc.trellis.api.VersionRange;
 import edu.amherst.acdc.trellis.vocabulary.ACL;
 import edu.amherst.acdc.trellis.vocabulary.DC;
+import edu.amherst.acdc.trellis.vocabulary.Fedora;
 import edu.amherst.acdc.trellis.vocabulary.LDP;
 import edu.amherst.acdc.trellis.vocabulary.RDF;
 import edu.amherst.acdc.trellis.vocabulary.Trellis;
 import org.apache.commons.rdf.api.Graph;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Literal;
+import org.apache.commons.rdf.api.Quad;
 import org.apache.commons.rdf.api.RDFTerm;
 import org.apache.commons.rdf.api.Triple;
 
@@ -61,6 +65,7 @@ import org.apache.commons.rdf.api.Triple;
 class VersionedResource extends AbstractFileResource {
 
     private final Instant time;
+    private final Map<IRI, Resource.TripleCategory> categorymap = new HashMap<>();
 
     /**
      * Create a File-based versioned resource
@@ -72,6 +77,12 @@ class VersionedResource extends AbstractFileResource {
             final Instant time) {
         super(directory, identifier, data);
         this.time = time;
+
+        categorymap.put(Fedora.InboundReferences, FEDORA_INBOUND_REFERENCES);
+        categorymap.put(LDP.PreferContainment, LDP_CONTAINMENT);
+        categorymap.put(LDP.PreferMembership, LDP_MEMBERSHIP);
+        categorymap.put(Trellis.PreferAudit, TRELLIS_AUDIT);
+        categorymap.put(Trellis.UserManagedTriples, USER_MANAGED);
     }
 
     /**
@@ -93,22 +104,52 @@ class VersionedResource extends AbstractFileResource {
      * @return the resource data, if it exists
      */
     public static Optional<ResourceData> read(final File directory, final IRI identifier, final Instant time) {
+        final Set<IRI> specialUserProperties = new HashSet<>();
+        specialUserProperties.add(ACL.accessControl);
+        specialUserProperties.add(LDP.inbox);
+        specialUserProperties.add(LDP.membershipResource);
+        specialUserProperties.add(LDP.hasMemberRelation);
+        specialUserProperties.add(LDP.isMemberOfRelation);
+        specialUserProperties.add(LDP.insertedContentRelation);
+        specialUserProperties.add(RDF.type);
+
         final Graph graph = rdf.createGraph();
         final File file = new File(directory, RESOURCE_JOURNAL);
+        final Set<IRI> types = new HashSet<>();
+        types.add(Trellis.ServerManagedTriples);
+        types.add(Trellis.UserManagedTriples);
+
         if (file.exists()) {
-            RDFPatch.asStream(rdf, file, time).forEach(graph::add);
 
-            final Map<IRI, List<RDFTerm>> data = graph.stream(identifier, null, null)
-                .collect(groupingBy(Triple::getPredicate, mapping(Triple::getObject, toList())));
-
-            final Map<Boolean, List<String>> types = getStringStream(data.getOrDefault(RDF.type,
-                        singletonList(LDP.Resource))).collect(partitioningBy(str -> str.startsWith(LDP.uri)));
-
+            final Map<IRI, List<IRI>> data = new HashMap<>();
             final ResourceData rd = new ResourceData();
             rd.id = identifier.getIRIString();
+
+            RDFPatch.asStream(rdf, file, time).filter(quad -> quad.getGraphName().isPresent() &&
+                    types.contains(quad.getGraphName().get())).forEach(quad -> {
+                if (quad.getGraphName().get().equals(Trellis.UserManagedTriples) &&
+                        specialUserProperties.contains(quad.getPredicate()) && quad.getObject() instanceof IRI) {
+                    data.computeIfAbsent(quad.getPredicate(), k -> new ArrayList<>()).add((IRI) quad.getObject());
+                } else if (quad.getGraphName().get().equals(Trellis.ServerManagedTriples)) {
+                    if (quad.getPredicate().equals(DC.created)) {
+                        rd.created = Optional.of((Literal) quad.getObject()).map(Literal::getLexicalForm)
+                            .map(Instant::parse).orElse(null);
+                    } else if (quad.getPredicate().equals(DC.modified)) {
+                        rd.modified = Optional.of((Literal) quad.getObject()).map(Literal::getLexicalForm)
+                            .map(Instant::parse).orElse(null);
+                    } else if (quad.getObject() instanceof IRI) {
+                        data.computeIfAbsent(quad.getPredicate(), k -> new ArrayList<>()).add((IRI) quad.getObject());
+                    }
+                    graph.add(quad.asTriple());
+                }
+            });
+
+
+            rd.ldpType = data.getOrDefault(RDF.type, emptyList()).stream().map(IRI::getIRIString)
+                .filter(uri -> uri.startsWith(LDP.uri)).findFirst().orElse(null);
+            rd.userTypes = data.getOrDefault(RDF.type, emptyList()).stream().map(IRI::getIRIString)
+                .filter(uri -> !uri.startsWith(LDP.uri)).collect(toList());
             rd.containedBy = getFirstAsString(data.get(Trellis.containedBy));
-            rd.ldpType = types.get(true).get(0);
-            rd.userTypes = types.get(false);
             rd.accessControl = getFirstAsString(data.get(ACL.accessControl));
             rd.inbox = getFirstAsString(data.get(LDP.inbox));
             rd.membershipResource = getFirstAsString(data.get(LDP.membershipResource));
@@ -116,24 +157,26 @@ class VersionedResource extends AbstractFileResource {
             rd.isMemberOfRelation = getFirstAsString(data.get(LDP.isMemberOfRelation));
             rd.insertedContentRelation = getFirstAsString(data.get(LDP.insertedContentRelation));
             rd.creator = getFirstAsString(data.get(DC.creator));
-            rd.created = getFirstAsInstant(data.get(DC.created));
-            rd.modified = getFirstAsInstant(data.get(DC.modified));
 
             // Populate datastream, if present
             graph.stream(identifier, DC.hasPart, null).map(Triple::getObject).findFirst()
                 .filter(id -> id instanceof IRI).map(id -> (IRI) id).ifPresent(id -> {
                     final Map<IRI, List<RDFTerm>> dsdata = graph.stream(id, null, null)
                         .collect(groupingBy(Triple::getPredicate, mapping(Triple::getObject, toList())));
-                    final Instant created = getFirstAsInstant(dsdata.get(DC.created));
-                    final Instant modified = getFirstAsInstant(dsdata.get(DC.modified));
+                    final Instant created = ofNullable(dsdata.get(DC.created)).map(l -> l.get(0))
+                        .map(term -> (Literal) term).map(Literal::getLexicalForm).map(Instant::parse).orElse(null);
+                    final Instant modified = ofNullable(dsdata.get(DC.modified)).map(l -> l.get(0))
+                        .map(term -> (Literal) term).map(Literal::getLexicalForm).map(Instant::parse).orElse(null);
 
                     if (nonNull(created) && nonNull(modified)) {
                         rd.datastream = new ResourceData.DatastreamData();
                         rd.datastream.id = id.getIRIString();
                         rd.datastream.created = created;
                         rd.datastream.modified = modified;
-                        rd.datastream.format = getFirstAsString(dsdata.get(DC.format));
-                        rd.datastream.size = Long.parseLong(getFirstAsString(dsdata.get(DC.extent)));
+                        rd.datastream.format = ofNullable(dsdata.get(DC.format)).map(l -> l.get(0))
+                            .map(term -> (Literal) term).map(Literal::getLexicalForm).orElse(null);
+                        rd.datastream.size = ofNullable(dsdata.get(DC.extent)).map(l -> l.get(0))
+                            .map(term -> (Literal) term).map(Literal::getLexicalForm).map(Long::parseLong).orElse(null);
                     }
                 });
 
@@ -150,14 +193,8 @@ class VersionedResource extends AbstractFileResource {
     }
 
     @Override
-    public Stream<VersionRange> getMementos() {
-        return Optional.of(new File(directory, USER_JOURNAL)).filter(File::exists)
-            .map(RDFPatch::asTimeMap).orElse(empty());
-    }
-
-    @Override
     public Stream<IRI> getContains() {
-        return getContainmentTriples().map(Triple::getSubject).flatMap(subj -> {
+        return stream(singletonList(LDP_CONTAINMENT)).map(Triple::getSubject).flatMap(subj -> {
             if (subj instanceof IRI) {
                 return of((IRI) subj);
             }
@@ -166,59 +203,15 @@ class VersionedResource extends AbstractFileResource {
     }
 
     @Override
-    protected Stream<Triple> getContainmentTriples() {
-        return Optional.of(new File(directory, CONTAINMENT_JOURNAL)).filter(File::exists)
-            .map(file -> RDFPatch.asStream(rdf, file, time)).orElse(empty());
+    public <T extends Resource.TripleCategory> Stream<Triple> stream(final Collection<T> category) {
+        return Optional.of(new File(directory, RESOURCE_JOURNAL)).filter(File::exists)
+            .map(file -> RDFPatch.asStream(rdf, file, time)).orElse(empty())
+            .filter(quad -> quad.getGraphName().filter(categorymap::containsKey).isPresent() &&
+                    category.contains(categorymap.get(quad.getGraphName().get())))
+            .map(Quad::asTriple);
     }
 
-    @Override
-    protected Stream<Triple> getMembershipTriples() {
-        return Optional.of(new File(directory, MEMBERSHIP_JOURNAL)).filter(File::exists)
-            .map(file -> RDFPatch.asStream(rdf, file, time)).orElse(empty());
+    private static String getFirstAsString(final List<IRI> list) {
+        return ofNullable(list).filter(l -> !l.isEmpty()).map(l -> l.get(0)).map(IRI::getIRIString).orElse(null);
     }
-
-    @Override
-    protected Stream<Triple> getInboundTriples() {
-        return Optional.of(new File(directory, INBOUND_JOURNAL)).filter(File::exists)
-            .map(file -> RDFPatch.asStream(rdf, file, time)).orElse(empty());
-    }
-
-    @Override
-    protected Stream<Triple> getUserTriples() {
-        return Optional.of(new File(directory, USER_JOURNAL)).filter(File::exists)
-            .map(file -> RDFPatch.asStream(rdf, file, time)).orElse(empty());
-    }
-
-    @Override
-    protected Stream<Triple> getAuditTriples() {
-        return Optional.of(new File(directory, AUDIT_JOURNAL)).filter(File::exists)
-            .map(file -> RDFPatch.asStream(rdf, file, time)).orElse(empty());
-    }
-
-
-    private static String getFirstAsString(final List<RDFTerm> list) {
-        return getStringStream(list).findFirst().orElse(null);
-    }
-
-    private static Instant getFirstAsInstant(final List<RDFTerm> list) {
-        return ofNullable(list).orElse(emptyList()).stream().findFirst().flatMap(literalToInstant).orElse(null);
-    }
-
-    private static Stream<String> getStringStream(final List<RDFTerm> list) {
-        return ofNullable(list).orElse(emptyList()).stream().flatMap(uriTermToString);
-    }
-
-    private static Function<RDFTerm, Stream<String>> uriTermToString = term -> {
-        if (term instanceof IRI) {
-            return of((IRI) term).map(IRI::getIRIString);
-        }
-        return empty();
-    };
-
-    private static Function<RDFTerm, Optional<Instant>> literalToInstant = term -> {
-        if (term instanceof Literal) {
-            return ofNullable((Literal) term).map(Literal::getLexicalForm).map(Instant::parse);
-        }
-        return Optional.empty();
-    };
 }

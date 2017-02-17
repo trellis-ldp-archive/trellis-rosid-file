@@ -25,9 +25,9 @@ import static java.time.Instant.now;
 import static java.time.Instant.parse;
 import static java.util.Objects.nonNull;
 import static java.util.stream.StreamSupport.stream;
-import static org.apache.commons.rdf.jena.JenaRDF.asTriple;
-import static org.apache.jena.riot.Lang.NTRIPLES;
-import static org.apache.jena.riot.system.StreamRDFLib.sinkTriples;
+import static org.apache.commons.rdf.jena.JenaRDF.asQuad;
+import static org.apache.jena.riot.Lang.NQUADS;
+import static org.apache.jena.riot.system.StreamRDFLib.sinkQuads;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -37,6 +37,7 @@ import java.io.UncheckedIOException;
 import java.io.Writer;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -48,8 +49,9 @@ import java.util.stream.Stream;
 import edu.amherst.acdc.trellis.api.VersionRange;
 import org.apache.commons.io.input.ReversedLinesFileReader;
 import org.apache.commons.rdf.api.Graph;
+import org.apache.commons.rdf.api.IRI;
+import org.apache.commons.rdf.api.Quad;
 import org.apache.commons.rdf.api.RDF;
-import org.apache.commons.rdf.api.Triple;
 import org.apache.jena.atlas.lib.SinkToCollection;
 import org.apache.jena.riot.RDFParserRegistry;
 import org.apache.jena.riot.ReaderRIOT;
@@ -59,7 +61,7 @@ import org.apache.jena.riot.ReaderRIOT;
  */
 class RDFPatch {
 
-    private static final ReaderRIOT READER = RDFParserRegistry.getFactory(NTRIPLES).create(NTRIPLES);
+    private static final ReaderRIOT READER = RDFParserRegistry.getFactory(NQUADS).create(NQUADS);
 
     /**
      * Read the triples from the journal that existed up to (and including) the specified time
@@ -68,7 +70,7 @@ class RDFPatch {
      * @param time the time
      * @return a stream of RDF triples
      */
-    public static Stream<Triple> asStream(final RDF rdf, final File file, final Instant time) {
+    public static Stream<Quad> asStream(final RDF rdf, final File file, final Instant time) {
         return stream(new StreamReader(rdf, file, time), false);
     }
 
@@ -78,7 +80,7 @@ class RDFPatch {
      * @param file the file
      * @return a stream of RDF triples
      */
-    public static Stream<Triple> asStream(final RDF rdf, final File file) {
+    public static Stream<Quad> asStream(final RDF rdf, final File file) {
         return asStream(rdf, file, now());
     }
 
@@ -88,8 +90,8 @@ class RDFPatch {
      * @param file the file
      * @return a graph of the RDF resource
      */
-    public static Graph asGraph(final RDF rdf, final File file) {
-        return asGraph(rdf, file, now());
+    public static Graph asGraph(final RDF rdf, final File file, final Collection<IRI> category) {
+        return asGraph(rdf, file, category, now());
     }
 
     /**
@@ -99,22 +101,26 @@ class RDFPatch {
      * @param time the time
      * @return a graph of the RDF resource
      */
-    public static Graph asGraph(final RDF rdf, final File file, final Instant time) {
+    public static Graph asGraph(final RDF rdf, final File file, final Collection<IRI> category, final Instant time) {
         final Graph graph = rdf.createGraph();
         try {
             final Iterator<String> allLines = lines(file.toPath()).iterator();
             while (allLines.hasNext()) {
                 final String line = allLines.next();
-                if (line.startsWith("D ANY ANY ANY")) {
-                    graph.clear();
-                } else if (line.startsWith("BEGIN # ")) {
+                if (line.startsWith("BEGIN # ")) {
                     if (time.isBefore(parse(line.split(" # ", 2)[1]))) {
                         break;
                     }
                 } else if (line.startsWith("A ")) {
-                    graph.add(stringToTriple(rdf, line.split(" ", 2)[1]));
+                    final Quad quad = stringToQuad(rdf, line.split(" ", 2)[1]);
+                    if (quad.getGraphName().filter(category::contains).isPresent()) {
+                        graph.add(quad.asTriple());
+                    }
                 } else if (line.startsWith("D ")) {
-                    graph.remove(stringToTriple(rdf, line.split(" ", 2)[1]));
+                    final Quad quad = stringToQuad(rdf, line.split(" ", 2)[1]);
+                    if (quad.getGraphName().filter(category::contains).isPresent()) {
+                        graph.remove(quad.asTriple());
+                    }
                 }
             }
         } catch (final IOException ex) {
@@ -133,39 +139,18 @@ class RDFPatch {
     }
 
     /**
-     * Replace RDF Patch statements to the specified file
-     * @param file the file
-     * @param triples the triples
-     * @param time the time
-     */
-    public static void replace(final File file, final Stream<Triple> triples, final Instant time) {
-        try (final BufferedWriter writer = newBufferedWriter(file.toPath(), UTF_8, APPEND)) {
-            writer.write("BEGIN # " + time.toString() + lineSeparator());
-            writer.write("D ANY ANY ANY ." + lineSeparator());
-            triples.forEach(triple -> {
-                uncheckedWrite(writer, join(" ", "A", triple.getSubject().ntriplesString(),
-                            triple.getPredicate().ntriplesString(), triple.getObject().ntriplesString(), ".") +
-                        lineSeparator());
-            });
-            writer.write("END # " + time.toString() + lineSeparator());
-        } catch (final IOException ex) {
-            throw new UncheckedIOException(ex);
-        }
-    }
-
-    /**
      * Delete RDF Patch statements from the specified file
      * @param file the file
-     * @param triples the triples
+     * @param quads the quads
      * @param time the time
      */
-    public static void delete(final File file, final Stream<Triple> triples, final Instant time) {
+    public static void delete(final File file, final Stream<Quad> quads, final Instant time) {
         try (final BufferedWriter writer = newBufferedWriter(file.toPath(), UTF_8, APPEND)) {
             writer.write("BEGIN # " + time.toString() + lineSeparator());
-            triples.forEach(triple -> {
-                uncheckedWrite(writer, join(" ", "D", triple.getSubject().ntriplesString(),
-                            triple.getPredicate().ntriplesString(), triple.getObject().ntriplesString(), ".") +
-                        lineSeparator());
+            quads.filter(quad -> quad.getGraphName().isPresent()).forEach(quad -> {
+                uncheckedWrite(writer, join(" ", "D", quad.getSubject().ntriplesString(),
+                            quad.getPredicate().ntriplesString(), quad.getObject().ntriplesString(),
+                            quad.getGraphName().get().ntriplesString(), ".") + lineSeparator());
             });
             writer.write("END # " + time.toString() + lineSeparator());
         } catch (final IOException ex) {
@@ -179,13 +164,13 @@ class RDFPatch {
      * @param triples the triples
      * @param time the time
      */
-    public static void add(final File file, final Stream<Triple> triples, final Instant time) {
+    public static void add(final File file, final Stream<Quad> quads, final Instant time) {
         try (final BufferedWriter writer = newBufferedWriter(file.toPath(), UTF_8, APPEND)) {
             writer.write("BEGIN # " + time.toString() + lineSeparator());
-            triples.forEach(triple -> {
-                uncheckedWrite(writer, join(" ", "A", triple.getSubject().ntriplesString(),
-                            triple.getPredicate().ntriplesString(), triple.getObject().ntriplesString(), ".") +
-                        lineSeparator());
+            quads.filter(quad -> quad.getGraphName().isPresent()).forEach(quad -> {
+                uncheckedWrite(writer, join(" ", "A", quad.getSubject().ntriplesString(),
+                            quad.getPredicate().ntriplesString(), quad.getObject().ntriplesString(),
+                            quad.getGraphName().get().ntriplesString(), ".") + lineSeparator());
             });
             writer.write("END # " + time.toString() + lineSeparator());
         } catch (final IOException ex) {
@@ -201,11 +186,11 @@ class RDFPatch {
         }
     }
 
-    private static Triple stringToTriple(final RDF rdf, final String line) {
-        final List<org.apache.jena.graph.Triple> c = new ArrayList<>();
-        READER.read(new StringReader(line), null, NTRIPLES.getContentType(),
-                sinkTriples(new SinkToCollection<>(c)), null);
-        return asTriple(rdf, c.get(0));
+    private static Quad stringToQuad(final RDF rdf, final String line) {
+        final List<org.apache.jena.sparql.core.Quad> c = new ArrayList<>();
+        READER.read(new StringReader(line), null, NQUADS.getContentType(),
+                sinkQuads(new SinkToCollection<>(c)), null);
+        return asQuad(rdf, c.get(0));
     }
 
     /**
@@ -271,11 +256,11 @@ class RDFPatch {
     }
 
     /**
-     * A class for reading an RDFPatch file into a Triple Spliterator.
+     * A class for reading an RDFPatch file into a Quad Spliterator.
      */
-    private static class StreamReader implements Spliterator<Triple> {
+    private static class StreamReader implements Spliterator<Quad> {
 
-        private final Set<Triple> deleted = new HashSet<>();
+        private final Set<Quad> deleted = new HashSet<>();
         private final ReversedLinesFileReader reader;
         private final Instant time;
         private final RDF rdf;
@@ -305,23 +290,21 @@ class RDFPatch {
         }
 
         @Override
-        public void forEachRemaining(final Consumer<? super Triple> action) {
+        public void forEachRemaining(final Consumer<? super Quad> action) {
             try {
                 for (String line = reader.readLine(); nonNull(line); line = reader.readLine()) {
-                    if (line.startsWith("D ANY ANY ANY") && inRegion) {
-                        break;
-                    } else if (line.startsWith("END # ")) {
+                    if (line.startsWith("END # ")) {
                         final String[] parts = line.split(" # ", 2);
                         if (!time.isBefore(parse(parts[1]))) {
                             inRegion = true;
                         }
                     } else if (inRegion && (line.startsWith("A ") || line.startsWith("D "))) {
                         final String[] parts = line.split(" ", 2);
-                        final Triple triple = stringToTriple(rdf, parts[1]);
+                        final Quad quad = stringToQuad(rdf, parts[1]);
                         if (parts[0].equals("D")) {
-                            deleted.add(triple);
-                        } else if (parts[0].equals("A") && !deleted.contains(triple)) {
-                            action.accept((Triple) triple);
+                            deleted.add(quad);
+                        } else if (parts[0].equals("A") && !deleted.contains(quad)) {
+                            action.accept((Quad) quad);
                         }
                     }
                 }
@@ -331,10 +314,10 @@ class RDFPatch {
         }
 
         @Override
-        public boolean tryAdvance(final Consumer<? super Triple> action) {
+        public boolean tryAdvance(final Consumer<? super Quad> action) {
             try {
                 final String line = reader.readLine();
-                if (nonNull(line) && !(line.startsWith("D ANY ANY ANY") && inRegion)) {
+                if (nonNull(line)) {
                     if (line.startsWith("END ")) {
                         final String[] parts = line.split(" # ", 2);
                         if (parts.length == 2 && !time.isBefore(parse(parts[1]))) {
@@ -342,11 +325,11 @@ class RDFPatch {
                         }
                     } else if (inRegion && (line.startsWith("A ") || line.startsWith("D "))) {
                         final String[] parts = line.split(" ", 2);
-                        final Triple triple = stringToTriple(rdf, parts[1]);
+                        final Quad quad = stringToQuad(rdf, parts[1]);
                         if (parts[0].equals("D")) {
-                            deleted.add(triple);
-                        } else if (parts[0].equals("A") && !deleted.contains(triple)) {
-                            action.accept((Triple) triple);
+                            deleted.add(quad);
+                        } else if (parts[0].equals("A") && !deleted.contains(quad)) {
+                            action.accept((Quad) quad);
                         }
                     }
                 }
@@ -357,7 +340,7 @@ class RDFPatch {
         }
 
         @Override
-        public Spliterator<Triple> trySplit() {
+        public Spliterator<Quad> trySplit() {
             return null;
         }
 

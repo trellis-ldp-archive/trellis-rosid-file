@@ -1,3 +1,0 @@
-<info:trellis/resource> <http://purl.org/dc/terms/hasPart> <info:trellis/ldprs> .
-<info:trellis/other/resource> <http://purl.org/dc/terms/relation> <info:trellis/ldprs> .
-<info:trellis/other/item> <http://purl.org/dc/terms/hasPart> <info:trellis/ldprs> .

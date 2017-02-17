@@ -16,8 +16,6 @@
 package edu.amherst.acdc.trellis.rosid;
 
 import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
-import static java.util.Collections.unmodifiableMap;
 import static java.util.Collections.unmodifiableSet;
 import static java.util.Objects.nonNull;
 import static java.util.Optional.ofNullable;
@@ -25,12 +23,6 @@ import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.mapping;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.empty;
-import static java.util.stream.Stream.of;
-import static edu.amherst.acdc.trellis.api.Resource.TripleContext.FEDORA_INBOUND_REFERENCES;
-import static edu.amherst.acdc.trellis.api.Resource.TripleContext.LDP_CONTAINMENT;
-import static edu.amherst.acdc.trellis.api.Resource.TripleContext.LDP_MEMBERSHIP;
-import static edu.amherst.acdc.trellis.api.Resource.TripleContext.TRELLIS_AUDIT;
-import static edu.amherst.acdc.trellis.api.Resource.TripleContext.USER_MANAGED;
 import static edu.amherst.acdc.trellis.rosid.Constants.RESOURCE_JOURNAL;
 
 import java.io.File;
@@ -48,7 +40,6 @@ import java.util.stream.Stream;
 import edu.amherst.acdc.trellis.api.Resource;
 import edu.amherst.acdc.trellis.vocabulary.ACL;
 import edu.amherst.acdc.trellis.vocabulary.DC;
-import edu.amherst.acdc.trellis.vocabulary.Fedora;
 import edu.amherst.acdc.trellis.vocabulary.LDP;
 import edu.amherst.acdc.trellis.vocabulary.RDF;
 import edu.amherst.acdc.trellis.vocabulary.Trellis;
@@ -65,15 +56,6 @@ import org.apache.commons.rdf.api.Triple;
  * @author acoburn
  */
 class VersionedResource extends AbstractFileResource {
-
-    private static final Map<IRI, Resource.TripleCategory> categorymap = unmodifiableMap(
-        new HashMap<IRI, Resource.TripleCategory>() { {
-            put(Fedora.InboundReferences, FEDORA_INBOUND_REFERENCES);
-            put(LDP.PreferContainment, LDP_CONTAINMENT);
-            put(LDP.PreferMembership, LDP_MEMBERSHIP);
-            put(Trellis.PreferAudit, TRELLIS_AUDIT);
-            put(Trellis.UserManagedTriples, USER_MANAGED);
-    }});
 
     private static final Set<IRI> specialUserProperties = unmodifiableSet(new HashSet<IRI>() { {
         add(ACL.accessControl);
@@ -199,16 +181,6 @@ class VersionedResource extends AbstractFileResource {
     @Override
     public Boolean isMemento() {
         return true;
-    }
-
-    @Override
-    public Stream<IRI> getContains() {
-        return stream(singletonList(LDP_CONTAINMENT)).map(Triple::getSubject).flatMap(subj -> {
-            if (subj instanceof IRI) {
-                return of((IRI) subj);
-            }
-            return empty();
-        });
     }
 
     @Override

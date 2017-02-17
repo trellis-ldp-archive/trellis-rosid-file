@@ -19,20 +19,11 @@ import static java.nio.file.Files.lines;
 import static java.util.Optional.of;
 import static java.util.stream.Stream.empty;
 import static com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS;
-import static edu.amherst.acdc.trellis.api.Resource.TripleContext.FEDORA_INBOUND_REFERENCES;
-import static edu.amherst.acdc.trellis.api.Resource.TripleContext.LDP_CONTAINMENT;
-import static edu.amherst.acdc.trellis.api.Resource.TripleContext.LDP_MEMBERSHIP;
-import static edu.amherst.acdc.trellis.api.Resource.TripleContext.TRELLIS_AUDIT;
-import static edu.amherst.acdc.trellis.api.Resource.TripleContext.USER_MANAGED;
-import static edu.amherst.acdc.trellis.rosid.Constants.AUDIT_CACHE;
-import static edu.amherst.acdc.trellis.rosid.Constants.CONTAINMENT_CACHE;
-import static edu.amherst.acdc.trellis.rosid.Constants.INBOUND_CACHE;
-import static edu.amherst.acdc.trellis.rosid.Constants.MEMBERSHIP_CACHE;
 import static edu.amherst.acdc.trellis.rosid.Constants.RESOURCE_CACHE;
-import static edu.amherst.acdc.trellis.rosid.Constants.USER_CACHE;
-import static org.apache.jena.riot.Lang.NTRIPLES;
-import static org.apache.commons.rdf.jena.JenaRDF.asTriple;
-import static org.apache.jena.riot.system.StreamRDFLib.sinkTriples;
+import static edu.amherst.acdc.trellis.rosid.Constants.RESOURCE_QUADS;
+import static org.apache.jena.riot.Lang.NQUADS;
+import static org.apache.commons.rdf.jena.JenaRDF.asQuad;
+import static org.apache.jena.riot.system.StreamRDFLib.sinkQuads;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.File;
@@ -42,19 +33,16 @@ import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import edu.amherst.acdc.trellis.api.Resource;
-import edu.amherst.acdc.trellis.vocabulary.LDP;
 import org.apache.commons.rdf.api.IRI;
+import org.apache.commons.rdf.api.Quad;
 import org.apache.commons.rdf.api.Triple;
 import org.apache.jena.atlas.lib.SinkToCollection;
 import org.apache.jena.riot.RDFParserRegistry;
@@ -70,11 +58,9 @@ class CachedResource extends AbstractFileResource {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
-    private static final ReaderRIOT READER = RDFParserRegistry.getFactory(NTRIPLES).create(NTRIPLES);
+    private static final ReaderRIOT READER = RDFParserRegistry.getFactory(NQUADS).create(NQUADS);
 
     private static final Logger LOGGER = getLogger(CachedResource.class);
-
-    protected final Map<Resource.TripleContext, Supplier<Stream<Triple>>> fnmap = new HashMap<>();
 
     static {
         MAPPER.configure(WRITE_DATES_AS_TIMESTAMPS, false);
@@ -88,13 +74,6 @@ class CachedResource extends AbstractFileResource {
      */
     protected CachedResource(final File directory, final IRI identifier, final ResourceData data) {
         super(directory, identifier, data);
-
-        // define mappings for triple contexts
-        fnmap.put(LDP_CONTAINMENT, this::getContainmentTriples);
-        fnmap.put(LDP_MEMBERSHIP, this::getMembershipTriples);
-        fnmap.put(FEDORA_INBOUND_REFERENCES, this::getInboundTriples);
-        fnmap.put(USER_MANAGED, this::getUserTriples);
-        fnmap.put(TRELLIS_AUDIT, this::getAuditTriples);
     }
 
     /**
@@ -122,39 +101,10 @@ class CachedResource extends AbstractFileResource {
     }
 
     @Override
-    public Stream<IRI> getContains() {
-        return of(new File(directory, CONTAINMENT_CACHE)).filter(File::exists).map(File::toPath).map(uncheckedLines)
-            .orElse(empty()).map(rdf::createIRI);
-    }
-
-    @Override
     public <T extends Resource.TripleCategory> Stream<Triple> stream(final Collection<T> category) {
-        return category.stream().filter(fnmap::containsKey).map(fnmap::get).flatMap(Supplier::get);
-    }
-
-
-    private Stream<Triple> getMembershipTriples() {
-        return of(new File(directory, MEMBERSHIP_CACHE)).filter(File::exists).map(File::toPath).map(uncheckedLines)
-            .orElse(empty()).flatMap(readNTriple);
-    }
-
-    private Stream<Triple> getInboundTriples() {
-        return of(new File(directory, INBOUND_CACHE)).filter(File::exists).map(File::toPath).map(uncheckedLines)
-            .orElse(empty()).flatMap(readNTriple);
-    }
-
-    private Stream<Triple> getUserTriples() {
-        return of(new File(directory, USER_CACHE)).filter(File::exists).map(File::toPath).map(uncheckedLines)
-            .orElse(empty()).flatMap(readNTriple);
-    }
-
-    private Stream<Triple> getAuditTriples() {
-        return of(new File(directory, AUDIT_CACHE)).filter(File::exists).map(File::toPath).map(uncheckedLines)
-            .orElse(empty()).flatMap(readNTriple);
-    }
-
-    private Stream<Triple> getContainmentTriples() {
-        return getContains().map(uri -> rdf.createTriple(getIdentifier(), LDP.contains, uri));
+        return Optional.of(new File(directory, RESOURCE_QUADS)).filter(File::exists).map(File::toPath)
+            .map(uncheckedLines).orElse(empty()).flatMap(readNQuad).filter(quad -> quad.getGraphName().isPresent() &&
+                    category.contains(categorymap.get(quad.getGraphName().get()))).map(Quad::asTriple);
     }
 
     private Function<Path, Stream<String>> uncheckedLines = path -> {
@@ -165,11 +115,10 @@ class CachedResource extends AbstractFileResource {
         }
     };
 
-    private static Function<String, Stream<Triple>> readNTriple = line -> {
-        final List<org.apache.jena.graph.Triple> c = new ArrayList<>();
-        READER.read(new StringReader(line), null, NTRIPLES.getContentType(),
-                sinkTriples(new SinkToCollection<>(c)), null);
-        return c.stream().map(triple -> asTriple(rdf, triple));
+    private static Function<String, Stream<Quad>> readNQuad = line -> {
+        final List<org.apache.jena.sparql.core.Quad> c = new ArrayList<>();
+        READER.read(new StringReader(line), null, NQUADS.getContentType(),
+                sinkQuads(new SinkToCollection<>(c)), null);
+        return c.stream().map(quad -> asQuad(rdf, quad));
     };
-
 }

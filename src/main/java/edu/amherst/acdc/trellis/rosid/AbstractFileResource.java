@@ -17,6 +17,8 @@ package edu.amherst.acdc.trellis.rosid;
 
 import static java.nio.file.Files.lines;
 import static java.time.Instant.parse;
+import static java.util.Collections.singleton;
+import static java.util.Collections.unmodifiableMap;
 import static java.util.Objects.nonNull;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
@@ -25,6 +27,12 @@ import static java.util.Spliterator.NONNULL;
 import static java.util.Spliterator.ORDERED;
 import static java.util.Spliterators.spliteratorUnknownSize;
 import static java.util.stream.Stream.empty;
+import static java.util.stream.Stream.of;
+import static edu.amherst.acdc.trellis.api.Resource.TripleContext.FEDORA_INBOUND_REFERENCES;
+import static edu.amherst.acdc.trellis.api.Resource.TripleContext.LDP_CONTAINMENT;
+import static edu.amherst.acdc.trellis.api.Resource.TripleContext.LDP_MEMBERSHIP;
+import static edu.amherst.acdc.trellis.api.Resource.TripleContext.TRELLIS_AUDIT;
+import static edu.amherst.acdc.trellis.api.Resource.TripleContext.USER_MANAGED;
 import static edu.amherst.acdc.trellis.rosid.Constants.MEMENTO_CACHE;
 
 import java.io.File;
@@ -32,7 +40,9 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.time.Instant;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -41,6 +51,8 @@ import edu.amherst.acdc.trellis.api.Datastream;
 import edu.amherst.acdc.trellis.api.Resource;
 import edu.amherst.acdc.trellis.api.VersionRange;
 import edu.amherst.acdc.trellis.vocabulary.LDP;
+import edu.amherst.acdc.trellis.vocabulary.Fedora;
+import edu.amherst.acdc.trellis.vocabulary.Trellis;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.RDF;
 import org.apache.commons.rdf.api.Triple;
@@ -58,6 +70,15 @@ abstract class AbstractFileResource implements Resource {
     protected final File directory;
 
     protected ResourceData data;
+
+    protected static final Map<IRI, Resource.TripleCategory> categorymap = unmodifiableMap(
+        new HashMap<IRI, Resource.TripleCategory>() { {
+            put(Fedora.InboundReferences, FEDORA_INBOUND_REFERENCES);
+            put(LDP.PreferContainment, LDP_CONTAINMENT);
+            put(LDP.PreferMembership, LDP_MEMBERSHIP);
+            put(Trellis.PreferAudit, TRELLIS_AUDIT);
+            put(Trellis.UserManagedTriples, USER_MANAGED);
+    }});
 
 
     protected AbstractFileResource(final File directory, final IRI identifier, final ResourceData data) {
@@ -146,6 +167,16 @@ abstract class AbstractFileResource implements Resource {
     public Stream<VersionRange> getMementos() {
         return StreamSupport.stream(spliteratorUnknownSize(new MementoReader(new File(directory, MEMENTO_CACHE)),
                     IMMUTABLE | NONNULL | ORDERED), false);
+    }
+
+    @Override
+    public Stream<IRI> getContains() {
+        return stream(singleton(LDP_CONTAINMENT)).map(Triple::getSubject).flatMap(subj -> {
+            if (subj instanceof IRI) {
+                return of((IRI) subj);
+            }
+            return empty();
+        });
     }
 
     @Override

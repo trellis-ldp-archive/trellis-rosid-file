@@ -19,7 +19,7 @@ package edu.amherst.acdc.trellis.rosid;
  * @author acoburn
  */
 class Constants {
-    public static final String PREFIX = "info:trellis/";
+    public static final String PREFIX = "info:trellis";
 
     public static final String RESOURCE_JOURNAL = "resource.rdfp";
 

@@ -58,7 +58,7 @@ class FileUtils {
     }
 
     public static String asPath(final String identifier) {
-        return of(identifier).filter(uri -> uri.startsWith(PREFIX)).map(uri -> uri.substring(PREFIX.length()))
+        return of(identifier).filter(uri -> uri.startsWith(PREFIX + "/")).map(uri -> uri.substring(PREFIX.length() + 1))
             .map(URI::create).map(URI::getPath).orElseThrow(() ->
                     new IllegalArgumentException("Invalid identifier: " + identifier));
     }

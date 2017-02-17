@@ -17,6 +17,8 @@ package edu.amherst.acdc.trellis.rosid;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import static java.util.Collections.unmodifiableMap;
+import static java.util.Collections.unmodifiableSet;
 import static java.util.Objects.nonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.groupingBy;
@@ -39,8 +41,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import edu.amherst.acdc.trellis.api.Resource;
@@ -64,25 +66,44 @@ import org.apache.commons.rdf.api.Triple;
  */
 class VersionedResource extends AbstractFileResource {
 
+    private static final Map<IRI, Resource.TripleCategory> categorymap = unmodifiableMap(
+        new HashMap<IRI, Resource.TripleCategory>() { {
+            put(Fedora.InboundReferences, FEDORA_INBOUND_REFERENCES);
+            put(LDP.PreferContainment, LDP_CONTAINMENT);
+            put(LDP.PreferMembership, LDP_MEMBERSHIP);
+            put(Trellis.PreferAudit, TRELLIS_AUDIT);
+            put(Trellis.UserManagedTriples, USER_MANAGED);
+    }});
+
+    private static final Set<IRI> specialUserProperties = unmodifiableSet(new HashSet<IRI>() { {
+        add(ACL.accessControl);
+        add(LDP.inbox);
+        add(LDP.membershipResource);
+        add(LDP.hasMemberRelation);
+        add(LDP.isMemberOfRelation);
+        add(LDP.insertedContentRelation);
+        add(RDF.type);
+    }});
+
+    private static final Set<IRI> namedGraphs = unmodifiableSet(new HashSet<IRI>() { {
+        add(Trellis.ServerManagedTriples);
+        add(Trellis.UserManagedTriples);
+    }});
+
+
     private final Instant time;
-    private final Map<IRI, Resource.TripleCategory> categorymap = new HashMap<>();
 
     /**
      * Create a File-based versioned resource
      * @param directory the directory
      * @param identifier the resource identifier
+     * @param data the resource data
      * @param time the time
      */
     protected VersionedResource(final File directory, final IRI identifier, final ResourceData data,
             final Instant time) {
         super(directory, identifier, data);
         this.time = time;
-
-        categorymap.put(Fedora.InboundReferences, FEDORA_INBOUND_REFERENCES);
-        categorymap.put(LDP.PreferContainment, LDP_CONTAINMENT);
-        categorymap.put(LDP.PreferMembership, LDP_MEMBERSHIP);
-        categorymap.put(Trellis.PreferAudit, TRELLIS_AUDIT);
-        categorymap.put(Trellis.UserManagedTriples, USER_MANAGED);
     }
 
     /**
@@ -104,20 +125,8 @@ class VersionedResource extends AbstractFileResource {
      * @return the resource data, if it exists
      */
     public static Optional<ResourceData> read(final File directory, final IRI identifier, final Instant time) {
-        final Set<IRI> specialUserProperties = new HashSet<>();
-        specialUserProperties.add(ACL.accessControl);
-        specialUserProperties.add(LDP.inbox);
-        specialUserProperties.add(LDP.membershipResource);
-        specialUserProperties.add(LDP.hasMemberRelation);
-        specialUserProperties.add(LDP.isMemberOfRelation);
-        specialUserProperties.add(LDP.insertedContentRelation);
-        specialUserProperties.add(RDF.type);
-
         final Graph graph = rdf.createGraph();
         final File file = new File(directory, RESOURCE_JOURNAL);
-        final Set<IRI> types = new HashSet<>();
-        types.add(Trellis.ServerManagedTriples);
-        types.add(Trellis.UserManagedTriples);
 
         if (file.exists()) {
 
@@ -126,7 +135,7 @@ class VersionedResource extends AbstractFileResource {
             rd.id = identifier.getIRIString();
 
             RDFPatch.asStream(rdf, file, time).filter(quad -> quad.getGraphName().isPresent() &&
-                    types.contains(quad.getGraphName().get())).forEach(quad -> {
+                    namedGraphs.contains(quad.getGraphName().get())).forEach(quad -> {
                 if (quad.getGraphName().get().equals(Trellis.UserManagedTriples) &&
                         specialUserProperties.contains(quad.getPredicate()) && quad.getObject() instanceof IRI) {
                     data.computeIfAbsent(quad.getPredicate(), k -> new ArrayList<>()).add((IRI) quad.getObject());
@@ -206,9 +215,8 @@ class VersionedResource extends AbstractFileResource {
     public <T extends Resource.TripleCategory> Stream<Triple> stream(final Collection<T> category) {
         return Optional.of(new File(directory, RESOURCE_JOURNAL)).filter(File::exists)
             .map(file -> RDFPatch.asStream(rdf, file, time)).orElse(empty())
-            .filter(quad -> quad.getGraphName().filter(categorymap::containsKey).isPresent() &&
-                    category.contains(categorymap.get(quad.getGraphName().get())))
-            .map(Quad::asTriple);
+            .filter(quad -> quad.getGraphName().isPresent() &&
+                    category.contains(categorymap.get(quad.getGraphName().get()))).map(Quad::asTriple);
     }
 
     private static String getFirstAsString(final List<IRI> list) {

@@ -39,7 +39,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.time.Instant;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -66,11 +65,6 @@ abstract class AbstractFileResource implements Resource {
 
     protected static final RDF rdf = new JenaRDF();
 
-    protected final IRI identifier;
-    protected final File directory;
-
-    protected ResourceData data;
-
     protected static final Map<IRI, Resource.TripleCategory> categorymap = unmodifiableMap(
         new HashMap<IRI, Resource.TripleCategory>() { {
             put(Fedora.InboundReferences, FEDORA_INBOUND_REFERENCES);
@@ -80,7 +74,16 @@ abstract class AbstractFileResource implements Resource {
             put(Trellis.UserManagedTriples, USER_MANAGED);
     }});
 
+    protected final IRI identifier;
+    protected final File directory;
+    protected final ResourceData data;
 
+    /**
+     * An abstract contructor for creating a file-based resource
+     * @param directory the directory
+     * @param identifier the identifier
+     * @param data the data
+     */
     protected AbstractFileResource(final File directory, final IRI identifier, final ResourceData data) {
         requireNonNull(directory, "The data directory cannot be null!");
         requireNonNull(identifier, "The identifier cannot be null!");
@@ -89,7 +92,6 @@ abstract class AbstractFileResource implements Resource {
         this.identifier = identifier;
         this.directory = directory;
         this.data = data;
-
     }
 
     @Override
@@ -178,9 +180,6 @@ abstract class AbstractFileResource implements Resource {
             return empty();
         });
     }
-
-    @Override
-    public abstract <T extends Resource.TripleCategory> Stream<Triple> stream(Collection<T> category);
 
     /**
      * A class for reading a file of change times

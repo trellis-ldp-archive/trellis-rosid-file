@@ -15,6 +15,7 @@
  */
 package edu.amherst.acdc.trellis.rosid;
 
+import static edu.amherst.acdc.trellis.api.Resource.TripleContext.FEDORA_INBOUND_REFERENCES;
 import static edu.amherst.acdc.trellis.api.Resource.TripleContext.LDP_CONTAINMENT;
 import static edu.amherst.acdc.trellis.api.Resource.TripleContext.LDP_MEMBERSHIP;
 import static edu.amherst.acdc.trellis.api.Resource.TripleContext.USER_MANAGED;
@@ -34,6 +35,7 @@ import java.util.List;
 
 import edu.amherst.acdc.trellis.api.Resource;
 import edu.amherst.acdc.trellis.api.VersionRange;
+import edu.amherst.acdc.trellis.vocabulary.DC;
 import edu.amherst.acdc.trellis.vocabulary.LDP;
 import edu.amherst.acdc.trellis.vocabulary.RDFS;
 import org.apache.commons.rdf.api.IRI;
@@ -92,6 +94,13 @@ public class VersionedResourceTest {
                         rdf.createIRI("http://example.org/types/Bar"))));
         assertTrue(triples.contains(rdf.createTriple(identifier, RDFS.label,
                         rdf.createLiteral("A label", "eng"))));
+
+        final List<Triple> inbound = res.stream(FEDORA_INBOUND_REFERENCES).collect(toList());
+        assertEquals(2L, inbound.size());
+        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("info:trellis/resource"),
+                        DC.hasPart, identifier)));
+        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("info:trellis/other/resource"),
+                        DC.relation, identifier)));
     }
 
     @Test
@@ -137,6 +146,15 @@ public class VersionedResourceTest {
                         rdf.createIRI("http://example.org/types/Bar"))));
         assertTrue(triples.contains(rdf.createTriple(identifier, RDFS.label,
                         rdf.createLiteral("A label", "eng"))));
+
+        final List<Triple> inbound = res.stream(FEDORA_INBOUND_REFERENCES).collect(toList());
+        assertEquals(3L, inbound.size());
+        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("info:trellis/resource"),
+                        DC.hasPart, identifier)));
+        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("info:trellis/other/resource"),
+                        DC.relation, identifier)));
+        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("info:trellis/other/item"),
+                        DC.hasPart, identifier)));
     }
 
     @Test
@@ -172,6 +190,13 @@ public class VersionedResourceTest {
 
         final List<Triple> triples = res.stream(USER_MANAGED).collect(toList());
         assertEquals(0L, triples.size());
+
+        final List<Triple> inbound = res.stream(FEDORA_INBOUND_REFERENCES).collect(toList());
+        assertEquals(2L, inbound.size());
+        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("info:trellis/resource"),
+                        DC.hasPart, identifier)));
+        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("info:trellis/other/resource"),
+                        DC.relation, identifier)));
     }
 
     @Test

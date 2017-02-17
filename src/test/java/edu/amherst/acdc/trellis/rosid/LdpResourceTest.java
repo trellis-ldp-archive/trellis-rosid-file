@@ -42,19 +42,26 @@ import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.RDF;
 import org.apache.commons.rdf.api.Triple;
 import org.apache.commons.rdf.jena.JenaRDF;
+import org.junit.Before;
 import org.junit.Test;
 
 /**
  * @author acoburn
  */
-public class VersionedResourceTest {
+public class LdpResourceTest {
 
-    private static RDF rdf = new JenaRDF();
+    private static final RDF rdf = new JenaRDF();
+
+    private File file;
+    private IRI identifier = identifier = rdf.createIRI("info:trellis/ldprs");
+
+    @Before
+    public void setUp() throws Exception {
+        file = new File(getClass().getResource("/ldprs").toURI());
+    }
 
     @Test
-    public void testResource() throws Exception {
-        final File file = new File(getClass().getResource("/ldprs").toURI());
-        final IRI identifier = rdf.createIRI("info:trellis/ldprs");
+    public void testVersionedResource() {
         final Instant time = parse("2017-02-15T11:15:00Z");
         final Resource res = VersionedResource.find(file, identifier, time).get();
         assertEquals(identifier, res.getIdentifier());
@@ -104,9 +111,7 @@ public class VersionedResourceTest {
     }
 
     @Test
-    public void testResourceFuture() throws Exception {
-        final File file = new File(getClass().getResource("/ldprs").toURI());
-        final IRI identifier = rdf.createIRI("info:trellis/ldprs");
+    public void testResourceFuture() {
         final Instant time = parse("2017-03-15T11:15:00Z");
         final Resource res = VersionedResource.find(file, identifier, time).get();
         assertEquals(identifier, res.getIdentifier());
@@ -158,9 +163,7 @@ public class VersionedResourceTest {
     }
 
     @Test
-    public void testResourcePast() throws Exception {
-        final File file = new File(getClass().getResource("/ldprs").toURI());
-        final IRI identifier = rdf.createIRI("info:trellis/ldprs");
+    public void testResourcePast() {
         final Instant time = parse("2017-02-15T11:00:00Z");
         final Resource res = VersionedResource.find(file, identifier, time).get();
         assertEquals(identifier, res.getIdentifier());
@@ -200,10 +203,59 @@ public class VersionedResourceTest {
     }
 
     @Test
-    public void testResourcePrehistory() throws Exception {
-        final File file = new File(getClass().getResource("/ldprs").toURI());
-        final IRI identifier = rdf.createIRI("info:trellis/ldprs");
+    public void testResourcePrehistory() {
         final Instant time = parse("2017-01-15T11:00:00Z");
         assertFalse(VersionedResource.find(file, identifier, time).isPresent());
+    }
+
+    @Test
+    public void testCachedResource() {
+        final Resource res = CachedResource.find(file, identifier).get();
+        assertEquals(identifier, res.getIdentifier());
+        assertEquals(LDP.RDFSource, res.getInteractionModel());
+        assertEquals(of(rdf.createIRI("info:trellis")), res.getContainedBy());
+        assertEquals(empty(), res.getContains().findFirst());
+        assertEquals(empty(), res.getMembershipResource());
+        assertEquals(empty(), res.getMemberRelation());
+        assertEquals(empty(), res.getMemberOfRelation());
+        assertEquals(empty(), res.getInsertedContentRelation());
+        assertEquals(empty(), res.getDatastream());
+        assertFalse(res.isMemento());
+        assertFalse(res.isPage());
+        assertEquals(empty(), res.getNext());
+        assertEquals(of(rdf.createIRI("http://example.org/receiver/inbox")), res.getInbox());
+        assertEquals(empty(), res.getAcl());
+        assertEquals(parse("2017-02-15T10:05:00Z"), res.getCreated());
+        assertEquals(parse("2017-02-15T11:15:00Z"), res.getModified());
+        assertEquals(of(rdf.createIRI("http://example.org/user/raadmin")), res.getCreator());
+        assertEquals(2L, res.getTypes().count());
+        assertTrue(res.getTypes().anyMatch(rdf.createIRI("http://example.org/types/Foo")::equals));
+        assertTrue(res.getTypes().anyMatch(rdf.createIRI("http://example.org/types/Bar")::equals));
+        assertEquals(0L, res.stream(EnumSet.of(LDP_CONTAINMENT, LDP_MEMBERSHIP)).count());
+
+        final List<VersionRange> mementos = res.getMementos().collect(toList());
+        assertEquals(1L, mementos.size());
+        assertEquals(parse("2017-02-15T10:05:00Z"), mementos.get(0).getFrom());
+        assertEquals(parse("2017-02-15T11:15:00Z"), mementos.get(0).getUntil());
+
+        final List<Triple> triples = res.stream(USER_MANAGED).collect(toList());
+        assertEquals(4L, triples.size());
+        assertTrue(triples.contains(rdf.createTriple(identifier, LDP.inbox,
+                        rdf.createIRI("http://example.org/receiver/inbox"))));
+        assertTrue(triples.contains(rdf.createTriple(identifier, type,
+                        rdf.createIRI("http://example.org/types/Foo"))));
+        assertTrue(triples.contains(rdf.createTriple(identifier, type,
+                        rdf.createIRI("http://example.org/types/Bar"))));
+        assertTrue(triples.contains(rdf.createTriple(identifier, RDFS.label,
+                        rdf.createLiteral("A label", "eng"))));
+
+        final List<Triple> inbound = res.stream(FEDORA_INBOUND_REFERENCES).collect(toList());
+        assertEquals(3L, inbound.size());
+        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("info:trellis/resource"),
+                        DC.hasPart, identifier)));
+        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("info:trellis/other/resource"),
+                        DC.relation, identifier)));
+        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("info:trellis/other/item"),
+                        DC.hasPart, identifier)));
     }
 }

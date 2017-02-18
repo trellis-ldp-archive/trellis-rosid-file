@@ -17,16 +17,28 @@ package edu.amherst.acdc.trellis.rosid;
 
 import static java.io.File.separator;
 import static java.util.Objects.requireNonNull;
+import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.stream.IntStream.range;
 import static edu.amherst.acdc.trellis.rosid.Constants.PREFIX;
 import static org.apache.commons.codec.digest.DigestUtils.md5Hex;
+import static org.apache.commons.rdf.jena.JenaRDF.asQuad;
+import static org.apache.jena.riot.Lang.NQUADS;
+import static org.apache.jena.riot.system.StreamRDFLib.sinkQuads;
 
-import java.net.URI;
+import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.StringJoiner;
 import java.util.zip.CRC32;
 
 import org.apache.commons.rdf.api.IRI;
+import org.apache.commons.rdf.api.Quad;
+import org.apache.commons.rdf.api.RDF;
+import org.apache.jena.atlas.lib.SinkToCollection;
+import org.apache.jena.riot.RDFParserRegistry;
+import org.apache.jena.riot.ReaderRIOT;
 
 /**
  * @author acoburn
@@ -36,6 +48,8 @@ class FileUtils {
     // The length of the CRC directory partition
     public final static int LENGTH = 2;
     public final static int MAX = 3;
+
+    private static final ReaderRIOT READER = RDFParserRegistry.getFactory(NQUADS).create(NQUADS);
 
     public static String partition(final String identifier) {
         requireNonNull(identifier, "identifier must not be null!");
@@ -59,8 +73,17 @@ class FileUtils {
 
     public static String asPath(final String identifier) {
         return of(identifier).filter(uri -> uri.startsWith(PREFIX + "/")).map(uri -> uri.substring(PREFIX.length() + 1))
-            .map(URI::create).map(URI::getPath).orElseThrow(() ->
-                    new IllegalArgumentException("Invalid identifier: " + identifier));
+            .orElseThrow(() -> new IllegalArgumentException("Invalid identifier: " + identifier));
+    }
+
+    public static Optional<Quad> stringToQuad(final RDF rdf, final String line) {
+        final List<org.apache.jena.sparql.core.Quad> c = new ArrayList<>();
+        READER.read(new StringReader(line), null, NQUADS.getContentType(),
+                sinkQuads(new SinkToCollection<>(c)), null);
+        if (c.isEmpty()) {
+            return empty();
+        }
+        return of(asQuad(rdf, c.get(0)));
     }
 
     private FileUtils() {

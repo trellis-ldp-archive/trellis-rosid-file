@@ -21,19 +21,14 @@ import static java.util.stream.Stream.empty;
 import static com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS;
 import static edu.amherst.acdc.trellis.rosid.Constants.RESOURCE_CACHE;
 import static edu.amherst.acdc.trellis.rosid.Constants.RESOURCE_QUADS;
-import static org.apache.jena.riot.Lang.NQUADS;
-import static org.apache.commons.rdf.jena.JenaRDF.asQuad;
-import static org.apache.jena.riot.system.StreamRDFLib.sinkQuads;
+import static edu.amherst.acdc.trellis.rosid.FileUtils.stringToQuad;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.StringReader;
 import java.io.UncheckedIOException;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -44,9 +39,6 @@ import edu.amherst.acdc.trellis.api.Resource;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Quad;
 import org.apache.commons.rdf.api.Triple;
-import org.apache.jena.atlas.lib.SinkToCollection;
-import org.apache.jena.riot.RDFParserRegistry;
-import org.apache.jena.riot.ReaderRIOT;
 import org.slf4j.Logger;
 
 /**
@@ -57,8 +49,6 @@ import org.slf4j.Logger;
 class CachedResource extends AbstractFileResource {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
-
-    private static final ReaderRIOT READER = RDFParserRegistry.getFactory(NQUADS).create(NQUADS);
 
     private static final Logger LOGGER = getLogger(CachedResource.class);
 
@@ -103,7 +93,8 @@ class CachedResource extends AbstractFileResource {
     @Override
     public <T extends Resource.TripleCategory> Stream<Triple> stream(final Collection<T> category) {
         return Optional.of(new File(directory, RESOURCE_QUADS)).filter(File::exists).map(File::toPath)
-            .map(uncheckedLines).orElse(empty()).flatMap(readNQuad).filter(quad -> quad.getGraphName().isPresent() &&
+            .map(uncheckedLines).orElse(empty()).map(line -> stringToQuad(rdf, line)).filter(Optional::isPresent)
+            .map(Optional::get).filter(quad -> quad.getGraphName().isPresent() &&
                     category.contains(categorymap.get(quad.getGraphName().get()))).map(Quad::asTriple);
     }
 
@@ -113,12 +104,5 @@ class CachedResource extends AbstractFileResource {
         } catch (final IOException ex) {
             throw new UncheckedIOException(ex);
         }
-    };
-
-    private static Function<String, Stream<Quad>> readNQuad = line -> {
-        final List<org.apache.jena.sparql.core.Quad> c = new ArrayList<>();
-        READER.read(new StringReader(line), null, NQUADS.getContentType(),
-                sinkQuads(new SinkToCollection<>(c)), null);
-        return c.stream().map(quad -> asQuad(rdf, quad));
     };
 }

@@ -38,8 +38,8 @@ public class FileUtilsTest {
     @Test
     public void testPath() {
         assertEquals("foo/bar",
-                FileUtils.asPath("info:trellis/foo/bar?version=0123456#hash"));
+                FileUtils.asPath("info:trellis/foo/bar"));
         assertEquals("foo",
-                FileUtils.asPath("info:trellis/foo?version=0123456#hash"));
+                FileUtils.asPath("info:trellis/foo"));
     }
 }

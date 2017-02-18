@@ -25,21 +25,16 @@ import static java.time.Instant.now;
 import static java.time.Instant.parse;
 import static java.util.Objects.nonNull;
 import static java.util.stream.StreamSupport.stream;
-import static org.apache.commons.rdf.jena.JenaRDF.asQuad;
-import static org.apache.jena.riot.Lang.NQUADS;
-import static org.apache.jena.riot.system.StreamRDFLib.sinkQuads;
+import static edu.amherst.acdc.trellis.rosid.FileUtils.stringToQuad;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
-import java.io.StringReader;
 import java.io.UncheckedIOException;
 import java.io.Writer;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.Iterator;
 import java.util.Spliterator;
@@ -52,16 +47,12 @@ import org.apache.commons.rdf.api.Graph;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Quad;
 import org.apache.commons.rdf.api.RDF;
-import org.apache.jena.atlas.lib.SinkToCollection;
-import org.apache.jena.riot.RDFParserRegistry;
-import org.apache.jena.riot.ReaderRIOT;
 
 /**
  * @author acoburn
  */
 class RDFPatch {
 
-    private static final ReaderRIOT READER = RDFParserRegistry.getFactory(NQUADS).create(NQUADS);
 
     /**
      * Read the triples from the journal that existed up to (and including) the specified time
@@ -112,15 +103,13 @@ class RDFPatch {
                         break;
                     }
                 } else if (line.startsWith("A ")) {
-                    final Quad quad = stringToQuad(rdf, line.split(" ", 2)[1]);
-                    if (quad.getGraphName().filter(category::contains).isPresent()) {
-                        graph.add(quad.asTriple());
-                    }
+                    stringToQuad(rdf, line.split(" ", 2)[1])
+                        .filter(quad -> quad.getGraphName().filter(category::contains).isPresent())
+                        .map(Quad::asTriple).ifPresent(graph::add);
                 } else if (line.startsWith("D ")) {
-                    final Quad quad = stringToQuad(rdf, line.split(" ", 2)[1]);
-                    if (quad.getGraphName().filter(category::contains).isPresent()) {
-                        graph.remove(quad.asTriple());
-                    }
+                    stringToQuad(rdf, line.split(" ", 2)[1])
+                        .filter(quad -> quad.getGraphName().filter(category::contains).isPresent())
+                        .map(Quad::asTriple).ifPresent(graph::remove);
                 }
             }
         } catch (final IOException ex) {
@@ -184,13 +173,6 @@ class RDFPatch {
         } catch (final IOException ex) {
             throw new UncheckedIOException(ex);
         }
-    }
-
-    private static Quad stringToQuad(final RDF rdf, final String line) {
-        final List<org.apache.jena.sparql.core.Quad> c = new ArrayList<>();
-        READER.read(new StringReader(line), null, NQUADS.getContentType(),
-                sinkQuads(new SinkToCollection<>(c)), null);
-        return asQuad(rdf, c.get(0));
     }
 
     /**
@@ -300,12 +282,13 @@ class RDFPatch {
                         }
                     } else if (inRegion && (line.startsWith("A ") || line.startsWith("D "))) {
                         final String[] parts = line.split(" ", 2);
-                        final Quad quad = stringToQuad(rdf, parts[1]);
-                        if (parts[0].equals("D")) {
-                            deleted.add(quad);
-                        } else if (parts[0].equals("A") && !deleted.contains(quad)) {
-                            action.accept((Quad) quad);
-                        }
+                        stringToQuad(rdf, parts[1]).ifPresent(quad -> {
+                            if (parts[0].equals("D")) {
+                                deleted.add(quad);
+                            } else if (parts[0].equals("A") && !deleted.contains(quad)) {
+                                action.accept((Quad) quad);
+                            }
+                        });
                     }
                 }
             } catch (final IOException ex) {
@@ -325,12 +308,13 @@ class RDFPatch {
                         }
                     } else if (inRegion && (line.startsWith("A ") || line.startsWith("D "))) {
                         final String[] parts = line.split(" ", 2);
-                        final Quad quad = stringToQuad(rdf, parts[1]);
-                        if (parts[0].equals("D")) {
-                            deleted.add(quad);
-                        } else if (parts[0].equals("A") && !deleted.contains(quad)) {
-                            action.accept((Quad) quad);
-                        }
+                        stringToQuad(rdf, parts[1]).ifPresent(quad -> {
+                            if (parts[0].equals("D")) {
+                                deleted.add(quad);
+                            } else if (parts[0].equals("A") && !deleted.contains(quad)) {
+                                action.accept((Quad) quad);
+                            }
+                        });
                     }
                 }
                 return false;

@@ -116,7 +116,7 @@ class VersionedResource extends AbstractFileResource {
             final ResourceData rd = new ResourceData();
             rd.id = identifier.getIRIString();
 
-            RDFPatch.asStream(rdf, file, time).filter(quad -> quad.getGraphName().isPresent() &&
+            RDFPatch.asStream(rdf, file, identifier, time).filter(quad -> quad.getGraphName().isPresent() &&
                     namedGraphs.contains(quad.getGraphName().get())).forEach(quad -> {
                 if (quad.getGraphName().get().equals(Trellis.UserManagedTriples) &&
                         specialUserProperties.contains(quad.getPredicate()) && quad.getObject() instanceof IRI) {
@@ -186,7 +186,7 @@ class VersionedResource extends AbstractFileResource {
     @Override
     public <T extends Resource.TripleCategory> Stream<Triple> stream(final Collection<T> category) {
         return Optional.of(new File(directory, RESOURCE_JOURNAL)).filter(File::exists)
-            .map(file -> RDFPatch.asStream(rdf, file, time)).orElse(empty())
+            .map(file -> RDFPatch.asStream(rdf, file, identifier, time)).orElse(empty())
             .filter(quad -> quad.getGraphName().isPresent() &&
                     category.contains(categorymap.get(quad.getGraphName().get()))).map(Quad::asTriple);
     }

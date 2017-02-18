@@ -8,12 +8,9 @@ BEGIN # 2017-02-15T10:05:00Z
 A <info:trellis/ldprs> <http://acdc.amherst.edu/ns/trellis#containedBy> <info:trellis> <http://acdc.amherst.edu/ns/trellis#ServerManagedTriples> .
 A <info:trellis/ldprs> <http://purl.org/dc/terms/created> "2017-02-15T10:05:00Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> <http://acdc.amherst.edu/ns/trellis#ServerManagedTriples> .
 A <info:trellis/ldprs> <http://purl.org/dc/terms/creator> <http://example.org/user/raadmin> <http://acdc.amherst.edu/ns/trellis#ServerManagedTriples> .
-A <info:trellis/ldprs> <http://purl.org/dc/terms/modified> "2017-02-15T10:05:00Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> <http://acdc.amherst.edu/ns/trellis#ServerManagedTriples> .
 A <info:trellis/ldprs> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/ns/ldp#RDFSource> <http://acdc.amherst.edu/ns/trellis#ServerManagedTriples> .
 END # 2017-02-15T10:05:00Z
 BEGIN # 2017-02-15T11:15:00Z
-D <info:trellis/ldprs> <http://purl.org/dc/terms/modified> "2017-02-15T10:05:00Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> <http://acdc.amherst.edu/ns/trellis#ServerManagedTriples> .
-A <info:trellis/ldprs> <http://purl.org/dc/terms/modified> "2017-02-15T11:15:00Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> <http://acdc.amherst.edu/ns/trellis#ServerManagedTriples> .
 A <info:trellis/ldprs> <http://www.w3.org/ns/ldp#inbox> <http://example.org/receiver/inbox> <http://acdc.amherst.edu/ns/trellis#UserManagedTriples> .
 A <info:trellis/ldprs> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://example.org/types/Foo> <http://acdc.amherst.edu/ns/trellis#UserManagedTriples> .
 A <info:trellis/ldprs> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://example.org/types/Bar> <http://acdc.amherst.edu/ns/trellis#UserManagedTriples> .

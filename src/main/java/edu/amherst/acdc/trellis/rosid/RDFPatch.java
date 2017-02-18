@@ -42,6 +42,10 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import edu.amherst.acdc.trellis.api.VersionRange;
+import edu.amherst.acdc.trellis.vocabulary.DC;
+import edu.amherst.acdc.trellis.vocabulary.Fedora;
+import edu.amherst.acdc.trellis.vocabulary.Trellis;
+import edu.amherst.acdc.trellis.vocabulary.XSD;
 import org.apache.commons.io.input.ReversedLinesFileReader;
 import org.apache.commons.rdf.api.Graph;
 import org.apache.commons.rdf.api.IRI;
@@ -61,8 +65,8 @@ class RDFPatch {
      * @param time the time
      * @return a stream of RDF triples
      */
-    public static Stream<Quad> asStream(final RDF rdf, final File file, final Instant time) {
-        return stream(new StreamReader(rdf, file, time), false);
+    public static Stream<Quad> asStream(final RDF rdf, final File file, final IRI identifier, final Instant time) {
+        return stream(new StreamReader(rdf, file, identifier, time), false);
     }
 
     /**
@@ -71,8 +75,8 @@ class RDFPatch {
      * @param file the file
      * @return a stream of RDF triples
      */
-    public static Stream<Quad> asStream(final RDF rdf, final File file) {
-        return asStream(rdf, file, now());
+    public static Stream<Quad> asStream(final RDF rdf, final File file, final IRI identifier) {
+        return asStream(rdf, file, identifier, now());
     }
 
     /**
@@ -81,8 +85,8 @@ class RDFPatch {
      * @param file the file
      * @return a graph of the RDF resource
      */
-    public static Graph asGraph(final RDF rdf, final File file, final Collection<IRI> category) {
-        return asGraph(rdf, file, category, now());
+    public static Graph asGraph(final RDF rdf, final File file, final Collection<IRI> category, final IRI identifier) {
+        return asGraph(rdf, file, category, identifier, now());
     }
 
     /**
@@ -92,15 +96,20 @@ class RDFPatch {
      * @param time the time
      * @return a graph of the RDF resource
      */
-    public static Graph asGraph(final RDF rdf, final File file, final Collection<IRI> category, final Instant time) {
+    public static Graph asGraph(final RDF rdf, final File file, final Collection<IRI> category, final IRI identifier,
+            final Instant time) {
         final Graph graph = rdf.createGraph();
+        Instant modified = null;
         try {
             final Iterator<String> allLines = lines(file.toPath()).iterator();
             while (allLines.hasNext()) {
                 final String line = allLines.next();
                 if (line.startsWith("BEGIN # ")) {
-                    if (time.isBefore(parse(line.split(" # ", 2)[1]))) {
+                    final Instant moment = parse(line.split(" # ", 2)[1]);
+                    if (time.isBefore(moment)) {
                         break;
+                    } else {
+                        modified = moment;
                     }
                 } else if (line.startsWith("A ")) {
                     stringToQuad(rdf, line.split(" ", 2)[1])
@@ -111,6 +120,9 @@ class RDFPatch {
                         .filter(quad -> quad.getGraphName().filter(category::contains).isPresent())
                         .map(Quad::asTriple).ifPresent(graph::remove);
                 }
+            }
+            if (nonNull(modified) && nonNull(identifier) && category.contains(Trellis.ServerManagedTriples)) {
+                graph.add(identifier, DC.modified, rdf.createLiteral(modified.toString(), XSD.dateTime));
             }
         } catch (final IOException ex) {
             throw new UncheckedIOException(ex);
@@ -246,24 +258,28 @@ class RDFPatch {
         private final ReversedLinesFileReader reader;
         private final Instant time;
         private final RDF rdf;
+        private final IRI identifier;
 
         private Boolean inRegion = false;
+        private Boolean hasModified = false;
+        private Instant modified = now();
 
         /**
          * Create a spliterator that reads a file line-by-line in reverse
          * @param file the file
          */
-        public StreamReader(final RDF rdf, final File file) {
-            this(rdf, file, now());
+        public StreamReader(final RDF rdf, final File file, final IRI identifier) {
+            this(rdf, file, identifier, now());
         }
 
         /**
          * Create a spliterator that reads a file line-by-line in reverse
          * @param file the file
          */
-        public StreamReader(final RDF rdf, final File file, final Instant time) {
+        public StreamReader(final RDF rdf, final File file, final IRI identifier, final Instant time) {
             this.rdf = rdf;
             this.time = time;
+            this.identifier = identifier;
             try {
                 this.reader = new ReversedLinesFileReader(file, UTF_8);
             } catch (final IOException ex) {
@@ -276,13 +292,20 @@ class RDFPatch {
             try {
                 for (String line = reader.readLine(); nonNull(line); line = reader.readLine()) {
                     if (line.startsWith("END # ")) {
-                        final String[] parts = line.split(" # ", 2);
-                        if (!time.isBefore(parse(parts[1]))) {
+                        final Instant moment = parse(line.split(" # ", 2)[1]);
+                        if (!time.isBefore(moment)) {
+                            modified = moment;
                             inRegion = true;
                         }
                     } else if (inRegion && (line.startsWith("A ") || line.startsWith("D "))) {
                         final String[] parts = line.split(" ", 2);
                         stringToQuad(rdf, parts[1]).ifPresent(quad -> {
+                            if (!hasModified && !quad.getGraphName().filter(Fedora.InboundReferences::equals)
+                                    .isPresent()) {
+                                action.accept(rdf.createQuad(Trellis.ServerManagedTriples, identifier, DC.modified,
+                                            rdf.createLiteral(modified.toString(), XSD.dateTime)));
+                                hasModified = true;
+                            }
                             if (parts[0].equals("D")) {
                                 deleted.add(quad);
                             } else if (parts[0].equals("A") && !deleted.contains(quad)) {
@@ -301,14 +324,21 @@ class RDFPatch {
             try {
                 final String line = reader.readLine();
                 if (nonNull(line)) {
-                    if (line.startsWith("END ")) {
-                        final String[] parts = line.split(" # ", 2);
-                        if (parts.length == 2 && !time.isBefore(parse(parts[1]))) {
+                    if (line.startsWith("END # ")) {
+                        final Instant moment = parse(line.split(" # ", 2)[1]);
+                        if (!time.isBefore(moment)) {
+                            modified = moment;
                             inRegion = true;
                         }
                     } else if (inRegion && (line.startsWith("A ") || line.startsWith("D "))) {
                         final String[] parts = line.split(" ", 2);
                         stringToQuad(rdf, parts[1]).ifPresent(quad -> {
+                            if (!hasModified && !quad.getGraphName().filter(Fedora.InboundReferences::equals)
+                                    .isPresent()) {
+                                action.accept(rdf.createQuad(Trellis.ServerManagedTriples, identifier, DC.modified,
+                                            rdf.createLiteral(modified.toString(), XSD.dateTime)));
+                                hasModified = true;
+                            }
                             if (parts[0].equals("D")) {
                                 deleted.add(quad);
                             } else if (parts[0].equals("A") && !deleted.contains(quad)) {

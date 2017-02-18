@@ -16,7 +16,6 @@
 package edu.amherst.acdc.trellis.rosid;
 
 import static java.time.Instant.parse;
-import static java.util.Collections.singleton;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -25,7 +24,6 @@ import java.io.File;
 import java.time.Instant;
 
 import edu.amherst.acdc.trellis.vocabulary.DC;
-import edu.amherst.acdc.trellis.vocabulary.Trellis;
 import org.apache.commons.rdf.api.Graph;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Quad;
@@ -85,55 +83,6 @@ public class RDFPatchTest {
         final Graph graph = rdf.createGraph();
         RDFPatch.asStream(rdf, file, identifier, time).map(Quad::asTriple).forEach(graph::add);
         assertEquals(5L, graph.size());
-        assertFalse(graph.contains(identifier, rdf.createIRI("http://www.w3.org/2004/02/skos/core#prefLabel"), null));
-        assertFalse(graph.contains(identifier, DC.extent, null));
-        assertFalse(graph.contains(identifier, DC.spatial, null));
-        assertTrue(graph.contains(identifier, DC.title, null));
-        assertTrue(graph.contains(identifier, DC.description, null));
-        assertTrue(graph.contains(identifier, DC.subject, null));
-        assertEquals(2L, graph.stream(identifier, DC.subject, null).count());
-    }
-
-    @Test
-    public void testStream5() throws Exception {
-        final File file = new File(getClass().getResource("/journal1.txt").toURI());
-        final Instant time = parse("2017-02-11T02:51:35Z");
-        final Graph graph = RDFPatch.asGraph(rdf, file, singleton(Trellis.UserManagedTriples), null, time);
-        assertEquals(1L, graph.size());
-        assertTrue(graph.contains(identifier, rdf.createIRI("http://www.w3.org/2004/02/skos/core#prefLabel"), null));
-    }
-
-    @Test
-    public void testStream6() throws Exception {
-        final File file = new File(getClass().getResource("/journal1.txt").toURI());
-        final Instant time = parse("2017-02-09T02:51:35Z");
-        final Graph graph = RDFPatch.asGraph(rdf, file, singleton(Trellis.UserManagedTriples), null, time);
-        assertEquals(2L, graph.size());
-        assertTrue(graph.contains(identifier, rdf.createIRI("http://www.w3.org/2004/02/skos/core#prefLabel"), null));
-        assertTrue(graph.contains(identifier, DC.isPartOf, null));
-    }
-
-    @Test
-    public void testStream7() throws Exception {
-        final File file = new File(getClass().getResource("/journal1.txt").toURI());
-        final Instant time = parse("2017-01-30T02:51:35Z");
-        final Graph graph = RDFPatch.asGraph(rdf, file, singleton(Trellis.UserManagedTriples), identifier, time);
-        assertEquals(6L, graph.size());
-        assertFalse(graph.contains(identifier, rdf.createIRI("http://www.w3.org/2004/02/skos/core#prefLabel"), null));
-        assertTrue(graph.contains(identifier, DC.extent, null));
-        assertTrue(graph.contains(identifier, DC.spatial, null));
-        assertTrue(graph.contains(identifier, DC.title, null));
-        assertTrue(graph.contains(identifier, DC.description, null));
-        assertTrue(graph.contains(identifier, DC.subject, null));
-        assertEquals(2L, graph.stream(identifier, DC.subject, null).count());
-    }
-
-    @Test
-    public void testStream8() throws Exception {
-        final File file = new File(getClass().getResource("/journal1.txt").toURI());
-        final Instant time = parse("2017-01-15T09:14:00Z");
-        final Graph graph = RDFPatch.asGraph(rdf, file, singleton(Trellis.UserManagedTriples), identifier, time);
-        assertEquals(4L, graph.size());
         assertFalse(graph.contains(identifier, rdf.createIRI("http://www.w3.org/2004/02/skos/core#prefLabel"), null));
         assertFalse(graph.contains(identifier, DC.extent, null));
         assertFalse(graph.contains(identifier, DC.spatial, null));

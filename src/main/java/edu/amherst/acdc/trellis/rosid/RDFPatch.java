@@ -33,7 +33,6 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.io.Writer;
 import java.time.Instant;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Iterator;
@@ -47,7 +46,6 @@ import edu.amherst.acdc.trellis.vocabulary.Fedora;
 import edu.amherst.acdc.trellis.vocabulary.Trellis;
 import edu.amherst.acdc.trellis.vocabulary.XSD;
 import org.apache.commons.io.input.ReversedLinesFileReader;
-import org.apache.commons.rdf.api.Graph;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Quad;
 import org.apache.commons.rdf.api.RDF;
@@ -67,67 +65,6 @@ class RDFPatch {
      */
     public static Stream<Quad> asStream(final RDF rdf, final File file, final IRI identifier, final Instant time) {
         return stream(new StreamReader(rdf, file, identifier, time), false);
-    }
-
-    /**
-     * Read the triples from the journal for the current state of the resource
-     * @param rdf the rdf object
-     * @param file the file
-     * @return a stream of RDF triples
-     */
-    public static Stream<Quad> asStream(final RDF rdf, final File file, final IRI identifier) {
-        return asStream(rdf, file, identifier, now());
-    }
-
-    /**
-     * Read the triples from the journal for the current state of the resource
-     * @param rdf the rdf object
-     * @param file the file
-     * @return a graph of the RDF resource
-     */
-    public static Graph asGraph(final RDF rdf, final File file, final Collection<IRI> category, final IRI identifier) {
-        return asGraph(rdf, file, category, identifier, now());
-    }
-
-    /**
-     * Read the triples from the journal for the resource at a given point in time
-     * @param rdf the rdf object
-     * @param file the file
-     * @param time the time
-     * @return a graph of the RDF resource
-     */
-    public static Graph asGraph(final RDF rdf, final File file, final Collection<IRI> category, final IRI identifier,
-            final Instant time) {
-        final Graph graph = rdf.createGraph();
-        Instant modified = null;
-        try {
-            final Iterator<String> allLines = lines(file.toPath()).iterator();
-            while (allLines.hasNext()) {
-                final String line = allLines.next();
-                if (line.startsWith("BEGIN # ")) {
-                    final Instant moment = parse(line.split(" # ", 2)[1]);
-                    if (time.isBefore(moment)) {
-                        break;
-                    } else {
-                        modified = moment;
-                    }
-                } else if (line.startsWith("A ")) {
-                    stringToQuad(rdf, line.split(" ", 2)[1])
-                        .filter(quad -> quad.getGraphName().filter(category::contains).isPresent())
-                        .map(Quad::asTriple).ifPresent(graph::add);
-                } else if (line.startsWith("D ")) {
-                    stringToQuad(rdf, line.split(" ", 2)[1])
-                        .filter(quad -> quad.getGraphName().filter(category::contains).isPresent())
-                        .map(Quad::asTriple).ifPresent(graph::remove);
-                }
-            }
-            if (nonNull(modified) && nonNull(identifier) && category.contains(Trellis.ServerManagedTriples)) {
-                graph.add(identifier, DC.modified, rdf.createLiteral(modified.toString(), XSD.dateTime));
-            }
-        } catch (final IOException ex) {
-            throw new UncheckedIOException(ex);
-        }
-        return graph;
     }
 
     /**
@@ -263,14 +200,6 @@ class RDFPatch {
         private Boolean inRegion = false;
         private Boolean hasModified = false;
         private Instant modified = now();
-
-        /**
-         * Create a spliterator that reads a file line-by-line in reverse
-         * @param file the file
-         */
-        public StreamReader(final RDF rdf, final File file, final IRI identifier) {
-            this(rdf, file, identifier, now());
-        }
 
         /**
          * Create a spliterator that reads a file line-by-line in reverse

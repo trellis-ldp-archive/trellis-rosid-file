@@ -32,6 +32,7 @@ import java.util.Optional;
 import java.util.StringJoiner;
 import java.util.zip.CRC32;
 
+import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Quad;
 import org.apache.commons.rdf.api.RDF;
 import org.apache.jena.atlas.lib.SinkToCollection;
@@ -48,6 +49,10 @@ class FileUtils {
     public final static int MAX = 3;
 
     private static final ReaderRIOT READER = RDFParserRegistry.getFactory(NQUADS).create(NQUADS);
+
+    public static String partition(final IRI identifier) {
+        return partition(identifier.getIRIString());
+    }
 
     public static String partition(final String identifier) {
         requireNonNull(identifier, "identifier must not be null!");

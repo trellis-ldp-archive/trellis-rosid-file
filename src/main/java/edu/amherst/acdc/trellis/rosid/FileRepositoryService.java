@@ -88,7 +88,7 @@ public class FileRepositoryService implements ResourceService {
     @Override
     public Boolean exists(final Session session, final IRI identifier) {
         // TODO -- this naively ignores the session (e.g. batch ops)
-        final File resource = new File(directory, partition(identifier.getIRIString()) + separator + RESOURCE_CACHE);
+        final File resource = new File(directory, partition(identifier) + separator + RESOURCE_CACHE);
         return resource.exists();
     }
 
@@ -101,14 +101,14 @@ public class FileRepositoryService implements ResourceService {
     @Override
     public Optional<Resource> find(final Session session, final IRI identifier) {
         // TODO -- this naively ignores the session (e.g. batch ops)
-        return of(new File(directory, partition(identifier.getIRIString()))).filter(File::exists)
+        return of(new File(directory, partition(identifier))).filter(File::exists)
             .flatMap(dir -> CachedResource.find(dir, identifier));
     }
 
     @Override
     public Optional<Resource> find(final Session session, final IRI identifier, final Instant time) {
         // TODO -- this naively ignores the session (e.g. batch ops)
-        return of(new File(directory, partition(identifier.getIRIString()))).filter(File::exists)
+        return of(new File(directory, partition(identifier))).filter(File::exists)
             .flatMap(dir -> VersionedResource.find(dir, identifier, time));
     }
 

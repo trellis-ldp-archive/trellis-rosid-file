@@ -20,7 +20,6 @@ import static java.util.Objects.requireNonNull;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.stream.IntStream.range;
-import static edu.amherst.acdc.trellis.rosid.Constants.PREFIX;
 import static org.apache.commons.codec.digest.DigestUtils.md5Hex;
 import static org.apache.commons.rdf.jena.JenaRDF.asQuad;
 import static org.apache.jena.riot.Lang.NQUADS;
@@ -33,7 +32,6 @@ import java.util.Optional;
 import java.util.StringJoiner;
 import java.util.zip.CRC32;
 
-import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Quad;
 import org.apache.commons.rdf.api.RDF;
 import org.apache.jena.atlas.lib.SinkToCollection;
@@ -65,15 +63,6 @@ class FileUtils {
 
         joiner.add(md5Hex(identifier));
         return joiner.toString();
-    }
-
-    public static String asPath(final IRI identifier) {
-        return asPath(identifier.getIRIString());
-    }
-
-    public static String asPath(final String identifier) {
-        return of(identifier).filter(uri -> uri.startsWith(PREFIX + "/")).map(uri -> uri.substring(PREFIX.length() + 1))
-            .orElseThrow(() -> new IllegalArgumentException("Invalid identifier: " + identifier));
     }
 
     public static Optional<Quad> stringToQuad(final RDF rdf, final String line) {

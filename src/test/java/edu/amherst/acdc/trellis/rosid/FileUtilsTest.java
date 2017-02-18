@@ -34,12 +34,4 @@ public class FileUtilsTest {
         assertEquals(join(separator, "56", "02", "ed", "94db502039137b6017bd7089ceaf8ad1"),
                 FileUtils.partition("info:trellis/other"));
     }
-
-    @Test
-    public void testPath() {
-        assertEquals("foo/bar",
-                FileUtils.asPath("info:trellis/foo/bar"));
-        assertEquals("foo",
-                FileUtils.asPath("info:trellis/foo"));
-    }
 }

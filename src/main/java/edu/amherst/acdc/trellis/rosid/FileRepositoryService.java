@@ -20,7 +20,6 @@ import static java.util.Objects.requireNonNull;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static edu.amherst.acdc.trellis.rosid.Constants.RESOURCE_CACHE;
-import static edu.amherst.acdc.trellis.rosid.FileUtils.asPath;
 import static edu.amherst.acdc.trellis.rosid.FileUtils.partition;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -89,7 +88,7 @@ public class FileRepositoryService implements ResourceService {
     @Override
     public Boolean exists(final Session session, final IRI identifier) {
         // TODO -- this naively ignores the session (e.g. batch ops)
-        final File resource = new File(directory, partition(asPath(identifier)) + separator + RESOURCE_CACHE);
+        final File resource = new File(directory, partition(identifier.getIRIString()) + separator + RESOURCE_CACHE);
         return resource.exists();
     }
 
@@ -102,14 +101,14 @@ public class FileRepositoryService implements ResourceService {
     @Override
     public Optional<Resource> find(final Session session, final IRI identifier) {
         // TODO -- this naively ignores the session (e.g. batch ops)
-        return of(new File(directory, partition(asPath(identifier)))).filter(File::exists)
+        return of(new File(directory, partition(identifier.getIRIString()))).filter(File::exists)
             .flatMap(dir -> CachedResource.find(dir, identifier));
     }
 
     @Override
     public Optional<Resource> find(final Session session, final IRI identifier, final Instant time) {
         // TODO -- this naively ignores the session (e.g. batch ops)
-        return of(new File(directory, partition(asPath(identifier)))).filter(File::exists)
+        return of(new File(directory, partition(identifier.getIRIString()))).filter(File::exists)
             .flatMap(dir -> VersionedResource.find(dir, identifier, time));
     }
 

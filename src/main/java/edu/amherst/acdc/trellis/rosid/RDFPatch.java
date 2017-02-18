@@ -21,7 +21,6 @@ import static java.nio.file.Files.lines;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.Files.newBufferedWriter;
 import static java.nio.file.StandardOpenOption.APPEND;
-import static java.time.Instant.now;
 import static java.time.Instant.parse;
 import static java.util.Objects.nonNull;
 import static java.util.stream.StreamSupport.stream;
@@ -199,7 +198,7 @@ class RDFPatch {
 
         private Boolean inRegion = false;
         private Boolean hasModified = false;
-        private Instant modified = now();
+        private Instant modified;
 
         /**
          * Create a spliterator that reads a file line-by-line in reverse
@@ -209,6 +208,7 @@ class RDFPatch {
             this.rdf = rdf;
             this.time = time;
             this.identifier = identifier;
+            this.modified = time;
             try {
                 this.reader = new ReversedLinesFileReader(file, UTF_8);
             } catch (final IOException ex) {

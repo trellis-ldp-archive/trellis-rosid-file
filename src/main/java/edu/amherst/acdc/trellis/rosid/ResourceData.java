@@ -29,6 +29,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import edu.amherst.acdc.trellis.vocabulary.ACL;
 import edu.amherst.acdc.trellis.vocabulary.DC;
 import edu.amherst.acdc.trellis.vocabulary.LDP;
+import edu.amherst.acdc.trellis.vocabulary.OA;
 import edu.amherst.acdc.trellis.vocabulary.RDF;
 import edu.amherst.acdc.trellis.vocabulary.Trellis;
 import org.apache.commons.rdf.api.Dataset;
@@ -71,6 +72,8 @@ class ResourceData {
     public DatastreamData datastream;
 
     public String inbox;
+
+    public String annotationService;
 
     public String accessControl;
 
@@ -157,6 +160,9 @@ class ResourceData {
 
             graph.stream(identifier, LDP.insertedContentRelation, null).findFirst().map(objectUriAsString)
                 .ifPresent(res -> rd.insertedContentRelation = res);
+
+            graph.stream(identifier, OA.annotationService, null).findFirst().map(objectUriAsString)
+                .ifPresent(res -> rd.annotationService = res);
         });
         return of(rd).filter(x -> nonNull(x.ldpType)).filter(x -> nonNull(x.created));
     }

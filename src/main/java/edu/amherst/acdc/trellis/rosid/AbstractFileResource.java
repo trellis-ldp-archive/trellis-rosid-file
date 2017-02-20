@@ -145,6 +145,11 @@ abstract class AbstractFileResource implements Resource {
     }
 
     @Override
+    public Optional<IRI> getAnnotationService() {
+        return ofNullable(data.annotationService).map(rdf::createIRI);
+    }
+
+    @Override
     public Stream<IRI> getTypes() {
         return ofNullable(data.userTypes).map(types -> types.stream().map(rdf::createIRI)).orElse(empty());
     }

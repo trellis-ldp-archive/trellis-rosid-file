@@ -33,6 +33,7 @@ import java.util.stream.Stream;
 import edu.amherst.acdc.trellis.api.Resource;
 import edu.amherst.acdc.trellis.vocabulary.ACL;
 import edu.amherst.acdc.trellis.vocabulary.LDP;
+import edu.amherst.acdc.trellis.vocabulary.OA;
 import edu.amherst.acdc.trellis.vocabulary.RDF;
 import edu.amherst.acdc.trellis.vocabulary.Trellis;
 import org.apache.commons.rdf.api.Dataset;
@@ -55,6 +56,7 @@ class VersionedResource extends AbstractFileResource {
         add(LDP.hasMemberRelation);
         add(LDP.isMemberOfRelation);
         add(LDP.insertedContentRelation);
+        add(OA.annotationService);
         add(RDF.type);
     }});
 

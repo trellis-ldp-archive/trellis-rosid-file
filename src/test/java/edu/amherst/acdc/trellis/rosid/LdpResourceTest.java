@@ -92,7 +92,7 @@ public class LdpResourceTest {
         assertEquals(parse("2017-02-15T11:15:00Z"), mementos.get(0).getUntil());
 
         final List<Triple> triples = res.stream(USER_MANAGED).collect(toList());
-        assertEquals(4L, triples.size());
+        assertEquals(5L, triples.size());
         assertTrue(triples.contains(rdf.createTriple(identifier, LDP.inbox,
                         rdf.createIRI("http://example.org/receiver/inbox"))));
         assertTrue(triples.contains(rdf.createTriple(identifier, type,
@@ -101,6 +101,8 @@ public class LdpResourceTest {
                         rdf.createIRI("http://example.org/types/Bar"))));
         assertTrue(triples.contains(rdf.createTriple(identifier, RDFS.label,
                         rdf.createLiteral("A label", "eng"))));
+        assertTrue(triples.contains(rdf.createTriple(rdf.createIRI("http://example.org/some/other/resource"),
+                    RDFS.label, rdf.createLiteral("Some other resource", "eng"))));
 
         final List<Triple> inbound = res.stream(FEDORA_INBOUND_REFERENCES).collect(toList());
         assertEquals(2L, inbound.size());
@@ -137,7 +139,7 @@ public class LdpResourceTest {
         assertEquals(0L, res.stream(EnumSet.of(LDP_CONTAINMENT, LDP_MEMBERSHIP)).count());
 
         final List<Triple> triples = res.stream(USER_MANAGED).collect(toList());
-        assertEquals(4L, triples.size());
+        assertEquals(5L, triples.size());
         assertTrue(triples.contains(rdf.createTriple(identifier, LDP.inbox,
                         rdf.createIRI("http://example.org/receiver/inbox"))));
         assertTrue(triples.contains(rdf.createTriple(identifier, type,
@@ -146,6 +148,8 @@ public class LdpResourceTest {
                         rdf.createIRI("http://example.org/types/Bar"))));
         assertTrue(triples.contains(rdf.createTriple(identifier, RDFS.label,
                         rdf.createLiteral("A label", "eng"))));
+        assertTrue(triples.contains(rdf.createTriple(rdf.createIRI("http://example.org/some/other/resource"),
+                    RDFS.label, rdf.createLiteral("Some other resource", "eng"))));
 
         final List<Triple> inbound = res.stream(FEDORA_INBOUND_REFERENCES).collect(toList());
         assertEquals(3L, inbound.size());
@@ -234,7 +238,7 @@ public class LdpResourceTest {
         assertEquals(0L, res.stream(EnumSet.of(LDP_CONTAINMENT, LDP_MEMBERSHIP)).count());
 
         final List<Triple> triples = res.stream(USER_MANAGED).collect(toList());
-        assertEquals(4L, triples.size());
+        assertEquals(5L, triples.size());
         assertTrue(triples.contains(rdf.createTriple(identifier, LDP.inbox,
                         rdf.createIRI("http://example.org/receiver/inbox"))));
         assertTrue(triples.contains(rdf.createTriple(identifier, type,
@@ -243,6 +247,8 @@ public class LdpResourceTest {
                         rdf.createIRI("http://example.org/types/Bar"))));
         assertTrue(triples.contains(rdf.createTriple(identifier, RDFS.label,
                         rdf.createLiteral("A label", "eng"))));
+        assertTrue(triples.contains(rdf.createTriple(rdf.createIRI("http://example.org/some/other/resource"),
+                    RDFS.label, rdf.createLiteral("Some other resource", "eng"))));
 
         final List<Triple> inbound = res.stream(FEDORA_INBOUND_REFERENCES).collect(toList());
         assertEquals(3L, inbound.size());

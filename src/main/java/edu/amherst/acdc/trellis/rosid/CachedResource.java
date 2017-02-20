@@ -16,7 +16,7 @@
 package edu.amherst.acdc.trellis.rosid;
 
 import static java.nio.file.Files.lines;
-import static java.util.Optional.of;
+import static java.util.Optional.ofNullable;
 import static java.util.stream.Stream.empty;
 import static com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS;
 import static edu.amherst.acdc.trellis.rosid.Constants.RESOURCE_CACHE;
@@ -73,13 +73,13 @@ class CachedResource extends AbstractFileResource {
      * @return the resource
      */
     public static Optional<Resource> find(final File directory, final IRI identifier) {
+        ResourceData data = null;
         try {
-            final ResourceData data = MAPPER.readValue(new File(directory, RESOURCE_CACHE), ResourceData.class);
-            return of(new CachedResource(directory, identifier, data));
+            data = MAPPER.readValue(new File(directory, RESOURCE_CACHE), ResourceData.class);
         } catch (final IOException ex) {
             LOGGER.warn("Error reading cached resource: {}", ex.getMessage());
         }
-        return Optional.empty();
+        return ofNullable(data).map(d -> new CachedResource(directory, identifier, d));
     }
 
     public static void write(final File directory, final ResourceData json) {

@@ -84,11 +84,7 @@ class RDFPatch {
     public static void delete(final File file, final Stream<Quad> quads, final Instant time) {
         try (final BufferedWriter writer = newBufferedWriter(file.toPath(), UTF_8, APPEND)) {
             writer.write("BEGIN # " + time.toString() + lineSeparator());
-            quads.filter(quad -> quad.getGraphName().isPresent()).forEach(quad -> {
-                uncheckedWrite(writer, join(" ", "D", quad.getSubject().ntriplesString(),
-                            quad.getPredicate().ntriplesString(), quad.getObject().ntriplesString(),
-                            quad.getGraphName().get().ntriplesString(), ".") + lineSeparator());
-            });
+            quads.filter(quad -> quad.getGraphName().isPresent()).forEach(quad -> uncheckedWrite(writer, "D", quad));
             writer.write("END # " + time.toString() + lineSeparator());
         } catch (final IOException ex) {
             throw new UncheckedIOException(ex);
@@ -104,20 +100,17 @@ class RDFPatch {
     public static void add(final File file, final Stream<Quad> quads, final Instant time) {
         try (final BufferedWriter writer = newBufferedWriter(file.toPath(), UTF_8, APPEND)) {
             writer.write("BEGIN # " + time.toString() + lineSeparator());
-            quads.filter(quad -> quad.getGraphName().isPresent()).forEach(quad -> {
-                uncheckedWrite(writer, join(" ", "A", quad.getSubject().ntriplesString(),
-                            quad.getPredicate().ntriplesString(), quad.getObject().ntriplesString(),
-                            quad.getGraphName().get().ntriplesString(), ".") + lineSeparator());
-            });
+            quads.filter(quad -> quad.getGraphName().isPresent()).forEach(quad -> uncheckedWrite(writer, "A", quad));
             writer.write("END # " + time.toString() + lineSeparator());
         } catch (final IOException ex) {
             throw new UncheckedIOException(ex);
         }
     }
 
-    private static void uncheckedWrite(final Writer writer, final String string) {
+    private static void uncheckedWrite(final Writer writer, final String prefix, final Quad quad) {
         try {
-            writer.write(string);
+            writer.write(join(" ", prefix, quad.getSubject().ntriplesString(), quad.getPredicate().ntriplesString(),
+                quad.getObject().ntriplesString(), quad.getGraphName().get().ntriplesString(), ".") + lineSeparator());
         } catch (final IOException ex) {
             throw new UncheckedIOException(ex);
         }

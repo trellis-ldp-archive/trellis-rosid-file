@@ -48,16 +48,17 @@ import org.junit.Test;
 /**
  * @author acoburn
  */
-public class LdpResourceTest {
+public class LdpNonRdfTest {
 
     private static final RDF rdf = new JenaRDF();
 
     private File file;
-    private IRI identifier = rdf.createIRI("info:trellis/ldprs");
+    private IRI identifier = rdf.createIRI("info:trellis/ldpnr");
+    private IRI datastream = rdf.createIRI("s3://bucket/some-resource");
 
     @Before
     public void setUp() throws Exception {
-        file = new File(getClass().getResource("/ldprs").toURI());
+        file = new File(getClass().getResource("/ldpnr").toURI());
     }
 
     @Test
@@ -65,14 +66,21 @@ public class LdpResourceTest {
         final Instant time = parse("2017-02-15T11:15:00Z");
         final Resource res = VersionedResource.find(file, identifier, time).get();
         assertEquals(identifier, res.getIdentifier());
-        assertEquals(LDP.RDFSource, res.getInteractionModel());
+        assertEquals(LDP.NonRDFSource, res.getInteractionModel());
         assertEquals(of(rdf.createIRI("info:trellis")), res.getContainedBy());
         assertEquals(empty(), res.getContains().findFirst());
         assertEquals(empty(), res.getMembershipResource());
         assertEquals(empty(), res.getMemberRelation());
         assertEquals(empty(), res.getMemberOfRelation());
         assertEquals(empty(), res.getInsertedContentRelation());
-        assertEquals(empty(), res.getDatastream());
+        assertTrue(res.getDatastream().isPresent());
+        res.getDatastream().ifPresent(ds -> {
+            assertEquals(datastream, ds.getIdentifier());
+            assertEquals(parse("2017-02-15T10:05:00Z"), ds.getCreated());
+            assertEquals(parse("2017-02-15T10:05:00Z"), ds.getModified());
+            assertEquals(of(123456L), ds.getSize());
+            assertEquals(of("image/jpeg"), ds.getMimeType());
+        });
         assertTrue(res.isMemento());
         assertFalse(res.isPage());
         assertEquals(empty(), res.getNext());
@@ -115,14 +123,21 @@ public class LdpResourceTest {
         final Instant time = parse("2017-03-15T11:15:00Z");
         final Resource res = VersionedResource.find(file, identifier, time).get();
         assertEquals(identifier, res.getIdentifier());
-        assertEquals(LDP.RDFSource, res.getInteractionModel());
+        assertEquals(LDP.NonRDFSource, res.getInteractionModel());
         assertEquals(of(rdf.createIRI("info:trellis")), res.getContainedBy());
         assertEquals(empty(), res.getContains().findFirst());
         assertEquals(empty(), res.getMembershipResource());
         assertEquals(empty(), res.getMemberRelation());
         assertEquals(empty(), res.getMemberOfRelation());
         assertEquals(empty(), res.getInsertedContentRelation());
-        assertEquals(empty(), res.getDatastream());
+        assertTrue(res.getDatastream().isPresent());
+        res.getDatastream().ifPresent(ds -> {
+            assertEquals(datastream, ds.getIdentifier());
+            assertEquals(parse("2017-02-15T10:05:00Z"), ds.getCreated());
+            assertEquals(parse("2017-02-15T10:05:00Z"), ds.getModified());
+            assertEquals(of(123456L), ds.getSize());
+            assertEquals(of("image/jpeg"), ds.getMimeType());
+        });
         assertTrue(res.isMemento());
         assertFalse(res.isPage());
         assertEquals(empty(), res.getNext());
@@ -167,14 +182,21 @@ public class LdpResourceTest {
         final Instant time = parse("2017-02-15T11:00:00Z");
         final Resource res = VersionedResource.find(file, identifier, time).get();
         assertEquals(identifier, res.getIdentifier());
-        assertEquals(LDP.RDFSource, res.getInteractionModel());
+        assertEquals(LDP.NonRDFSource, res.getInteractionModel());
         assertEquals(of(rdf.createIRI("info:trellis")), res.getContainedBy());
         assertEquals(empty(), res.getContains().findFirst());
         assertEquals(empty(), res.getMembershipResource());
         assertEquals(empty(), res.getMemberRelation());
         assertEquals(empty(), res.getMemberOfRelation());
         assertEquals(empty(), res.getInsertedContentRelation());
-        assertEquals(empty(), res.getDatastream());
+        assertTrue(res.getDatastream().isPresent());
+        res.getDatastream().ifPresent(ds -> {
+            assertEquals(datastream, ds.getIdentifier());
+            assertEquals(parse("2017-02-15T10:05:00Z"), ds.getCreated());
+            assertEquals(parse("2017-02-15T10:05:00Z"), ds.getModified());
+            assertEquals(of(123456L), ds.getSize());
+            assertEquals(of("image/jpeg"), ds.getMimeType());
+        });
         assertTrue(res.isMemento());
         assertFalse(res.isPage());
         assertEquals(empty(), res.getNext());
@@ -212,14 +234,21 @@ public class LdpResourceTest {
     public void testCachedResource() {
         final Resource res = CachedResource.find(file, identifier).get();
         assertEquals(identifier, res.getIdentifier());
-        assertEquals(LDP.RDFSource, res.getInteractionModel());
+        assertEquals(LDP.NonRDFSource, res.getInteractionModel());
         assertEquals(of(rdf.createIRI("info:trellis")), res.getContainedBy());
         assertEquals(empty(), res.getContains().findFirst());
         assertEquals(empty(), res.getMembershipResource());
         assertEquals(empty(), res.getMemberRelation());
         assertEquals(empty(), res.getMemberOfRelation());
         assertEquals(empty(), res.getInsertedContentRelation());
-        assertEquals(empty(), res.getDatastream());
+        assertTrue(res.getDatastream().isPresent());
+        res.getDatastream().ifPresent(ds -> {
+            assertEquals(datastream, ds.getIdentifier());
+            assertEquals(parse("2017-02-15T10:05:00Z"), ds.getCreated());
+            assertEquals(parse("2017-02-15T10:05:00Z"), ds.getModified());
+            assertEquals(of(123456L), ds.getSize());
+            assertEquals(of("image/jpeg"), ds.getMimeType());
+        });
         assertFalse(res.isMemento());
         assertFalse(res.isPage());
         assertEquals(empty(), res.getNext());

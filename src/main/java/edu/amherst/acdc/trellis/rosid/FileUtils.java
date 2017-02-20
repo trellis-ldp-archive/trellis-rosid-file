@@ -17,7 +17,6 @@ package edu.amherst.acdc.trellis.rosid;
 
 import static java.io.File.separator;
 import static java.util.Objects.requireNonNull;
-import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.stream.IntStream.range;
 import static org.apache.commons.codec.digest.DigestUtils.md5Hex;
@@ -62,9 +61,8 @@ class FileUtils {
         hasher.update(identifier.getBytes());
         final String intermediate = Long.toHexString(hasher.getValue());
 
-        final int count = intermediate.length() / LENGTH;
-
-        range(0, count).limit(MAX).forEach(i -> joiner.add(intermediate.substring(i * LENGTH, (i + 1) * LENGTH)));
+        range(0, intermediate.length() / LENGTH).limit(MAX)
+            .forEach(i -> joiner.add(intermediate.substring(i * LENGTH, (i + 1) * LENGTH)));
 
         joiner.add(md5Hex(identifier));
         return joiner.toString();
@@ -72,12 +70,8 @@ class FileUtils {
 
     public static Optional<Quad> stringToQuad(final RDF rdf, final String line) {
         final List<org.apache.jena.sparql.core.Quad> c = new ArrayList<>();
-        READER.read(new StringReader(line), null, NQUADS.getContentType(),
-                sinkQuads(new SinkToCollection<>(c)), null);
-        if (c.isEmpty()) {
-            return empty();
-        }
-        return of(asQuad(rdf, c.get(0)));
+        READER.read(new StringReader(line), null, NQUADS.getContentType(), sinkQuads(new SinkToCollection<>(c)), null);
+        return of(c).filter(x -> !x.isEmpty()).map(x -> asQuad(rdf, x.get(0)));
     }
 
     private FileUtils() {

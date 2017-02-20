@@ -130,30 +130,20 @@ class VersionedResource extends AbstractFileResource {
 
             dataset.getGraph(Trellis.ServerManagedTriples).ifPresent(graph -> {
                 graph.stream(identifier, DC.created, null).findFirst().map(objectLiteralAsString).map(Instant::parse)
-                    .ifPresent(date -> {
-                        rd.created = date;
-                    });
+                    .ifPresent(date -> rd.created = date);
 
                 graph.stream(identifier, DC.modified, null).findFirst().map(objectLiteralAsString).map(Instant::parse)
-                    .ifPresent(date -> {
-                        rd.modified = date;
-                    });
+                    .ifPresent(date -> rd.modified = date);
 
-                graph.stream(identifier, RDF.type, null).findFirst().map(objectUriAsString).ifPresent(type -> {
-                        rd.ldpType = type;
-                    });
+                graph.stream(identifier, RDF.type, null).findFirst().map(objectUriAsString)
+                    .ifPresent(type -> rd.ldpType = type);
 
                 graph.stream(identifier, Trellis.containedBy, null).findFirst().map(objectUriAsString)
-                    .ifPresent(res -> {
-                        rd.containedBy = res;
-                    });
+                    .ifPresent(res -> rd.containedBy = res);
 
-                graph.stream(identifier, DC.creator, null).findFirst().map(objectUriAsString).ifPresent(agent -> {
-                        rd.creator = agent;
-                    });
+                graph.stream(identifier, DC.creator, null).findFirst().map(objectUriAsString)
+                    .ifPresent(agent -> rd.creator = agent);
 
-
-                // TODO
                 // Populate datastream, if present
                 graph.stream(identifier, DC.hasPart, null).findFirst().map(Triple::getObject).map(x -> (IRI) x)
                         .ifPresent(id -> {
@@ -161,60 +151,41 @@ class VersionedResource extends AbstractFileResource {
                     ds.id = id.getIRIString();
 
                     graph.stream(id, DC.created, null).findFirst().map(objectLiteralAsString).map(Instant::parse)
-                        .ifPresent(date -> {
-                            ds.created = date;
-                        });
+                        .ifPresent(date -> ds.created = date);
 
                     graph.stream(id, DC.modified, null).findFirst().map(objectLiteralAsString).map(Instant::parse)
-                        .ifPresent(date -> {
-                            ds.modified = date;
-                        });
+                        .ifPresent(date -> ds.modified = date);
 
-                    graph.stream(id, DC.format, null).findFirst().map(objectLiteralAsString).ifPresent(format -> {
-                            ds.format = format;
-                        });
+                    graph.stream(id, DC.format, null).findFirst().map(objectLiteralAsString)
+                        .ifPresent(format -> ds.format = format);
 
                     graph.stream(id, DC.extent, null).findFirst().map(objectLiteralAsString).map(Long::parseLong)
-                        .ifPresent(size -> {
-                            ds.size = size;
-                        });
+                        .ifPresent(size -> ds.size = size);
 
-                    if (nonNull(ds.created) && nonNull(ds.id)) {
-                        rd.datastream = ds;
-                    }
+                    rd.datastream = ds;
                 });
             });
 
             dataset.getGraph(Trellis.UserManagedTriples).ifPresent(graph -> {
                 rd.userTypes = graph.stream(identifier, RDF.type, null).map(objectUriAsString).collect(toList());
 
-                graph.stream(identifier, ACL.accessControl, null).findFirst().map(objectUriAsString).ifPresent(res -> {
-                        rd.accessControl = res;
-                    });
+                graph.stream(identifier, ACL.accessControl, null).findFirst().map(objectUriAsString)
+                    .ifPresent(res -> rd.accessControl = res);
 
-                graph.stream(identifier, LDP.inbox, null).findFirst().map(objectUriAsString).ifPresent(res -> {
-                        rd.inbox = res;
-                    });
+                graph.stream(identifier, LDP.inbox, null).findFirst().map(objectUriAsString)
+                    .ifPresent(res -> rd.inbox = res);
 
                 graph.stream(identifier, LDP.membershipResource, null).findFirst().map(objectUriAsString)
-                    .ifPresent(res -> {
-                        rd.membershipResource = res;
-                    });
+                    .ifPresent(res -> rd.membershipResource = res);
 
                 graph.stream(identifier, LDP.hasMemberRelation, null).findFirst().map(objectUriAsString)
-                    .ifPresent(res -> {
-                        rd.hasMemberRelation = res;
-                    });
+                    .ifPresent(res -> rd.hasMemberRelation = res);
 
                 graph.stream(identifier, LDP.isMemberOfRelation, null).findFirst().map(objectUriAsString)
-                    .ifPresent(res -> {
-                        rd.isMemberOfRelation = res;
-                    });
+                    .ifPresent(res -> rd.isMemberOfRelation = res);
 
                 graph.stream(identifier, LDP.insertedContentRelation, null).findFirst().map(objectUriAsString)
-                    .ifPresent(res -> {
-                        rd.insertedContentRelation = res;
-                    });
+                    .ifPresent(res -> rd.insertedContentRelation = res);
             });
         }
         return Optional.of(rd).filter(x -> nonNull(x.ldpType)).filter(x -> nonNull(x.created));

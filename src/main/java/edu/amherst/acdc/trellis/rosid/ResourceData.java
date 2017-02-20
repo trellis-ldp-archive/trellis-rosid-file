@@ -56,7 +56,7 @@ class ResourceData {
     }
 
     @JsonProperty("@context")
-    public String context = "http://acdc.amherst.edu/ns/trellisresource";
+    public String context = "http://acdc.amherst.edu/ns/trellis.jsonld";
 
     @JsonProperty("@id")
     public String id;

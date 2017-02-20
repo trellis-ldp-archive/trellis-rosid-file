@@ -1,5 +1,5 @@
 {
-    "@context" : "http://acdc.amherst.edu/ns/trellisresource" ,
+    "@context" : "http://acdc.amherst.edu/ns/trellis.jsonld" ,
     "@id" : "info:trellis/ldprs" ,
     "@type" : "http://www.w3.org/ns/ldp#RDFSource" ,
     "containedBy" : "info:trellis" ,

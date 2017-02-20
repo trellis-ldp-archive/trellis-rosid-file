@@ -16,8 +16,10 @@
 package edu.amherst.acdc.trellis.rosid;
 
 import static java.util.Collections.unmodifiableSet;
+import static java.util.Optional.of;
 import static java.util.stream.Stream.empty;
 import static edu.amherst.acdc.trellis.rosid.Constants.RESOURCE_JOURNAL;
+import static edu.amherst.acdc.trellis.rosid.RDFPatch.asStream;
 
 import java.io.File;
 import java.time.Instant;
@@ -45,6 +47,7 @@ import org.apache.commons.rdf.api.Triple;
  */
 class VersionedResource extends AbstractFileResource {
 
+    /* User-controllable properties that become part of the core resource data */
     private static final Set<IRI> specialUserProperties = unmodifiableSet(new HashSet<IRI>() { {
         add(ACL.accessControl);
         add(LDP.inbox);
@@ -55,7 +58,40 @@ class VersionedResource extends AbstractFileResource {
         add(RDF.type);
     }});
 
+    private static Predicate<Quad> isServerManagedTriple = quad ->
+        quad.getGraphName().filter(Trellis.ServerManagedTriples::equals).isPresent();
+
+    private static Predicate<Quad> isResourceTriple = isServerManagedTriple.or(quad ->
+        quad.getGraphName().filter(Trellis.UserManagedTriples::equals).isPresent() &&
+        specialUserProperties.contains(quad.getPredicate()));
+
     private final Instant time;
+
+    /**
+     * Find the resource at a particular point in time
+     * @param directory the directory
+     * @param identifier the identifier
+     * @param time the time
+     * @return the resource, if it exists at the given time
+     */
+    public static Optional<Resource> find(final File directory, final IRI identifier, final Instant time) {
+        return read(directory, identifier, time).map(data -> new VersionedResource(directory, identifier, data, time));
+    }
+
+    /**
+     * Read the state of the resource data at a particular point in time
+     * @param directory the directory
+     * @param identifier the identifier
+     * @param time the time
+     * @return the resource data, if it exists
+     */
+    public static Optional<ResourceData> read(final File directory, final IRI identifier, final Instant time) {
+        return of(new File(directory, RESOURCE_JOURNAL)).filter(File::exists).flatMap(file -> {
+            final Dataset dataset = rdf.createDataset();
+            asStream(rdf, file, identifier, time).filter(isResourceTriple).forEach(dataset::add);
+            return ResourceData.from(identifier, dataset);
+        });
+    }
 
     /**
      * Create a File-based versioned resource
@@ -70,40 +106,6 @@ class VersionedResource extends AbstractFileResource {
         this.time = time;
     }
 
-    /**
-     * Find the resource at a particular point in time
-     * @param directory the directory
-     * @param identifier the identifier
-     * @param time the time
-     * @return the resource, if it exists at the given time
-     */
-    public static Optional<Resource> find(final File directory, final IRI identifier, final Instant time) {
-        return read(directory, identifier, time).map(data -> new VersionedResource(directory, identifier, data, time));
-    }
-
-    private static Predicate<Quad> isServerManaged = quad ->
-        quad.getGraphName().filter(Trellis.ServerManagedTriples::equals).isPresent();
-
-    private static Predicate<Quad> isSpecialUserTriple = quad ->
-        quad.getGraphName().filter(Trellis.UserManagedTriples::equals).isPresent() &&
-        specialUserProperties.contains(quad.getPredicate());
-
-    /**
-     * Read the state of the resource data at a particular point in time
-     * @param directory the directory
-     * @param identifier the identifier
-     * @param time the time
-     * @return the resource data, if it exists
-     */
-    public static Optional<ResourceData> read(final File directory, final IRI identifier, final Instant time) {
-        return Optional.of(new File(directory, RESOURCE_JOURNAL)).filter(File::exists).flatMap(file -> {
-            final Dataset dataset = rdf.createDataset();
-            RDFPatch.asStream(rdf, file, identifier, time).filter(isServerManaged.or(isSpecialUserTriple))
-                .forEach(dataset::add);
-            return ResourceData.from(identifier, dataset);
-        });
-    }
-
     @Override
     public Boolean isMemento() {
         return true;
@@ -111,8 +113,8 @@ class VersionedResource extends AbstractFileResource {
 
     @Override
     public <T extends Resource.TripleCategory> Stream<Triple> stream(final Collection<T> category) {
-        return Optional.of(new File(directory, RESOURCE_JOURNAL)).filter(File::exists)
-            .map(file -> RDFPatch.asStream(rdf, file, identifier, time)).orElse(empty())
+        return of(new File(directory, RESOURCE_JOURNAL)).filter(File::exists)
+            .map(file -> asStream(rdf, file, identifier, time)).orElse(empty())
             .filter(quad -> quad.getGraphName().isPresent() &&
                     category.contains(categorymap.get(quad.getGraphName().get()))).map(Quad::asTriple);
     }

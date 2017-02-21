@@ -16,6 +16,7 @@
 package edu.amherst.acdc.trellis.rosid;
 
 import static java.io.File.separator;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.of;
 import static java.util.stream.IntStream.range;
@@ -41,7 +42,7 @@ import org.apache.jena.riot.ReaderRIOT;
 /**
  * @author acoburn
  */
-class FileUtils {
+final class FileUtils {
 
     // The length of the CRC directory partition
     public final static int LENGTH = 2;
@@ -49,16 +50,26 @@ class FileUtils {
 
     private static final ReaderRIOT READER = RDFParserRegistry.getFactory(NQUADS).create(NQUADS);
 
+    /**
+     * Partition an identifier into a directory structure
+     * @param identifier the identifier
+     * @return a string usable as a directory path
+     */
     public static String partition(final IRI identifier) {
         return partition(identifier.getIRIString());
     }
 
+    /**
+     * Partition an identifier into a directory structure
+     * @param identifier the identifier
+     * @return a string usable as a directory path
+     */
     public static String partition(final String identifier) {
         requireNonNull(identifier, "identifier must not be null!");
 
         final StringJoiner joiner = new StringJoiner(separator);
         final CRC32 hasher = new CRC32();
-        hasher.update(identifier.getBytes());
+        hasher.update(identifier.getBytes(UTF_8));
         final String intermediate = Long.toHexString(hasher.getValue());
 
         range(0, intermediate.length() / LENGTH).limit(MAX)
@@ -68,6 +79,12 @@ class FileUtils {
         return joiner.toString();
     }
 
+    /**
+     * Parse a string into a Quad
+     * @param rdf the RDF object
+     * @param line the line of text
+     * @return the Quad
+     */
     public static Optional<Quad> stringToQuad(final RDF rdf, final String line) {
         final List<org.apache.jena.sparql.core.Quad> c = new ArrayList<>();
         READER.read(new StringReader(line), null, NQUADS.getContentType(), sinkQuads(new SinkToCollection<>(c)), null);

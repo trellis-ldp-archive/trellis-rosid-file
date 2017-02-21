@@ -15,16 +15,22 @@
  */
 package edu.amherst.acdc.trellis.rosid;
 
+import static edu.amherst.acdc.trellis.rosid.FileUtils.stringToQuad;
 import static java.lang.String.join;
 import static java.lang.System.lineSeparator;
-import static java.nio.file.Files.lines;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.nio.file.Files.lines;
 import static java.nio.file.Files.newBufferedWriter;
 import static java.nio.file.StandardOpenOption.APPEND;
 import static java.time.Instant.parse;
 import static java.util.Objects.nonNull;
 import static java.util.stream.StreamSupport.stream;
-import static edu.amherst.acdc.trellis.rosid.FileUtils.stringToQuad;
+
+import edu.amherst.acdc.trellis.api.VersionRange;
+import edu.amherst.acdc.trellis.vocabulary.DC;
+import edu.amherst.acdc.trellis.vocabulary.Fedora;
+import edu.amherst.acdc.trellis.vocabulary.Trellis;
+import edu.amherst.acdc.trellis.vocabulary.XSD;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -33,17 +39,12 @@ import java.io.UncheckedIOException;
 import java.io.Writer;
 import java.time.Instant;
 import java.util.HashSet;
-import java.util.Set;
 import java.util.Iterator;
+import java.util.Set;
 import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-import edu.amherst.acdc.trellis.api.VersionRange;
-import edu.amherst.acdc.trellis.vocabulary.DC;
-import edu.amherst.acdc.trellis.vocabulary.Fedora;
-import edu.amherst.acdc.trellis.vocabulary.Trellis;
-import edu.amherst.acdc.trellis.vocabulary.XSD;
 import org.apache.commons.io.input.ReversedLinesFileReader;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Quad;
@@ -52,13 +53,17 @@ import org.apache.commons.rdf.api.RDF;
 /**
  * @author acoburn
  */
-class RDFPatch {
+final class RDFPatch {
 
+    private static final String COMMENT_DELIM = " # ";
+    private static final String BEGIN = "BEGIN" + COMMENT_DELIM;
+    private static final String END = "END" + COMMENT_DELIM;
 
     /**
      * Read the triples from the journal that existed up to (and including) the specified time
      * @param rdf the rdf object
      * @param file the file
+     * @param identifier the identifier
      * @param time the time
      * @return a stream of RDF triples
      */
@@ -83,9 +88,9 @@ class RDFPatch {
      */
     public static void delete(final File file, final Stream<Quad> quads, final Instant time) {
         try (final BufferedWriter writer = newBufferedWriter(file.toPath(), UTF_8, APPEND)) {
-            writer.write("BEGIN # " + time.toString() + lineSeparator());
+            writer.write(BEGIN + time + lineSeparator());
             quads.filter(quad -> quad.getGraphName().isPresent()).forEach(quad -> uncheckedWrite(writer, "D", quad));
-            writer.write("END # " + time.toString() + lineSeparator());
+            writer.write(END + time + lineSeparator());
         } catch (final IOException ex) {
             throw new UncheckedIOException(ex);
         }
@@ -94,14 +99,14 @@ class RDFPatch {
     /**
      * Add RDF Patch statements to the specified file
      * @param file the file
-     * @param triples the triples
+     * @param quads the quads
      * @param time the time
      */
     public static void add(final File file, final Stream<Quad> quads, final Instant time) {
         try (final BufferedWriter writer = newBufferedWriter(file.toPath(), UTF_8, APPEND)) {
-            writer.write("BEGIN # " + time.toString() + lineSeparator());
+            writer.write(BEGIN + time + lineSeparator());
             quads.filter(quad -> quad.getGraphName().isPresent()).forEach(quad -> uncheckedWrite(writer, "A", quad));
-            writer.write("END # " + time.toString() + lineSeparator());
+            writer.write(END + time + lineSeparator());
         } catch (final IOException ex) {
             throw new UncheckedIOException(ex);
         }
@@ -126,13 +131,11 @@ class RDFPatch {
 
         /**
          * Create a time map reader
-         * @param rdf the rdf object
-         * @param identifier the identifier
          * @param file the file
          */
         public TimeMapReader(final File file) {
             try {
-                dateLines = lines(file.toPath()).filter(line -> line.startsWith("BEGIN # ")).iterator();
+                dateLines = lines(file.toPath()).filter(line -> line.startsWith(BEGIN)).iterator();
             } catch (final IOException ex) {
                 throw new UncheckedIOException(ex);
             }
@@ -170,7 +173,7 @@ class RDFPatch {
         }
 
         private Instant emit(final Consumer<? super VersionRange> action, final String line) {
-            final Instant time = parse(line.split(" # ")[1]);
+            final Instant time = parse(line.split(COMMENT_DELIM)[1]);
             if (nonNull(from)) {
                 action.accept(new VersionRange(from, time));
             }
@@ -195,7 +198,10 @@ class RDFPatch {
 
         /**
          * Create a spliterator that reads a file line-by-line in reverse
+         * @param rdf the RDF object
          * @param file the file
+         * @param identifier the identifier
+         * @param time the time
          */
         public StreamReader(final RDF rdf, final File file, final IRI identifier, final Instant time) {
             this.rdf = rdf;
@@ -213,8 +219,8 @@ class RDFPatch {
         public void forEachRemaining(final Consumer<? super Quad> action) {
             try {
                 for (String line = reader.readLine(); nonNull(line); line = reader.readLine()) {
-                    if (line.startsWith("END # ")) {
-                        final Instant moment = parse(line.split(" # ", 2)[1]);
+                    if (line.startsWith(END)) {
+                        final Instant moment = parse(line.split(COMMENT_DELIM, 2)[1]);
                         if (!time.isBefore(moment)) {
                             modified = moment;
                             inRegion = true;
@@ -246,8 +252,8 @@ class RDFPatch {
             try {
                 final String line = reader.readLine();
                 if (nonNull(line)) {
-                    if (line.startsWith("END # ")) {
-                        final Instant moment = parse(line.split(" # ", 2)[1]);
+                    if (line.startsWith(END)) {
+                        final Instant moment = parse(line.split(COMMENT_DELIM, 2)[1]);
                         if (!time.isBefore(moment)) {
                             modified = moment;
                             inRegion = true;

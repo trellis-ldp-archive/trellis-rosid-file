@@ -20,18 +20,20 @@ import static java.util.Objects.requireNonNull;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.toList;
 
-import java.time.Instant;
-import java.util.List;
-import java.util.Optional;
-import java.util.function.Function;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import edu.amherst.acdc.trellis.vocabulary.ACL;
 import edu.amherst.acdc.trellis.vocabulary.DC;
 import edu.amherst.acdc.trellis.vocabulary.LDP;
 import edu.amherst.acdc.trellis.vocabulary.OA;
 import edu.amherst.acdc.trellis.vocabulary.RDF;
 import edu.amherst.acdc.trellis.vocabulary.Trellis;
+
+import java.time.Instant;
+import java.util.List;
+import java.util.Optional;
+import java.util.function.Function;
+
 import org.apache.commons.rdf.api.Dataset;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Literal;
@@ -42,53 +44,119 @@ import org.apache.commons.rdf.api.Triple;
  */
 class ResourceData {
 
+    /**
+     * The datastream-specific data
+     */
     static class DatastreamData {
+        /**
+         * The datastream identifier
+         */
         @JsonProperty("@id")
         public String id;
 
+        /**
+         * The datastream format (MIMEType)
+         */
         public String format;
 
+        /**
+         * The datastream size
+         */
         public Long size;
 
+        /**
+         * The creation date of the datastream
+         */
         public Instant created;
 
+        /**
+         * The modification date of the datastream
+         */
         public Instant modified;
     }
 
+    /**
+     * The JSON-LD context of the resource data
+     */
     @JsonProperty("@context")
     public String context = "http://acdc.amherst.edu/ns/trellis.jsonld";
 
+    /**
+     * The resource identifier
+     */
     @JsonProperty("@id")
     public String id;
 
+    /**
+     * The interaction model for the resource
+     */
     @JsonProperty("@type")
     public String ldpType;
 
+    /**
+     * Any additional RDF types for the resource
+     */
     @JsonProperty("type")
     public List<String> userTypes;
 
+    /**
+     * The resource that contains this resource, if any
+     */
     public String containedBy;
 
+    /**
+     * The datastream data, if available
+     */
     public DatastreamData datastream;
 
+    /**
+     * An ldp:inbox for the resource, if available
+     */
     public String inbox;
 
+    /**
+     * The oa:annotationService for the resource, if available
+     */
     public String annotationService;
 
+    /**
+     * The acl:accessControl for the resource, if available
+     */
     public String accessControl;
 
+    /**
+     * The creation date
+     */
     public Instant created;
 
+    /**
+     * The modification date
+     */
     public Instant modified;
 
+    /**
+     * The ldp:membershipResource, if available
+     */
     public String membershipResource;
 
+    /**
+     * The ldp:hasMemberRelation, if available
+     */
     public String hasMemberRelation;
 
+    /**
+     * The ldp:isMemberOfRelation, if available
+     */
     public String isMemberOfRelation;
 
+    /**
+     * The ldp:insertedContentRelation, if available
+     */
     public String insertedContentRelation;
 
+    /**
+     * The dc:creator of the resource, if available
+     */
     public String creator;
 
     private static final Function<Triple, String> objectUriAsString = triple ->
@@ -97,6 +165,12 @@ class ResourceData {
     private static final Function<Triple, String> objectLiteralAsString = triple ->
         ((Literal) triple.getObject()).getLexicalForm();
 
+    /**
+     * Create a ResourcData object from an identifier and a dataset
+     * @param identifier the identifier
+     * @param dataset the dataset
+     * @return the resource data, if present from the dataset
+     */
     public static Optional<ResourceData> from(final IRI identifier, final Dataset dataset) {
         requireNonNull(identifier, "identifier may not be null!");
         requireNonNull(dataset, "dataset may not be null!");

@@ -15,6 +15,12 @@
  */
 package edu.amherst.acdc.trellis.rosid;
 
+import static edu.amherst.acdc.trellis.api.Resource.TripleContext.FEDORA_INBOUND_REFERENCES;
+import static edu.amherst.acdc.trellis.api.Resource.TripleContext.LDP_CONTAINMENT;
+import static edu.amherst.acdc.trellis.api.Resource.TripleContext.LDP_MEMBERSHIP;
+import static edu.amherst.acdc.trellis.api.Resource.TripleContext.TRELLIS_AUDIT;
+import static edu.amherst.acdc.trellis.api.Resource.TripleContext.USER_MANAGED;
+import static edu.amherst.acdc.trellis.rosid.Constants.MEMENTO_CACHE;
 import static java.nio.file.Files.lines;
 import static java.time.Instant.parse;
 import static java.util.Collections.singleton;
@@ -28,12 +34,13 @@ import static java.util.Spliterator.ORDERED;
 import static java.util.Spliterators.spliteratorUnknownSize;
 import static java.util.stream.Stream.empty;
 import static java.util.stream.Stream.of;
-import static edu.amherst.acdc.trellis.api.Resource.TripleContext.FEDORA_INBOUND_REFERENCES;
-import static edu.amherst.acdc.trellis.api.Resource.TripleContext.LDP_CONTAINMENT;
-import static edu.amherst.acdc.trellis.api.Resource.TripleContext.LDP_MEMBERSHIP;
-import static edu.amherst.acdc.trellis.api.Resource.TripleContext.TRELLIS_AUDIT;
-import static edu.amherst.acdc.trellis.api.Resource.TripleContext.USER_MANAGED;
-import static edu.amherst.acdc.trellis.rosid.Constants.MEMENTO_CACHE;
+
+import edu.amherst.acdc.trellis.api.Datastream;
+import edu.amherst.acdc.trellis.api.Resource;
+import edu.amherst.acdc.trellis.api.VersionRange;
+import edu.amherst.acdc.trellis.vocabulary.Fedora;
+import edu.amherst.acdc.trellis.vocabulary.LDP;
+import edu.amherst.acdc.trellis.vocabulary.Trellis;
 
 import java.io.File;
 import java.io.IOException;
@@ -46,12 +53,6 @@ import java.util.Optional;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import edu.amherst.acdc.trellis.api.Datastream;
-import edu.amherst.acdc.trellis.api.Resource;
-import edu.amherst.acdc.trellis.api.VersionRange;
-import edu.amherst.acdc.trellis.vocabulary.LDP;
-import edu.amherst.acdc.trellis.vocabulary.Fedora;
-import edu.amherst.acdc.trellis.vocabulary.Trellis;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.RDF;
 import org.apache.commons.rdf.api.Triple;
@@ -192,6 +193,11 @@ abstract class AbstractFileResource implements Resource {
     private static class MementoReader implements Iterator<VersionRange> {
         private final Iterator<String> dateLines;
         private Instant from = null;
+
+        /**
+         * Create a new MementoReader
+         * @param file the file
+         */
         public MementoReader(final File file) {
             try {
                 dateLines = lines(file.toPath()).iterator();

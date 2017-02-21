@@ -15,29 +15,30 @@
  */
 package edu.amherst.acdc.trellis.rosid;
 
+import static edu.amherst.acdc.trellis.rosid.Constants.RESOURCE_CACHE;
+import static edu.amherst.acdc.trellis.rosid.FileUtils.partition;
 import static java.io.File.separator;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
-import static edu.amherst.acdc.trellis.rosid.Constants.RESOURCE_CACHE;
-import static edu.amherst.acdc.trellis.rosid.FileUtils.partition;
 import static org.slf4j.LoggerFactory.getLogger;
+
+import edu.amherst.acdc.trellis.api.Resource;
+import edu.amherst.acdc.trellis.spi.EventService;
+import edu.amherst.acdc.trellis.spi.ResourceService;
+import edu.amherst.acdc.trellis.spi.Session;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.commons.rdf.api.Graph;
 import org.apache.commons.rdf.api.IRI;
 import org.slf4j.Logger;
-
-import edu.amherst.acdc.trellis.api.Resource;
-import edu.amherst.acdc.trellis.spi.EventService;
-import edu.amherst.acdc.trellis.spi.ResourceService;
-import edu.amherst.acdc.trellis.spi.Session;
 
 /**
  * @author acoburn
@@ -75,12 +76,14 @@ public class FileRepositoryService implements ResourceService {
 
     @Override
     public void bind(final EventService svc) {
+        LOGGER.info("Binding EventService to RepositoryService");
         evtSvc = svc;
     }
 
     @Override
     public void unbind(final EventService svc) {
-        if (evtSvc == svc) {
+        if (Objects.equals(evtSvc, svc)) {
+            LOGGER.info("Unbinding EventService from RepositoryService");
             evtSvc = null;
         }
     }

@@ -15,11 +15,18 @@
  */
 package edu.amherst.acdc.trellis.rosid;
 
+import static edu.amherst.acdc.trellis.rosid.Constants.RESOURCE_JOURNAL;
+import static edu.amherst.acdc.trellis.rosid.RDFPatch.asStream;
 import static java.util.Collections.unmodifiableSet;
 import static java.util.Optional.of;
 import static java.util.stream.Stream.empty;
-import static edu.amherst.acdc.trellis.rosid.Constants.RESOURCE_JOURNAL;
-import static edu.amherst.acdc.trellis.rosid.RDFPatch.asStream;
+
+import edu.amherst.acdc.trellis.api.Resource;
+import edu.amherst.acdc.trellis.vocabulary.ACL;
+import edu.amherst.acdc.trellis.vocabulary.LDP;
+import edu.amherst.acdc.trellis.vocabulary.OA;
+import edu.amherst.acdc.trellis.vocabulary.RDF;
+import edu.amherst.acdc.trellis.vocabulary.Trellis;
 
 import java.io.File;
 import java.time.Instant;
@@ -30,12 +37,6 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-import edu.amherst.acdc.trellis.api.Resource;
-import edu.amherst.acdc.trellis.vocabulary.ACL;
-import edu.amherst.acdc.trellis.vocabulary.LDP;
-import edu.amherst.acdc.trellis.vocabulary.OA;
-import edu.amherst.acdc.trellis.vocabulary.RDF;
-import edu.amherst.acdc.trellis.vocabulary.Trellis;
 import org.apache.commons.rdf.api.Dataset;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Quad;

@@ -15,14 +15,19 @@
  */
 package edu.amherst.acdc.trellis.rosid;
 
-import static java.nio.file.Files.lines;
-import static java.util.Optional.ofNullable;
-import static java.util.stream.Stream.empty;
 import static com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS;
 import static edu.amherst.acdc.trellis.rosid.Constants.RESOURCE_CACHE;
 import static edu.amherst.acdc.trellis.rosid.Constants.RESOURCE_QUADS;
 import static edu.amherst.acdc.trellis.rosid.FileUtils.stringToQuad;
+import static java.nio.file.Files.lines;
+import static java.util.Optional.ofNullable;
+import static java.util.stream.Stream.empty;
 import static org.slf4j.LoggerFactory.getLogger;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+
+import edu.amherst.acdc.trellis.api.Resource;
 
 import java.io.File;
 import java.io.IOException;
@@ -33,9 +38,6 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import edu.amherst.acdc.trellis.api.Resource;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Quad;
 import org.apache.commons.rdf.api.Triple;
@@ -82,6 +84,11 @@ class CachedResource extends AbstractFileResource {
         return ofNullable(data).map(d -> new CachedResource(directory, identifier, d));
     }
 
+    /**
+     * Write the resource data into a file as JSON
+     * @param directory the directory
+     * @param json the resource data
+     */
     public static void write(final File directory, final ResourceData json) {
         try {
             MAPPER.writeValue(new File(directory, RESOURCE_CACHE), json);

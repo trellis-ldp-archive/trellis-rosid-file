@@ -79,7 +79,7 @@ class ResourceData {
      * The JSON-LD context of the resource data
      */
     @JsonProperty("@context")
-    public String context = "http://acdc.amherst.edu/ns/trellis.jsonld";
+    public String context = "http://acdc.amherst.edu/ns/trellisresource.jsonld";
 
     /**
      * The resource identifier

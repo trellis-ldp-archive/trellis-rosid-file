@@ -158,4 +158,10 @@ public class FileRepositoryService implements ResourceService {
         // TODO
         return empty();
     }
+
+    @Override
+    public void close() {
+        // TODO
+        // close any zk/kafka connections
+    }
 }

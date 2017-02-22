@@ -228,9 +228,9 @@ final class RDFPatch {
                     } else if (inRegion && (line.startsWith("A ") || line.startsWith("D "))) {
                         final String[] parts = line.split(" ", 2);
                         stringToQuad(rdf, parts[1]).ifPresent(quad -> {
-                            if (!hasModified && !quad.getGraphName().filter(Fedora.InboundReferences::equals)
+                            if (!hasModified && !quad.getGraphName().filter(Fedora.PreferInboundReferences::equals)
                                     .isPresent()) {
-                                action.accept(rdf.createQuad(Trellis.ServerManagedTriples, identifier, DC.modified,
+                                action.accept(rdf.createQuad(Trellis.PreferServerManaged, identifier, DC.modified,
                                             rdf.createLiteral(modified.toString(), XSD.dateTime)));
                                 hasModified = true;
                             }
@@ -261,9 +261,9 @@ final class RDFPatch {
                     } else if (inRegion && (line.startsWith("A ") || line.startsWith("D "))) {
                         final String[] parts = line.split(" ", 2);
                         stringToQuad(rdf, parts[1]).ifPresent(quad -> {
-                            if (!hasModified && !quad.getGraphName().filter(Fedora.InboundReferences::equals)
+                            if (!hasModified && !quad.getGraphName().filter(Fedora.PreferInboundReferences::equals)
                                     .isPresent()) {
-                                action.accept(rdf.createQuad(Trellis.ServerManagedTriples, identifier, DC.modified,
+                                action.accept(rdf.createQuad(Trellis.PreferServerManaged, identifier, DC.modified,
                                             rdf.createLiteral(modified.toString(), XSD.dateTime)));
                                 hasModified = true;
                             }

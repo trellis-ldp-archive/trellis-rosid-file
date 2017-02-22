@@ -1,9 +1,9 @@
-<info:trellis/resource> <http://purl.org/dc/terms/hasPart> <info:trellis/ldprs> <http://fedora.info/definitions/repository#InboundReferences> .
-<info:trellis/other/resource> <http://purl.org/dc/terms/relation> <info:trellis/ldprs> <http://fedora.info/definitions/repository#InboundReferences> .
-<info:trellis/other/item> <http://purl.org/dc/terms/hasPart> <info:trellis/ldprs> <http://fedora.info/definitions/repository#InboundReferences> .
-<info:trellis/ldprs> <http://www.w3.org/ns/ldp#inbox> <http://example.org/receiver/inbox> <http://acdc.amherst.edu/ns/trellis#UserManagedTriples> .
-<info:trellis/ldprs> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://example.org/types/Foo> <http://acdc.amherst.edu/ns/trellis#UserManagedTriples> .
-<info:trellis/ldprs> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://example.org/types/Bar> <http://acdc.amherst.edu/ns/trellis#UserManagedTriples> .
-<info:trellis/ldprs> <http://www.w3.org/2000/01/rdf-schema#label> "A label"@eng <http://acdc.amherst.edu/ns/trellis#UserManagedTriples> .
-<http://example.org/some/other/resource> <http://www.w3.org/2000/01/rdf-schema#label> "Some other resource"@eng <http://acdc.amherst.edu/ns/trellis#UserManagedTriples> .
+<info:trellis/resource> <http://purl.org/dc/terms/hasPart> <info:trellis/ldprs> <http://fedora.info/definitions/repository#PreferInboundReferences> .
+<info:trellis/other/resource> <http://purl.org/dc/terms/relation> <info:trellis/ldprs> <http://fedora.info/definitions/repository#PreferInboundReferences> .
+<info:trellis/other/item> <http://purl.org/dc/terms/hasPart> <info:trellis/ldprs> <http://fedora.info/definitions/repository#PreferInboundReferences> .
+<info:trellis/ldprs> <http://www.w3.org/ns/ldp#inbox> <http://example.org/receiver/inbox> <http://acdc.amherst.edu/ns/trellis#PreferUserManaged> .
+<info:trellis/ldprs> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://example.org/types/Foo> <http://acdc.amherst.edu/ns/trellis#PreferUserManaged> .
+<info:trellis/ldprs> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://example.org/types/Bar> <http://acdc.amherst.edu/ns/trellis#PreferUserManaged> .
+<info:trellis/ldprs> <http://www.w3.org/2000/01/rdf-schema#label> "A label"@eng <http://acdc.amherst.edu/ns/trellis#PreferUserManaged> .
+<http://example.org/some/other/resource> <http://www.w3.org/2000/01/rdf-schema#label> "Some other resource"@eng <http://acdc.amherst.edu/ns/trellis#PreferUserManaged> .
 

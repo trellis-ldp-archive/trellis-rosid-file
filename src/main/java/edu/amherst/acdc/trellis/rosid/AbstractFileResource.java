@@ -68,11 +68,11 @@ abstract class AbstractFileResource implements Resource {
 
     protected static final Map<IRI, Resource.TripleCategory> categorymap = unmodifiableMap(
         new HashMap<IRI, Resource.TripleCategory>() { {
-            put(Fedora.InboundReferences, FEDORA_INBOUND_REFERENCES);
+            put(Fedora.PreferInboundReferences, FEDORA_INBOUND_REFERENCES);
             put(LDP.PreferContainment, LDP_CONTAINMENT);
             put(LDP.PreferMembership, LDP_MEMBERSHIP);
             put(Trellis.PreferAudit, TRELLIS_AUDIT);
-            put(Trellis.UserManagedTriples, USER_MANAGED);
+            put(Trellis.PreferUserManaged, USER_MANAGED);
     }});
 
     protected final IRI identifier;

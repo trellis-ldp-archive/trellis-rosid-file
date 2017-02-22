@@ -178,7 +178,7 @@ class ResourceData {
         final ResourceData rd = new ResourceData();
         rd.id = identifier.getIRIString();
 
-        dataset.getGraph(Trellis.ServerManagedTriples).ifPresent(graph -> {
+        dataset.getGraph(Trellis.PreferServerManaged).ifPresent(graph -> {
             graph.stream(identifier, DC.created, null).findFirst().map(objectLiteralAsString).map(Instant::parse)
                 .ifPresent(date -> rd.created = date);
 
@@ -214,7 +214,7 @@ class ResourceData {
             });
         });
 
-        dataset.getGraph(Trellis.UserManagedTriples).ifPresent(graph -> {
+        dataset.getGraph(Trellis.PreferUserManaged).ifPresent(graph -> {
             rd.userTypes = graph.stream(identifier, RDF.type, null).map(objectUriAsString).collect(toList());
 
             graph.stream(identifier, ACL.accessControl, null).findFirst().map(objectUriAsString)

@@ -62,10 +62,10 @@ class VersionedResource extends AbstractFileResource {
     }});
 
     private static Predicate<Quad> isServerManagedTriple = quad ->
-        quad.getGraphName().filter(Trellis.ServerManagedTriples::equals).isPresent();
+        quad.getGraphName().filter(Trellis.PreferServerManaged::equals).isPresent();
 
     private static Predicate<Quad> isResourceTriple = isServerManagedTriple.or(quad ->
-        quad.getGraphName().filter(Trellis.UserManagedTriples::equals).isPresent() &&
+        quad.getGraphName().filter(Trellis.PreferUserManaged::equals).isPresent() &&
         specialUserProperties.contains(quad.getPredicate()));
 
     private final Instant time;

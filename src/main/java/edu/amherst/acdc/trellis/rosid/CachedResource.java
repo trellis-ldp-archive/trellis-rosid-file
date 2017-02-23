@@ -19,7 +19,13 @@ import static com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS
 import static edu.amherst.acdc.trellis.rosid.Constants.RESOURCE_CACHE;
 import static edu.amherst.acdc.trellis.rosid.Constants.RESOURCE_QUADS;
 import static edu.amherst.acdc.trellis.rosid.FileUtils.stringToQuad;
+import static java.lang.String.join;
+import static java.lang.System.lineSeparator;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.Files.lines;
+import static java.nio.file.Files.newBufferedWriter;
+import static java.nio.file.StandardOpenOption.APPEND;
+import static java.nio.file.StandardOpenOption.CREATE;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Stream.empty;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -28,12 +34,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import edu.amherst.acdc.trellis.api.Resource;
+import edu.amherst.acdc.trellis.vocabulary.Trellis;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -94,6 +103,25 @@ class CachedResource extends AbstractFileResource {
             MAPPER.writeValue(new File(directory, RESOURCE_CACHE), json);
         } catch (final IOException ex) {
             throw new UncheckedIOException(ex);
+        }
+    }
+
+    /**
+     * Write the resource data into a file as RDF quads
+     * @param directory the directory
+     * @param quads the quads
+     */
+    public static void write(final File directory, final Stream<Quad> quads) throws IOException {
+        final File file = new File(directory, RESOURCE_QUADS);
+        try (final BufferedWriter writer = newBufferedWriter(file.toPath(), UTF_8, CREATE, APPEND)) {
+            final Iterator<String> lineIter = quads.map(quad -> join(" ", quad.getSubject().ntriplesString(),
+                        quad.getPredicate().ntriplesString(), quad.getObject().ntriplesString(),
+                        quad.getGraphName().orElse(Trellis.PreferUserManaged).ntriplesString(), ".")).iterator();
+            while (lineIter.hasNext()) {
+                writer.write(lineIter.next() + lineSeparator());
+            }
+        } catch (final IOException ex) {
+            throw ex;
         }
     }
 

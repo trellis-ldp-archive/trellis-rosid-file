@@ -43,7 +43,7 @@ import org.slf4j.Logger;
 /**
  * @author acoburn
  */
-public class FileRepositoryService implements ResourceService {
+public class FileRepositoryService implements ResourceService, AutoCloseable {
 
     private static final Logger LOGGER = getLogger(FileRepositoryService.class);
 

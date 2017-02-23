@@ -43,6 +43,7 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.Spliterator;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import org.apache.commons.io.input.ReversedLinesFileReader;
@@ -83,39 +84,31 @@ final class RDFPatch {
     /**
      * Delete RDF Patch statements from the specified file
      * @param file the file
-     * @param quads the quads
+     * @param delete the quads to delete
+     * @param add the quads to add
      * @param time the time
+     * @param throws IOException if the writer encounters an error writing to the file
      */
-    public static void delete(final File file, final Stream<Quad> quads, final Instant time) {
+    public static void write(final File file, final Stream<Quad> delete, final Stream<Quad> add, final Instant time)
+            throws IOException {
         try (final BufferedWriter writer = newBufferedWriter(file.toPath(), UTF_8, APPEND)) {
             writer.write(BEGIN + time + lineSeparator());
-            quads.filter(quad -> quad.getGraphName().isPresent()).forEach(quad -> uncheckedWrite(writer, "D", quad));
+            delete.map(quadToString).forEach(quad -> uncheckedWrite(writer, "D " + quad));
+            add.map(quadToString).forEach(quad -> uncheckedWrite(writer, "A " + quad));
             writer.write(END + time + lineSeparator());
         } catch (final IOException ex) {
-            throw new UncheckedIOException(ex);
+            throw ex;
         }
     }
 
-    /**
-     * Add RDF Patch statements to the specified file
-     * @param file the file
-     * @param quads the quads
-     * @param time the time
-     */
-    public static void add(final File file, final Stream<Quad> quads, final Instant time) {
-        try (final BufferedWriter writer = newBufferedWriter(file.toPath(), UTF_8, APPEND)) {
-            writer.write(BEGIN + time + lineSeparator());
-            quads.filter(quad -> quad.getGraphName().isPresent()).forEach(quad -> uncheckedWrite(writer, "A", quad));
-            writer.write(END + time + lineSeparator());
-        } catch (final IOException ex) {
-            throw new UncheckedIOException(ex);
-        }
-    }
+    private static final Function<Quad, String> quadToString = quad ->
+        join(" ", quad.getSubject().ntriplesString(), quad.getPredicate().ntriplesString(),
+                quad.getObject().ntriplesString(),
+                quad.getGraphName().orElse(Trellis.PreferUserManaged).ntriplesString(), ".");
 
-    private static void uncheckedWrite(final Writer writer, final String prefix, final Quad quad) {
+    private static void uncheckedWrite(final Writer writer, final String line) {
         try {
-            writer.write(join(" ", prefix, quad.getSubject().ntriplesString(), quad.getPredicate().ntriplesString(),
-                quad.getObject().ntriplesString(), quad.getGraphName().get().ntriplesString(), ".") + lineSeparator());
+            writer.write(line + lineSeparator());
         } catch (final IOException ex) {
             throw new UncheckedIOException(ex);
         }

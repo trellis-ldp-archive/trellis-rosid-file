@@ -48,26 +48,30 @@ import org.junit.Test;
 /**
  * @author acoburn
  */
-public class LdpResourceTest {
+public class LdpContainerTest {
 
     private static final RDF rdf = new JenaRDF();
 
     private File file;
-    private IRI identifier = rdf.createIRI("info:trellis/ldprs");
+    private IRI identifier = rdf.createIRI("info:trellis/ldpc");
 
     @Before
     public void setUp() throws Exception {
-        file = new File(getClass().getResource("/ldprs").toURI());
+        file = new File(getClass().getResource("/ldpc").toURI());
     }
 
     @Test
     public void testVersionedResource() {
-        final Instant time = parse("2017-02-15T11:15:00Z");
+        final Instant time = parse("2017-02-16T11:15:03Z");
         final Resource res = VersionedResource.find(file, identifier, time).get();
         assertEquals(identifier, res.getIdentifier());
         assertEquals(LDP.RDFSource, res.getInteractionModel());
         assertEquals(of(rdf.createIRI("info:trellis")), res.getContainedBy());
-        assertEquals(empty(), res.getContains().findFirst());
+        final List<IRI> contained = res.getContains().collect(toList());
+        assertEquals(3L, contained.size());
+        assertTrue(contained.contains(rdf.createIRI("info:trellis/ldpc/1")));
+        assertTrue(contained.contains(rdf.createIRI("info:trellis/ldpc/2")));
+        assertTrue(contained.contains(rdf.createIRI("info:trellis/ldpc/3")));
         assertEquals(empty(), res.getMembershipResource());
         assertEquals(empty(), res.getMemberRelation());
         assertEquals(empty(), res.getMemberOfRelation());
@@ -79,12 +83,13 @@ public class LdpResourceTest {
         assertEquals(of(rdf.createIRI("http://example.org/receiver/inbox")), res.getInbox());
         assertEquals(empty(), res.getAcl());
         assertEquals(parse("2017-02-15T10:05:00Z"), res.getCreated());
-        assertEquals(parse("2017-02-15T11:15:00Z"), res.getModified());
+        assertEquals(parse("2017-02-16T11:15:03Z"), res.getModified());
         assertEquals(of(rdf.createIRI("http://example.org/user/raadmin")), res.getCreator());
         assertEquals(2L, res.getTypes().count());
         assertTrue(res.getTypes().anyMatch(rdf.createIRI("http://example.org/types/Foo")::equals));
         assertTrue(res.getTypes().anyMatch(rdf.createIRI("http://example.org/types/Bar")::equals));
-        assertEquals(0L, res.stream(EnumSet.of(LDP_CONTAINMENT, LDP_MEMBERSHIP)).count());
+        assertEquals(3L, res.stream(EnumSet.of(LDP_CONTAINMENT)).count());
+        assertEquals(0L, res.stream(EnumSet.of(LDP_MEMBERSHIP)).count());
 
         final List<VersionRange> mementos = res.getMementos().collect(toList());
         assertEquals(1L, mementos.size());
@@ -119,7 +124,11 @@ public class LdpResourceTest {
         assertEquals(identifier, res.getIdentifier());
         assertEquals(LDP.RDFSource, res.getInteractionModel());
         assertEquals(of(rdf.createIRI("info:trellis")), res.getContainedBy());
-        assertEquals(empty(), res.getContains().findFirst());
+        final List<IRI> contained = res.getContains().collect(toList());
+        assertEquals(3L, contained.size());
+        assertTrue(contained.contains(rdf.createIRI("info:trellis/ldpc/1")));
+        assertTrue(contained.contains(rdf.createIRI("info:trellis/ldpc/2")));
+        assertTrue(contained.contains(rdf.createIRI("info:trellis/ldpc/3")));
         assertEquals(empty(), res.getMembershipResource());
         assertEquals(empty(), res.getMemberRelation());
         assertEquals(empty(), res.getMemberOfRelation());
@@ -131,12 +140,13 @@ public class LdpResourceTest {
         assertEquals(of(rdf.createIRI("http://example.org/receiver/inbox")), res.getInbox());
         assertEquals(empty(), res.getAcl());
         assertEquals(parse("2017-02-15T10:05:00Z"), res.getCreated());
-        assertEquals(parse("2017-02-15T11:15:00Z"), res.getModified());
+        assertEquals(parse("2017-02-16T11:15:03Z"), res.getModified());
         assertEquals(of(rdf.createIRI("http://example.org/user/raadmin")), res.getCreator());
         assertEquals(2L, res.getTypes().count());
         assertTrue(res.getTypes().anyMatch(rdf.createIRI("http://example.org/types/Foo")::equals));
         assertTrue(res.getTypes().anyMatch(rdf.createIRI("http://example.org/types/Bar")::equals));
-        assertEquals(0L, res.stream(EnumSet.of(LDP_CONTAINMENT, LDP_MEMBERSHIP)).count());
+        assertEquals(3L, res.stream(EnumSet.of(LDP_CONTAINMENT)).count());
+        assertEquals(0L, res.stream(LDP_MEMBERSHIP).count());
 
         final List<Triple> triples = res.stream(USER_MANAGED).collect(toList());
         assertEquals(5L, triples.size());
@@ -218,7 +228,12 @@ public class LdpResourceTest {
         assertEquals(identifier, res.getIdentifier());
         assertEquals(LDP.RDFSource, res.getInteractionModel());
         assertEquals(of(rdf.createIRI("info:trellis")), res.getContainedBy());
-        assertEquals(empty(), res.getContains().findFirst());
+        final List<IRI> contained = res.getContains().collect(toList());
+        assertEquals(3L, contained.size());
+        System.out.println(contained.toString());
+        assertTrue(contained.contains(rdf.createIRI("info:trellis/ldpc/1")));
+        assertTrue(contained.contains(rdf.createIRI("info:trellis/ldpc/2")));
+        assertTrue(contained.contains(rdf.createIRI("info:trellis/ldpc/3")));
         assertEquals(empty(), res.getMembershipResource());
         assertEquals(empty(), res.getMemberRelation());
         assertEquals(empty(), res.getMemberOfRelation());
@@ -230,12 +245,13 @@ public class LdpResourceTest {
         assertEquals(of(rdf.createIRI("http://example.org/receiver/inbox")), res.getInbox());
         assertEquals(empty(), res.getAcl());
         assertEquals(parse("2017-02-15T10:05:00Z"), res.getCreated());
-        assertEquals(parse("2017-02-15T11:15:00Z"), res.getModified());
+        assertEquals(parse("2017-02-16T11:15:03Z"), res.getModified());
         assertEquals(of(rdf.createIRI("http://example.org/user/raadmin")), res.getCreator());
         assertEquals(2L, res.getTypes().count());
         assertTrue(res.getTypes().anyMatch(rdf.createIRI("http://example.org/types/Foo")::equals));
         assertTrue(res.getTypes().anyMatch(rdf.createIRI("http://example.org/types/Bar")::equals));
-        assertEquals(0L, res.stream(EnumSet.of(LDP_CONTAINMENT, LDP_MEMBERSHIP)).count());
+        assertEquals(3L, res.stream(LDP_CONTAINMENT).count());
+        assertEquals(0L, res.stream(EnumSet.of(LDP_MEMBERSHIP)).count());
 
         final List<Triple> triples = res.stream(USER_MANAGED).collect(toList());
         assertEquals(5L, triples.size());

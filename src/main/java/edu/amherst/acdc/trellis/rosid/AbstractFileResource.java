@@ -179,9 +179,9 @@ abstract class AbstractFileResource implements Resource {
 
     @Override
     public Stream<IRI> getContains() {
-        return stream(singleton(LDP_CONTAINMENT)).map(Triple::getSubject).flatMap(subj -> {
-            if (subj instanceof IRI) {
-                return of((IRI) subj);
+        return stream(singleton(LDP_CONTAINMENT)).map(Triple::getObject).flatMap(obj -> {
+            if (obj instanceof IRI) {
+                return of((IRI) obj);
             }
             return empty();
         });

@@ -65,7 +65,7 @@ public class LdpContainerTest {
         final Instant time = parse("2017-02-16T11:15:03Z");
         final Resource res = VersionedResource.find(file, identifier, time).get();
         assertEquals(identifier, res.getIdentifier());
-        assertEquals(LDP.RDFSource, res.getInteractionModel());
+        assertEquals(LDP.Container, res.getInteractionModel());
         assertEquals(of(rdf.createIRI("info:trellis")), res.getContainedBy());
         final List<IRI> contained = res.getContains().collect(toList());
         assertEquals(3L, contained.size());
@@ -122,7 +122,7 @@ public class LdpContainerTest {
         final Instant time = parse("2017-03-15T11:15:00Z");
         final Resource res = VersionedResource.find(file, identifier, time).get();
         assertEquals(identifier, res.getIdentifier());
-        assertEquals(LDP.RDFSource, res.getInteractionModel());
+        assertEquals(LDP.Container, res.getInteractionModel());
         assertEquals(of(rdf.createIRI("info:trellis")), res.getContainedBy());
         final List<IRI> contained = res.getContains().collect(toList());
         assertEquals(3L, contained.size());
@@ -181,7 +181,7 @@ public class LdpContainerTest {
         final Instant time = parse("2017-02-15T11:00:00Z");
         final Resource res = VersionedResource.find(file, identifier, time).get();
         assertEquals(identifier, res.getIdentifier());
-        assertEquals(LDP.RDFSource, res.getInteractionModel());
+        assertEquals(LDP.Container, res.getInteractionModel());
         assertEquals(of(rdf.createIRI("info:trellis")), res.getContainedBy());
         assertEquals(empty(), res.getContains().findFirst());
         assertEquals(empty(), res.getMembershipResource());
@@ -226,7 +226,7 @@ public class LdpContainerTest {
     public void testCachedResource() {
         final Resource res = CachedResource.find(file, identifier).get();
         assertEquals(identifier, res.getIdentifier());
-        assertEquals(LDP.RDFSource, res.getInteractionModel());
+        assertEquals(LDP.Container, res.getInteractionModel());
         assertEquals(of(rdf.createIRI("info:trellis")), res.getContainedBy());
         final List<IRI> contained = res.getContains().collect(toList());
         assertEquals(3L, contained.size());

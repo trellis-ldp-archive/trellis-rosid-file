@@ -1,7 +1,7 @@
 {
     "@context" : "https://acdc.amherst.edu/ns/trellisresource.jsonld" ,
     "@id" : "info:trellis/ldpc" ,
-    "@type" : "http://www.w3.org/ns/ldp#RDFSource" ,
+    "@type" : "http://www.w3.org/ns/ldp#Container" ,
     "containedBy" : "info:trellis" ,
     "type" : [ "http://example.org/types/Foo", "http://example.org/types/Bar" ] ,
     "inbox" : "http://example.org/receiver/inbox" ,

@@ -16,6 +16,7 @@
 package edu.amherst.acdc.trellis.rosid;
 
 import static com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS;
+import static edu.amherst.acdc.trellis.rosid.Constants.MEMENTO_CACHE;
 import static edu.amherst.acdc.trellis.rosid.Constants.RESOURCE_CACHE;
 import static edu.amherst.acdc.trellis.rosid.Constants.RESOURCE_QUADS;
 import static edu.amherst.acdc.trellis.rosid.FileUtils.stringToQuad;
@@ -24,8 +25,9 @@ import static java.lang.System.lineSeparator;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.Files.lines;
 import static java.nio.file.Files.newBufferedWriter;
-import static java.nio.file.StandardOpenOption.APPEND;
 import static java.nio.file.StandardOpenOption.CREATE;
+import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
+import static java.nio.file.StandardOpenOption.WRITE;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Stream.empty;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -34,6 +36,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import edu.amherst.acdc.trellis.api.Resource;
+import edu.amherst.acdc.trellis.api.VersionRange;
 import edu.amherst.acdc.trellis.vocabulary.Trellis;
 
 import java.io.BufferedWriter;
@@ -98,12 +101,8 @@ class CachedResource extends AbstractFileResource {
      * @param directory the directory
      * @param json the resource data
      */
-    public static void write(final File directory, final ResourceData json) {
-        try {
-            MAPPER.writeValue(new File(directory, RESOURCE_CACHE), json);
-        } catch (final IOException ex) {
-            throw new UncheckedIOException(ex);
-        }
+    public static void write(final File directory, final ResourceData json) throws IOException {
+        MAPPER.writeValue(new File(directory, RESOURCE_CACHE), json);
     }
 
     /**
@@ -113,12 +112,35 @@ class CachedResource extends AbstractFileResource {
      */
     public static void write(final File directory, final Stream<Quad> quads) throws IOException {
         final File file = new File(directory, RESOURCE_QUADS);
-        try (final BufferedWriter writer = newBufferedWriter(file.toPath(), UTF_8, CREATE, APPEND)) {
+        try (final BufferedWriter writer = newBufferedWriter(file.toPath(), UTF_8, CREATE, WRITE, TRUNCATE_EXISTING)) {
             final Iterator<String> lineIter = quads.map(quad -> join(" ", quad.getSubject().ntriplesString(),
                         quad.getPredicate().ntriplesString(), quad.getObject().ntriplesString(),
                         quad.getGraphName().orElse(Trellis.PreferUserManaged).ntriplesString(), ".")).iterator();
             while (lineIter.hasNext()) {
                 writer.write(lineIter.next() + lineSeparator());
+            }
+        } catch (final IOException ex) {
+            throw ex;
+        }
+    }
+
+    /**
+     * Write the mementos
+     * @param directory the directory
+     * @param mementos the mementos
+     * @throws IOException if there is an error writing to the file
+     */
+    public static void writeMementos(final File directory, final Stream<VersionRange> mementos) throws IOException {
+        final File file = new File(directory, MEMENTO_CACHE);
+        try (final BufferedWriter writer = newBufferedWriter(file.toPath(), UTF_8, CREATE, WRITE, TRUNCATE_EXISTING)) {
+            final Iterator<VersionRange> iter = mementos.iterator();
+            if (iter.hasNext()) {
+                final VersionRange range = iter.next();
+                writer.write(range.getFrom() + lineSeparator());
+                writer.write(range.getUntil() + lineSeparator());
+            }
+            while (iter.hasNext()) {
+                writer.write(iter.next().getUntil() + lineSeparator());
             }
         } catch (final IOException ex) {
             throw ex;

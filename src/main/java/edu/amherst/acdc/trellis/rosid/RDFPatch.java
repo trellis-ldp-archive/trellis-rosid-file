@@ -25,6 +25,10 @@ import static java.nio.file.StandardOpenOption.APPEND;
 import static java.nio.file.StandardOpenOption.CREATE;
 import static java.time.Instant.parse;
 import static java.util.Objects.nonNull;
+import static java.util.Spliterator.IMMUTABLE;
+import static java.util.Spliterator.NONNULL;
+import static java.util.Spliterator.ORDERED;
+import static java.util.Spliterators.spliteratorUnknownSize;
 import static java.util.stream.StreamSupport.stream;
 
 import edu.amherst.acdc.trellis.api.VersionRange;
@@ -79,7 +83,7 @@ final class RDFPatch {
      * @return a stream of VersionRange objects
      */
     public static Stream<VersionRange> asTimeMap(final File file) {
-        return stream(new TimeMapReader(file), false);
+        return stream(spliteratorUnknownSize(new TimeMapReader(file), IMMUTABLE | NONNULL | ORDERED), false);
     }
 
     /**
@@ -118,11 +122,12 @@ final class RDFPatch {
     /**
      * A class for reading an RDF Patch file into a VersionRange Spliterator
      */
-    private static class TimeMapReader implements Spliterator<VersionRange> {
-        private final Iterator<String> dateLines;
+    private static class TimeMapReader implements Iterator<VersionRange> {
+        private final Iterator<String> allLines;
 
         private Instant from = null;
         private Boolean hasUserTriples = false;
+        private VersionRange buffer = null;
 
         /**
          * Create a time map reader
@@ -130,56 +135,45 @@ final class RDFPatch {
          */
         public TimeMapReader(final File file) {
             try {
-                dateLines = lines(file.toPath()).iterator();
+                allLines = lines(file.toPath()).iterator();
+                tryAdvance();
             } catch (final IOException ex) {
                 throw new UncheckedIOException(ex);
             }
         }
 
         @Override
-        public void forEachRemaining(final Consumer<? super VersionRange> action) {
-            while (dateLines.hasNext()) {
-                emit(dateLines.next(), action);
-            }
+        public boolean hasNext() {
+            return nonNull(buffer);
         }
 
         @Override
-        public boolean tryAdvance(final Consumer<? super VersionRange> action) {
-            if (dateLines.hasNext()) {
-                emit(dateLines.next(), action);
-                return true;
-            }
-            return false;
+        public VersionRange next() {
+            final VersionRange range = buffer;
+            tryAdvance();
+            return range;
         }
 
-        @Override
-        public Spliterator<VersionRange> trySplit() {
-            return null;
-        }
-
-        @Override
-        public long estimateSize() {
-            return Long.MAX_VALUE;
-        }
-
-        @Override
-        public int characteristics() {
-            return ORDERED | NONNULL | IMMUTABLE;
-        }
-
-        private void emit(final String line, final Consumer<? super VersionRange> action) {
-            if (line.startsWith(BEGIN)) {
-                hasUserTriples = false;
-            } else if (line.endsWith(Trellis.PreferUserManaged + " .") ||
-                    line.endsWith(Trellis.PreferServerManaged + " .")) {
-                hasUserTriples = true;
-            } else if (line.startsWith(END) && hasUserTriples) {
-                final Instant time = parse(line.split(COMMENT_DELIM)[1]);
-                if (nonNull(from)) {
-                    action.accept(new VersionRange(from, time));
+        private void tryAdvance() {
+            while (allLines.hasNext()) {
+                final String line = allLines.next();
+                if (line.startsWith(BEGIN)) {
+                    hasUserTriples = false;
+                } else if (line.endsWith(Trellis.PreferUserManaged + " .") ||
+                        line.endsWith(Trellis.PreferServerManaged + " .")) {
+                    hasUserTriples = true;
+                } else if (line.startsWith(END) && hasUserTriples) {
+                    final Instant time = parse(line.split(COMMENT_DELIM)[1]);
+                    if (nonNull(from)) {
+                        buffer = new VersionRange(from, time);
+                        from = time;
+                        return;
+                    } else {
+                        from = time;
+                    }
                 }
-                from = time;
             }
+            buffer = null;
         }
     }
 

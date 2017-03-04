@@ -16,7 +16,6 @@
 package edu.amherst.acdc.trellis.rosid;
 
 import static java.time.Instant.now;
-import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static java.time.Instant.parse;
 import static org.junit.Assert.assertEquals;
@@ -24,6 +23,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import edu.amherst.acdc.trellis.vocabulary.DC;
+import edu.amherst.acdc.trellis.vocabulary.RDFS;
 import edu.amherst.acdc.trellis.vocabulary.Trellis;
 
 import java.io.File;
@@ -108,17 +108,30 @@ public class RDFPatchTest {
     }
 
     @Test
-    public void testVersionWriter() throws IOException {
+    public void testPatchWriter() throws IOException {
         final File file = new File("build/data/resource.rdfp");
         final Instant time = now();
-        final List<Quad> delete = emptyList();
+        final List<Quad> delete = new ArrayList<>();
         final List<Quad> add = new ArrayList<>();
-        add.add(rdf.createQuad(Trellis.PreferUserManaged, identifier, DC.title, rdf.createLiteral("Title")));
+        final Quad title = rdf.createQuad(Trellis.PreferUserManaged, identifier, DC.title, rdf.createLiteral("Title"));
+        add.add(title);
         add.add(rdf.createQuad(Trellis.PreferUserManaged, identifier, DC.description,
                     rdf.createLiteral("A longer description")));
         RDFPatch.write(file, delete.stream(), add.stream(), time);
-        final List<Quad> data = RDFPatch.asStream(rdf, file, identifier, time).collect(toList());
-        assertEquals(data.size(), add.size() + 1);
-        add.forEach(q -> assertTrue(data.contains(q)));
+        final List<Quad> data1 = RDFPatch.asStream(rdf, file, identifier, time).collect(toList());
+        assertEquals(data1.size(), add.size() + 1);
+        add.forEach(q -> assertTrue(data1.contains(q)));
+
+        final Instant later = time.plusSeconds(10L);
+        add.clear();
+        delete.add(title);
+        add.add(rdf.createQuad(Trellis.PreferUserManaged, identifier, DC.title, rdf.createLiteral("Other Title")));
+        add.add(rdf.createQuad(Trellis.PreferUserManaged, identifier, RDFS.label, rdf.createLiteral("Label")));
+        RDFPatch.write(file, delete.stream(), add.stream(), later);
+        final List<Quad> data2 = RDFPatch.asStream(rdf, file, identifier, later).collect(toList());
+        assertEquals(data2.size(), data1.size() - delete.size() + add.size());
+        add.forEach(q -> assertTrue(data2.contains(q)));
+        delete.forEach(q -> assertFalse(data2.contains(q)));
+        assertFalse(data2.contains(title));
     }
 }

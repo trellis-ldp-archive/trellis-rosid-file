@@ -124,7 +124,6 @@ final class RDFPatch {
      */
     private static class TimeMapReader implements Iterator<VersionRange> {
         private final Iterator<String> allLines;
-
         private Instant from = null;
         private Boolean hasUserTriples = false;
         private VersionRange buffer = null;
@@ -136,10 +135,10 @@ final class RDFPatch {
         public TimeMapReader(final File file) {
             try {
                 allLines = lines(file.toPath()).iterator();
-                tryAdvance();
             } catch (final IOException ex) {
                 throw new UncheckedIOException(ex);
             }
+            tryAdvance();
         }
 
         @Override
@@ -168,9 +167,8 @@ final class RDFPatch {
                         buffer = new VersionRange(from, time);
                         from = time;
                         return;
-                    } else {
-                        from = time;
                     }
+                    from = time;
                 }
             }
             buffer = null;

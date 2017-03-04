@@ -15,20 +15,29 @@
  */
 package edu.amherst.acdc.trellis.rosid;
 
+import static java.time.Instant.now;
+import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toList;
 import static java.time.Instant.parse;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.io.File;
-import java.time.Instant;
-
 import edu.amherst.acdc.trellis.vocabulary.DC;
+import edu.amherst.acdc.trellis.vocabulary.Trellis;
+
+import java.io.File;
+import java.io.IOException;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.commons.rdf.api.Graph;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Quad;
 import org.apache.commons.rdf.api.RDF;
 import org.apache.commons.rdf.jena.JenaRDF;
+import org.junit.Before;
 import org.junit.Test;
 
 /**
@@ -38,6 +47,12 @@ public class RDFPatchTest {
 
     private static final RDF rdf = new JenaRDF();
     private static final IRI identifier = rdf.createIRI("info:trellis/resource");
+
+    @Before
+    public void setUp() throws IOException {
+        final File dir = new File("build/data");
+        dir.mkdirs();
+    }
 
     @Test
     public void testStream1() throws Exception {
@@ -90,5 +105,20 @@ public class RDFPatchTest {
         assertTrue(graph.contains(identifier, DC.description, null));
         assertTrue(graph.contains(identifier, DC.subject, null));
         assertEquals(2L, graph.stream(identifier, DC.subject, null).count());
+    }
+
+    @Test
+    public void testVersionWriter() throws IOException {
+        final File file = new File("build/data/resource.rdfp");
+        final Instant time = now();
+        final List<Quad> delete = emptyList();
+        final List<Quad> add = new ArrayList<>();
+        add.add(rdf.createQuad(Trellis.PreferUserManaged, identifier, DC.title, rdf.createLiteral("Title")));
+        add.add(rdf.createQuad(Trellis.PreferUserManaged, identifier, DC.description,
+                    rdf.createLiteral("A longer description")));
+        RDFPatch.write(file, delete.stream(), add.stream(), time);
+        final List<Quad> data = RDFPatch.asStream(rdf, file, identifier, time).collect(toList());
+        assertEquals(data.size(), add.size() + 1);
+        add.forEach(q -> assertTrue(data.contains(q)));
     }
 }

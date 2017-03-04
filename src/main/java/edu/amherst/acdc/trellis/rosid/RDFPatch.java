@@ -22,6 +22,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.Files.lines;
 import static java.nio.file.Files.newBufferedWriter;
 import static java.nio.file.StandardOpenOption.APPEND;
+import static java.nio.file.StandardOpenOption.CREATE;
 import static java.time.Instant.parse;
 import static java.util.Objects.nonNull;
 import static java.util.stream.StreamSupport.stream;
@@ -91,7 +92,7 @@ final class RDFPatch {
      */
     public static void write(final File file, final Stream<Quad> delete, final Stream<Quad> add, final Instant time)
             throws IOException {
-        try (final BufferedWriter writer = newBufferedWriter(file.toPath(), UTF_8, APPEND)) {
+        try (final BufferedWriter writer = newBufferedWriter(file.toPath(), UTF_8, CREATE, APPEND)) {
             writer.write(BEGIN + time + lineSeparator());
             delete.map(quadToString).forEach(quad -> uncheckedWrite(writer, "D " + quad));
             add.map(quadToString).forEach(quad -> uncheckedWrite(writer, "A " + quad));

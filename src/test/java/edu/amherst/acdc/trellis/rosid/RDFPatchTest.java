@@ -15,14 +15,19 @@
  */
 package edu.amherst.acdc.trellis.rosid;
 
+import static edu.amherst.acdc.trellis.rosid.Constants.RESOURCE_JOURNAL;
 import static java.time.Instant.now;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Stream.empty;
+import static java.util.stream.Stream.of;
 import static java.time.Instant.parse;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import edu.amherst.acdc.trellis.api.VersionRange;
 import edu.amherst.acdc.trellis.vocabulary.DC;
+import edu.amherst.acdc.trellis.vocabulary.LDP;
 import edu.amherst.acdc.trellis.vocabulary.RDFS;
 import edu.amherst.acdc.trellis.vocabulary.Trellis;
 
@@ -47,11 +52,11 @@ public class RDFPatchTest {
 
     private static final RDF rdf = new JenaRDF();
     private static final IRI identifier = rdf.createIRI("info:trellis/resource");
+    private File resDir1 = new File("build/data/res1");
 
     @Before
     public void setUp() throws IOException {
-        final File dir = new File("build/data");
-        dir.mkdirs();
+        resDir1.mkdirs();
     }
 
     @Test
@@ -109,7 +114,7 @@ public class RDFPatchTest {
 
     @Test
     public void testPatchWriter() throws IOException {
-        final File file = new File("build/data/resource.rdfp");
+        final File file = new File(resDir1, RESOURCE_JOURNAL);
         final Instant time = now();
         final List<Quad> delete = new ArrayList<>();
         final List<Quad> add = new ArrayList<>();
@@ -133,5 +138,13 @@ public class RDFPatchTest {
         add.forEach(q -> assertTrue(data2.contains(q)));
         delete.forEach(q -> assertFalse(data2.contains(q)));
         assertFalse(data2.contains(title));
+
+        RDFPatch.write(file, empty(), of(rdf.createQuad(LDP.PreferContainment, identifier, LDP.contains,
+                    rdf.createIRI("info:trellis/resource/1"))), later.plusSeconds(10L));
+
+        final List<VersionRange> versions = RDFPatch.asTimeMap(file).collect(toList());
+        assertEquals(1L, versions.size());
+        assertEquals(time, versions.get(0).getFrom());
+        assertEquals(later, versions.get(0).getUntil());
     }
 }

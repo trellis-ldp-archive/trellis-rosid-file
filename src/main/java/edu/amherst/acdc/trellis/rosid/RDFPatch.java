@@ -83,12 +83,12 @@ final class RDFPatch {
     }
 
     /**
-     * Delete RDF Patch statements from the specified file
+     * Write RDF Patch statements to the specified file
      * @param file the file
      * @param delete the quads to delete
      * @param add the quads to add
      * @param time the time
-     * @param throws IOException if the writer encounters an error writing to the file
+     * @throws IOException if the writer encounters an error writing to the file
      */
     public static void write(final File file, final Stream<Quad> delete, final Stream<Quad> add, final Instant time)
             throws IOException {
@@ -122,6 +122,7 @@ final class RDFPatch {
         private final Iterator<String> dateLines;
 
         private Instant from = null;
+        private Boolean hasUserTriples = false;
 
         /**
          * Create a time map reader
@@ -129,7 +130,7 @@ final class RDFPatch {
          */
         public TimeMapReader(final File file) {
             try {
-                dateLines = lines(file.toPath()).filter(line -> line.startsWith(BEGIN)).iterator();
+                dateLines = lines(file.toPath()).iterator();
             } catch (final IOException ex) {
                 throw new UncheckedIOException(ex);
             }
@@ -138,14 +139,14 @@ final class RDFPatch {
         @Override
         public void forEachRemaining(final Consumer<? super VersionRange> action) {
             while (dateLines.hasNext()) {
-                from = emit(action, dateLines.next());
+                emit(dateLines.next(), action);
             }
         }
 
         @Override
         public boolean tryAdvance(final Consumer<? super VersionRange> action) {
             if (dateLines.hasNext()) {
-                from = emit(action, dateLines.next());
+                emit(dateLines.next(), action);
                 return true;
             }
             return false;
@@ -166,12 +167,19 @@ final class RDFPatch {
             return ORDERED | NONNULL | IMMUTABLE;
         }
 
-        private Instant emit(final Consumer<? super VersionRange> action, final String line) {
-            final Instant time = parse(line.split(COMMENT_DELIM)[1]);
-            if (nonNull(from)) {
-                action.accept(new VersionRange(from, time));
+        private void emit(final String line, final Consumer<? super VersionRange> action) {
+            if (line.startsWith(BEGIN)) {
+                hasUserTriples = false;
+            } else if (line.endsWith(Trellis.PreferUserManaged + " .") ||
+                    line.endsWith(Trellis.PreferServerManaged + " .")) {
+                hasUserTriples = true;
+            } else if (line.startsWith(END) && hasUserTriples) {
+                final Instant time = parse(line.split(COMMENT_DELIM)[1]);
+                if (nonNull(from)) {
+                    action.accept(new VersionRange(from, time));
+                }
+                from = time;
             }
-            return time;
         }
     }
 
@@ -213,28 +221,7 @@ final class RDFPatch {
         public void forEachRemaining(final Consumer<? super Quad> action) {
             try {
                 for (String line = reader.readLine(); nonNull(line); line = reader.readLine()) {
-                    if (line.startsWith(END)) {
-                        final Instant moment = parse(line.split(COMMENT_DELIM, 2)[1]);
-                        if (!time.isBefore(moment)) {
-                            modified = moment;
-                            inRegion = true;
-                        }
-                    } else if (inRegion && (line.startsWith("A ") || line.startsWith("D "))) {
-                        final String[] parts = line.split(" ", 2);
-                        stringToQuad(rdf, parts[1]).ifPresent(quad -> {
-                            if (!hasModified && !quad.getGraphName().filter(Fedora.PreferInboundReferences::equals)
-                                    .isPresent()) {
-                                action.accept(rdf.createQuad(Trellis.PreferServerManaged, identifier, DC.modified,
-                                            rdf.createLiteral(modified.toString(), XSD.dateTime)));
-                                hasModified = true;
-                            }
-                            if (parts[0].equals("D")) {
-                                deleted.add(quad);
-                            } else if (parts[0].equals("A") && !deleted.contains(quad)) {
-                                action.accept((Quad) quad);
-                            }
-                        });
-                    }
+                    emit(line, action);
                 }
             } catch (final IOException ex) {
                 throw new UncheckedIOException(ex);
@@ -246,28 +233,8 @@ final class RDFPatch {
             try {
                 final String line = reader.readLine();
                 if (nonNull(line)) {
-                    if (line.startsWith(END)) {
-                        final Instant moment = parse(line.split(COMMENT_DELIM, 2)[1]);
-                        if (!time.isBefore(moment)) {
-                            modified = moment;
-                            inRegion = true;
-                        }
-                    } else if (inRegion && (line.startsWith("A ") || line.startsWith("D "))) {
-                        final String[] parts = line.split(" ", 2);
-                        stringToQuad(rdf, parts[1]).ifPresent(quad -> {
-                            if (!hasModified && !quad.getGraphName().filter(Fedora.PreferInboundReferences::equals)
-                                    .isPresent()) {
-                                action.accept(rdf.createQuad(Trellis.PreferServerManaged, identifier, DC.modified,
-                                            rdf.createLiteral(modified.toString(), XSD.dateTime)));
-                                hasModified = true;
-                            }
-                            if (parts[0].equals("D")) {
-                                deleted.add(quad);
-                            } else if (parts[0].equals("A") && !deleted.contains(quad)) {
-                                action.accept((Quad) quad);
-                            }
-                        });
-                    }
+                    emit(line, action);
+                    return true;
                 }
                 return false;
             } catch (final IOException ex) {
@@ -288,6 +255,31 @@ final class RDFPatch {
         @Override
         public int characteristics() {
             return ORDERED | NONNULL | IMMUTABLE;
+        }
+
+        private void emit(final String line, final Consumer<? super Quad> action) {
+            if (line.startsWith(END)) {
+                final Instant moment = parse(line.split(COMMENT_DELIM, 2)[1]);
+                if (!time.isBefore(moment)) {
+                    modified = moment;
+                    inRegion = true;
+                }
+            } else if (inRegion && (line.startsWith("A ") || line.startsWith("D "))) {
+                final String[] parts = line.split(" ", 2);
+                stringToQuad(rdf, parts[1]).ifPresent(quad -> {
+                    if (!hasModified && !quad.getGraphName().filter(Fedora.PreferInboundReferences::equals)
+                            .isPresent()) {
+                        action.accept(rdf.createQuad(Trellis.PreferServerManaged, identifier, DC.modified,
+                                    rdf.createLiteral(modified.toString(), XSD.dateTime)));
+                        hasModified = true;
+                    }
+                    if (parts[0].equals("D")) {
+                        deleted.add(quad);
+                    } else if (parts[0].equals("A") && !deleted.contains(quad)) {
+                        action.accept((Quad) quad);
+                    }
+                });
+            }
         }
     }
 

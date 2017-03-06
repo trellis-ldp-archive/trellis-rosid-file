@@ -24,6 +24,7 @@ import static java.nio.file.Files.newBufferedWriter;
 import static java.nio.file.StandardOpenOption.APPEND;
 import static java.nio.file.StandardOpenOption.CREATE;
 import static java.time.Instant.parse;
+import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static java.util.Spliterator.IMMUTABLE;
 import static java.util.Spliterator.NONNULL;
@@ -46,8 +47,6 @@ import java.time.Instant;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-import java.util.Spliterator;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -74,7 +73,8 @@ final class RDFPatch {
      * @return a stream of RDF triples
      */
     public static Stream<Quad> asStream(final RDF rdf, final File file, final IRI identifier, final Instant time) {
-        return stream(new StreamReader(rdf, file, identifier, time), false);
+        return stream(spliteratorUnknownSize(new StreamReader(rdf, file, identifier, time),
+                    IMMUTABLE | NONNULL | ORDERED), false);
     }
 
     /**
@@ -120,7 +120,7 @@ final class RDFPatch {
     }
 
     /**
-     * A class for reading an RDF Patch file into a VersionRange Spliterator
+     * A class for reading an RDF Patch file into a VersionRange Iterator
      */
     private static class TimeMapReader implements Iterator<VersionRange> {
         private final Iterator<String> allLines;
@@ -176,9 +176,9 @@ final class RDFPatch {
     }
 
     /**
-     * A class for reading an RDFPatch file into a Quad Spliterator.
+     * A class for reading an RDFPatch file into a Quad Iterator.
      */
-    private static class StreamReader implements Spliterator<Quad> {
+    private static class StreamReader implements Iterator<Quad> {
 
         private final Set<Quad> deleted = new HashSet<>();
         private final ReversedLinesFileReader reader;
@@ -188,10 +188,12 @@ final class RDFPatch {
 
         private Boolean inRegion = false;
         private Boolean hasModified = false;
-        private Instant modified;
+        private Boolean hasModificationTriples = false;
+        private Quad buffer = null;
+        private String line = null;
 
         /**
-         * Create a spliterator that reads a file line-by-line in reverse
+         * Create an iterator that reads a file line-by-line in reverse
          * @param rdf the RDF object
          * @param file the file
          * @param identifier the identifier
@@ -201,76 +203,73 @@ final class RDFPatch {
             this.rdf = rdf;
             this.time = time;
             this.identifier = identifier;
-            this.modified = time;
             try {
                 this.reader = new ReversedLinesFileReader(file, UTF_8);
+                this.line = reader.readLine();
             } catch (final IOException ex) {
                 throw new UncheckedIOException(ex);
             }
+            tryAdvance();
         }
 
         @Override
-        public void forEachRemaining(final Consumer<? super Quad> action) {
-            try {
-                for (String line = reader.readLine(); nonNull(line); line = reader.readLine()) {
-                    emit(line, action);
-                }
-            } catch (final IOException ex) {
-                throw new UncheckedIOException(ex);
-            }
+        public boolean hasNext() {
+            return nonNull(buffer);
         }
 
         @Override
-        public boolean tryAdvance(final Consumer<? super Quad> action) {
-            try {
-                final String line = reader.readLine();
-                if (nonNull(line)) {
-                    emit(line, action);
-                    return true;
-                }
-                return false;
-            } catch (final IOException ex) {
-                throw new UncheckedIOException(ex);
-            }
+        public Quad next() {
+            final Quad quad = buffer;
+            tryAdvance();
+            return quad;
         }
 
-        @Override
-        public Spliterator<Quad> trySplit() {
-            return null;
-        }
+        private void tryAdvance() {
+            buffer = null;
+            while (nonNull(line) && isNull(buffer)) {
+                // Determine if the reader is within the target region
+                if (inRegion) {
+                    // If the reader is in the target region, output any valid "A" quads and record any "D" quads
+                    if ((line.startsWith("A ") || line.startsWith("D "))) {
+                        final String[] parts = line.split(" ", 2);
+                        stringToQuad(rdf, parts[1]).ifPresent(quad -> {
+                            if (parts[0].equals("D")) {
+                                deleted.add(quad);
+                            } else if (parts[0].equals("A") && !deleted.contains(quad)) {
+                                buffer = quad;
+                            }
 
-        @Override
-        public long estimateSize() {
-            return Long.MAX_VALUE;
-        }
+                            // Inbound refs don't cause the modification date to change
+                            if (!quad.getGraphName().filter(Fedora.PreferInboundReferences::equals).isPresent()) {
+                                hasModificationTriples = true;
+                            }
+                        });
 
-        @Override
-        public int characteristics() {
-            return ORDERED | NONNULL | IMMUTABLE;
-        }
-
-        private void emit(final String line, final Consumer<? super Quad> action) {
-            if (line.startsWith(END)) {
-                final Instant moment = parse(line.split(COMMENT_DELIM, 2)[1]);
-                if (!time.isBefore(moment)) {
-                    modified = moment;
-                    inRegion = true;
-                }
-            } else if (inRegion && (line.startsWith("A ") || line.startsWith("D "))) {
-                final String[] parts = line.split(" ", 2);
-                stringToQuad(rdf, parts[1]).ifPresent(quad -> {
-                    if (!hasModified && !quad.getGraphName().filter(Fedora.PreferInboundReferences::equals)
-                            .isPresent()) {
-                        action.accept(rdf.createQuad(Trellis.PreferServerManaged, identifier, DC.modified,
-                                    rdf.createLiteral(modified.toString(), XSD.dateTime)));
-                        hasModified = true;
+                    // If the reader is in the target region and the modified triple hasn't yet been emitted
+                    } else if (line.startsWith(BEGIN) && hasModificationTriples && !hasModified) {
+                        final Instant moment = parse(line.split(COMMENT_DELIM, 2)[1]);
+                        if (!time.isBefore(moment)) {
+                            buffer = rdf.createQuad(Trellis.PreferServerManaged, identifier, DC.modified,
+                                    rdf.createLiteral(moment.toString(), XSD.dateTime));
+                            hasModified = true;
+                        }
                     }
-                    if (parts[0].equals("D")) {
-                        deleted.add(quad);
-                    } else if (parts[0].equals("A") && !deleted.contains(quad)) {
-                        action.accept((Quad) quad);
+
+                } else if (line.startsWith(END)) {
+
+                    // Check if the reader has entered the target region
+                    final Instant moment = parse(line.split(COMMENT_DELIM, 2)[1]);
+                    if (!time.isBefore(moment)) {
+                        inRegion = true;
                     }
-                });
+                }
+
+                // Advance the reader
+                try {
+                    line = reader.readLine();
+                } catch (final IOException ex) {
+                    throw new UncheckedIOException(ex);
+                }
             }
         }
     }

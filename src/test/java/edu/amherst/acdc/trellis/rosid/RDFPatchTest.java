@@ -124,7 +124,7 @@ public class RDFPatchTest {
                     rdf.createLiteral("A longer description")));
         RDFPatch.write(file, delete.stream(), add.stream(), time);
         final List<Quad> data1 = RDFPatch.asStream(rdf, file, identifier, time).collect(toList());
-        assertEquals(data1.size(), add.size() + 1);
+        assertEquals(add.size() + 1, data1.size());
         add.forEach(q -> assertTrue(data1.contains(q)));
 
         final Instant later = time.plusSeconds(10L);

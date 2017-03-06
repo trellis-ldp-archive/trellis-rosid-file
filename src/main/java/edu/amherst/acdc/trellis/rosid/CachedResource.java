@@ -18,6 +18,7 @@ package edu.amherst.acdc.trellis.rosid;
 import static com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS;
 import static edu.amherst.acdc.trellis.rosid.Constants.MEMENTO_CACHE;
 import static edu.amherst.acdc.trellis.rosid.Constants.RESOURCE_CACHE;
+import static edu.amherst.acdc.trellis.rosid.Constants.RESOURCE_JOURNAL;
 import static edu.amherst.acdc.trellis.rosid.Constants.RESOURCE_QUADS;
 import static edu.amherst.acdc.trellis.rosid.FileUtils.stringToQuad;
 import static java.lang.String.join;
@@ -28,6 +29,7 @@ import static java.nio.file.Files.newBufferedWriter;
 import static java.nio.file.StandardOpenOption.CREATE;
 import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
 import static java.nio.file.StandardOpenOption.WRITE;
+import static java.time.Instant.now;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Stream.empty;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -44,6 +46,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Optional;
@@ -99,41 +102,33 @@ class CachedResource extends AbstractFileResource {
     /**
      * Write the resource data into a file as JSON
      * @param directory the directory
-     * @param json the resource data
+     * @param identifier the resource identifier
      */
-    public static void write(final File directory, final ResourceData json) throws IOException {
-        MAPPER.writeValue(new File(directory, RESOURCE_CACHE), json);
-    }
+    public static void write(final File directory, final IRI identifier) throws IOException {
+        final Instant time = now();
 
-    /**
-     * Write the resource data into a file as RDF quads
-     * @param directory the directory
-     * @param quads the quads
-     */
-    public static void write(final File directory, final Stream<Quad> quads) throws IOException {
-        final File file = new File(directory, RESOURCE_QUADS);
-        try (final BufferedWriter writer = newBufferedWriter(file.toPath(), UTF_8, CREATE, WRITE, TRUNCATE_EXISTING)) {
-            final Iterator<String> lineIter = quads.map(quad -> join(" ", quad.getSubject().ntriplesString(),
+        // Write the JSON file
+        final Optional<ResourceData> data = VersionedResource.read(directory, identifier, time);
+        MAPPER.writeValue(new File(directory, RESOURCE_CACHE), data.get());
+
+        // Write the quads
+        try (final BufferedWriter writer = newBufferedWriter(new File(directory, RESOURCE_QUADS).toPath(),
+                    UTF_8, CREATE, WRITE, TRUNCATE_EXISTING)) {
+            final File file = new File(directory, RESOURCE_JOURNAL);
+            final Iterator<String> lineIter = RDFPatch.asStream(rdf, file, identifier, time)
+                    .map(quad -> join(" ", quad.getSubject().ntriplesString(),
                         quad.getPredicate().ntriplesString(), quad.getObject().ntriplesString(),
                         quad.getGraphName().orElse(Trellis.PreferUserManaged).ntriplesString(), ".")).iterator();
             while (lineIter.hasNext()) {
                 writer.write(lineIter.next() + lineSeparator());
             }
-        } catch (final IOException ex) {
-            throw ex;
         }
-    }
 
-    /**
-     * Write the mementos
-     * @param directory the directory
-     * @param mementos the mementos
-     * @throws IOException if there is an error writing to the file
-     */
-    public static void writeMementos(final File directory, final Stream<VersionRange> mementos) throws IOException {
-        final File file = new File(directory, MEMENTO_CACHE);
-        try (final BufferedWriter writer = newBufferedWriter(file.toPath(), UTF_8, CREATE, WRITE, TRUNCATE_EXISTING)) {
-            final Iterator<VersionRange> iter = mementos.iterator();
+        // Write the mementos
+        try (final BufferedWriter writer = newBufferedWriter(new File(directory, MEMENTO_CACHE).toPath(),
+                    UTF_8, CREATE, WRITE, TRUNCATE_EXISTING)) {
+            final File file = new File(directory, RESOURCE_JOURNAL);
+            final Iterator<VersionRange> iter = RDFPatch.asTimeMap(file).iterator();
             if (iter.hasNext()) {
                 final VersionRange range = iter.next();
                 writer.write(range.getFrom() + lineSeparator());
@@ -142,8 +137,6 @@ class CachedResource extends AbstractFileResource {
             while (iter.hasNext()) {
                 writer.write(iter.next().getUntil() + lineSeparator());
             }
-        } catch (final IOException ex) {
-            throw ex;
         }
     }
 

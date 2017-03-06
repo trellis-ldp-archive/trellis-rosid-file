@@ -230,7 +230,6 @@ public class LdpBasicContainerTest {
         assertEquals(of(rdf.createIRI("info:trellis")), res.getContainedBy());
         final List<IRI> contained = res.getContains().collect(toList());
         assertEquals(3L, contained.size());
-        System.out.println(contained.toString());
         assertTrue(contained.contains(rdf.createIRI("info:trellis/ldpbc/1")));
         assertTrue(contained.contains(rdf.createIRI("info:trellis/ldpbc/2")));
         assertTrue(contained.contains(rdf.createIRI("info:trellis/ldpbc/3")));

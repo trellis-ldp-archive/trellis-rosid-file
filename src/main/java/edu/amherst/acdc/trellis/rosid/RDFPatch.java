@@ -101,8 +101,6 @@ final class RDFPatch {
             delete.map(quadToString).forEach(quad -> uncheckedWrite(writer, "D " + quad));
             add.map(quadToString).forEach(quad -> uncheckedWrite(writer, "A " + quad));
             writer.write(END + time + lineSeparator());
-        } catch (final IOException ex) {
-            throw ex;
         }
     }
 

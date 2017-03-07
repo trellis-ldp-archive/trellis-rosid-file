@@ -218,7 +218,10 @@ abstract class AbstractFileResource implements Resource {
         public VersionRange next() {
             final String line = dateLines.next();
             if (nonNull(line)) {
-                return new VersionRange(from, parse(line));
+                final Instant until = parse(line);
+                final VersionRange range = new VersionRange(from, until);
+                from = until;
+                return range;
             }
             return null;
         }

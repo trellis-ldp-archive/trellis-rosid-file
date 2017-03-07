@@ -144,8 +144,8 @@ class CachedResource extends AbstractFileResource {
     public <T extends Resource.TripleCategory> Stream<Triple> stream(final Collection<T> category) {
         return Optional.of(new File(directory, RESOURCE_QUADS)).filter(File::exists).map(File::toPath)
             .map(uncheckedLines).orElse(empty()).map(line -> stringToQuad(rdf, line)).filter(Optional::isPresent)
-            .map(Optional::get).filter(quad -> quad.getGraphName().isPresent() &&
-                    category.contains(categorymap.get(quad.getGraphName().get()))).map(Quad::asTriple);
+            .map(Optional::get).filter(quad -> category.contains(categorymap.get(quad.getGraphName().get())))
+            .map(Quad::asTriple);
     }
 
     private Function<Path, Stream<String>> uncheckedLines = path -> {

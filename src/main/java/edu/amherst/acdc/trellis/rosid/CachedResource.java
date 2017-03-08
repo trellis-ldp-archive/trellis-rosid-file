@@ -105,7 +105,16 @@ class CachedResource extends AbstractFileResource {
      * @param identifier the resource identifier
      */
     public static void write(final File directory, final IRI identifier) throws IOException {
-        final Instant time = now();
+        write(directory, identifier, now());
+    }
+
+    /**
+     * Write the resource data into a file as JSON
+     * @param directory the directory
+     * @param identifier the resource identifier
+     * @param time the time
+     */
+    public static void write(final File directory, final IRI identifier, final Instant time) throws IOException {
 
         // Write the JSON file
         final Optional<ResourceData> data = VersionedResource.read(directory, identifier, time);

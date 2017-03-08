@@ -36,6 +36,7 @@ import edu.amherst.acdc.trellis.vocabulary.RDFS;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.Instant;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
@@ -63,7 +64,8 @@ public class ResourceWriterTest {
 
     @Test
     public void testCacheWriter() throws IOException {
-        CachedResource.write(directory, identifier);
+        final Instant time = parse("2017-03-15T01:23:45Z");
+        CachedResource.write(directory, identifier, time);
         final Optional<Resource> resource = CachedResource.find(directory, identifier);
         assertTrue(resource.isPresent());
         resource.ifPresent(res -> {

@@ -17,7 +17,7 @@ package edu.amherst.acdc.trellis.rosid;
 
 import static edu.amherst.acdc.trellis.rosid.Constants.RESOURCE_CACHE;
 import static edu.amherst.acdc.trellis.rosid.FileUtils.partition;
-import static java.io.File.separator;
+import static java.time.Instant.now;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
@@ -30,7 +30,6 @@ import edu.amherst.acdc.trellis.spi.Session;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
@@ -43,9 +42,9 @@ import org.slf4j.Logger;
 /**
  * @author acoburn
  */
-public class FileRepositoryService implements ResourceService, AutoCloseable {
+public class FileResourceService implements ResourceService, AutoCloseable {
 
-    private static final Logger LOGGER = getLogger(FileRepositoryService.class);
+    private static final Logger LOGGER = getLogger(FileResourceService.class);
 
     private EventService evtSvc;
     private File directory;
@@ -53,23 +52,25 @@ public class FileRepositoryService implements ResourceService, AutoCloseable {
     /**
      * Create a File-based repository service
      * @param directory the data directory
+     * @throws IOException if the directory is not writable
      */
-    public FileRepositoryService(final String directory) {
+    public FileResourceService(final String directory) throws IOException {
         this(new File(directory));
     }
 
     /**
      * Create a File-based repository service
      * @param directory the data directory
+     * @throws IOException if the directory is not writable
      */
-    public FileRepositoryService(final File directory) {
+    public FileResourceService(final File directory) throws IOException {
         requireNonNull(directory, "directory may not be null!");
 
         if (!directory.exists()) {
             directory.mkdirs();
         }
         if (!directory.canWrite()) {
-            throw new UncheckedIOException(new IOException("Cannot write to " + directory.getAbsolutePath()));
+            throw new IOException("Cannot write to " + directory.getAbsolutePath());
         }
         this.directory = directory;
     }
@@ -89,28 +90,16 @@ public class FileRepositoryService implements ResourceService, AutoCloseable {
     }
 
     @Override
-    public Boolean exists(final Session session, final IRI identifier) {
-        // TODO -- this naively ignores the session (e.g. batch ops)
-        final File resource = new File(directory, partition(identifier) + separator + RESOURCE_CACHE);
-        return resource.exists();
-    }
-
-    @Override
-    public Boolean exists(final Session session, final IRI identifier, final Instant time) {
-        // TODO -- this naively ignores the session (e.g. batch ops)
-        return VersionedResource.read(directory, identifier, time).isPresent();
-    }
-
-    @Override
     public Optional<Resource> find(final Session session, final IRI identifier) {
-        // TODO -- this naively ignores the session (e.g. batch ops)
+        // this ignores the session (e.g. batch ops)
         return of(new File(directory, partition(identifier))).filter(File::exists)
-            .flatMap(dir -> CachedResource.find(dir, identifier));
+            .flatMap(dir -> new File(dir, RESOURCE_CACHE).exists() ?
+                    CachedResource.find(dir, identifier) : VersionedResource.find(dir, identifier, now()));
     }
 
     @Override
     public Optional<Resource> find(final Session session, final IRI identifier, final Instant time) {
-        // TODO -- this naively ignores the session (e.g. batch ops)
+        // this ignores the session (e.g. batch ops)
         return of(new File(directory, partition(identifier))).filter(File::exists)
             .flatMap(dir -> VersionedResource.find(dir, identifier, time));
     }

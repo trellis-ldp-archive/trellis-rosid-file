@@ -15,31 +15,36 @@
  */
 package edu.amherst.acdc.trellis.rosid;
 
-import static java.io.File.separator;
-import static java.lang.String.join;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
+import java.io.File;
+import java.util.Optional;
+
+import edu.amherst.acdc.trellis.api.Resource;
+import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.RDF;
 import org.apache.commons.rdf.jena.JenaRDF;
+import org.junit.Before;
 import org.junit.Test;
 
 /**
  * @author acoburn
  */
-public class FileUtilsTest {
+public class CachedResourceTest {
 
     private static final RDF rdf = new JenaRDF();
 
-    @Test
-    public void testPartition() {
+    private File file;
+    private IRI identifier = rdf.createIRI("info:trellis/resource");
 
-        assertEquals(join(separator, "e4", "3d", "d2", "3c11fdfba716fe4a8c2ad59720f73b3e"),
-                FileUtils.partition("info:trellis/resource"));
-        assertEquals(join(separator, "e4", "3d", "d2", "3c11fdfba716fe4a8c2ad59720f73b3e"),
-                FileUtils.partition(rdf.createIRI("info:trellis/resource")));
-        assertEquals(join(separator, "56", "02", "ed", "94db502039137b6017bd7089ceaf8ad1"),
-                FileUtils.partition("info:trellis/other"));
-        assertEquals(join(separator, "56", "02", "ed", "94db502039137b6017bd7089ceaf8ad1"),
-                FileUtils.partition(rdf.createIRI("info:trellis/other")));
+    @Before
+    public void setUp() throws Exception {
+        file = new File(getClass().getResource("/res3").toURI());
+    }
+
+    @Test
+    public void testNonExistent() {
+        final Optional<Resource> resource = CachedResource.find(file, identifier);
+        assertFalse(resource.isPresent());
     }
 }

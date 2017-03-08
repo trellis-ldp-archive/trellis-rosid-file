@@ -17,11 +17,14 @@ package edu.amherst.acdc.trellis.rosid;
 
 import static edu.amherst.acdc.trellis.rosid.Constants.RESOURCE_JOURNAL;
 import static edu.amherst.acdc.trellis.rosid.RDFPatch.asStream;
+import static edu.amherst.acdc.trellis.rosid.RDFPatch.asTimeMap;
 import static java.util.Collections.unmodifiableSet;
 import static java.util.Optional.of;
 import static java.util.stream.Stream.empty;
+import static org.slf4j.LoggerFactory.getLogger;
 
 import edu.amherst.acdc.trellis.api.Resource;
+import edu.amherst.acdc.trellis.api.VersionRange;
 import edu.amherst.acdc.trellis.vocabulary.ACL;
 import edu.amherst.acdc.trellis.vocabulary.LDP;
 import edu.amherst.acdc.trellis.vocabulary.OA;
@@ -41,6 +44,7 @@ import org.apache.commons.rdf.api.Dataset;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Quad;
 import org.apache.commons.rdf.api.Triple;
+import org.slf4j.Logger;
 
 /**
  * An object that mediates access to the resource version files.
@@ -48,6 +52,8 @@ import org.apache.commons.rdf.api.Triple;
  * @author acoburn
  */
 class VersionedResource extends AbstractFileResource {
+
+    private static final Logger LOGGER = getLogger(VersionedResource.class);
 
     /* User-controllable properties that become part of the core resource data */
     private static final Set<IRI> specialUserProperties = unmodifiableSet(new HashSet<IRI>() { {
@@ -107,6 +113,7 @@ class VersionedResource extends AbstractFileResource {
             final Instant time) {
         super(directory, identifier, data);
         this.time = time;
+        LOGGER.debug("Creating a Versioned Resource for {}", identifier.getIRIString());
     }
 
     @Override
@@ -115,10 +122,15 @@ class VersionedResource extends AbstractFileResource {
     }
 
     @Override
+    public Stream<VersionRange> getMementos() {
+        return asTimeMap(new File(directory, RESOURCE_JOURNAL));
+    }
+
+    @Override
     public <T extends Resource.TripleCategory> Stream<Triple> stream(final Collection<T> category) {
         return of(new File(directory, RESOURCE_JOURNAL)).filter(File::exists)
             .map(file -> asStream(rdf, file, identifier, time)).orElse(empty())
-            .filter(quad -> quad.getGraphName().isPresent() &&
-                    category.contains(categorymap.get(quad.getGraphName().get()))).map(Quad::asTriple);
+            .filter(quad -> quad.getGraphName().map(categorymap::get).filter(category::contains).isPresent())
+            .map(Quad::asTriple);
     }
 }

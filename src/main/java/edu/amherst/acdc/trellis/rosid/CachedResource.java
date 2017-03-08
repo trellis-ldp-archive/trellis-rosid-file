@@ -30,7 +30,14 @@ import static java.nio.file.StandardOpenOption.CREATE;
 import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
 import static java.nio.file.StandardOpenOption.WRITE;
 import static java.time.Instant.now;
+import static java.time.Instant.parse;
+import static java.util.Collections.emptyIterator;
+import static java.util.Objects.nonNull;
 import static java.util.Optional.ofNullable;
+import static java.util.Spliterator.IMMUTABLE;
+import static java.util.Spliterator.NONNULL;
+import static java.util.Spliterator.ORDERED;
+import static java.util.Spliterators.spliteratorUnknownSize;
 import static java.util.stream.Stream.empty;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -44,7 +51,6 @@ import edu.amherst.acdc.trellis.vocabulary.Trellis;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Collection;
@@ -52,6 +58,7 @@ import java.util.Iterator;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Quad;
@@ -81,6 +88,7 @@ class CachedResource extends AbstractFileResource {
      */
     protected CachedResource(final File directory, final IRI identifier, final ResourceData data) {
         super(directory, identifier, data);
+        LOGGER.debug("Creating a Cached Resource for {}", identifier.getIRIString());
     }
 
     /**
@@ -150,10 +158,17 @@ class CachedResource extends AbstractFileResource {
     }
 
     @Override
+    public Stream<VersionRange> getMementos() {
+        return StreamSupport.stream(spliteratorUnknownSize(new MementoReader(new File(directory, MEMENTO_CACHE)),
+                    IMMUTABLE | NONNULL | ORDERED), false);
+    }
+
+    @Override
     public <T extends Resource.TripleCategory> Stream<Triple> stream(final Collection<T> category) {
         return Optional.of(new File(directory, RESOURCE_QUADS)).filter(File::exists).map(File::toPath)
-            .map(uncheckedLines).orElse(empty()).map(line -> stringToQuad(rdf, line)).filter(Optional::isPresent)
-            .map(Optional::get).filter(quad -> category.contains(categorymap.get(quad.getGraphName().get())))
+            .map(uncheckedLines).orElse(empty())
+            .map(line -> stringToQuad(rdf, line)).filter(Optional::isPresent).map(Optional::get)
+            .filter(quad -> quad.getGraphName().map(categorymap::get).filter(category::contains).isPresent())
             .map(Quad::asTriple);
     }
 
@@ -161,7 +176,53 @@ class CachedResource extends AbstractFileResource {
         try {
             return lines(path);
         } catch (final IOException ex) {
-            throw new UncheckedIOException(ex);
+            LOGGER.warn("Could not read file at {}: {}", path.toString(), ex.getMessage());
         }
+        return empty();
     };
+
+    /**
+     * A class for reading a file of change times
+     */
+    private static class MementoReader implements Iterator<VersionRange> {
+        private final Iterator<String> dateLines;
+        private Instant from = null;
+
+        /**
+         * Create a new MementoReader
+         * @param file the file
+         */
+        public MementoReader(final File file) {
+            dateLines = getLines(file.toPath());
+            if (dateLines.hasNext()) {
+                from = parse(dateLines.next());
+            }
+        }
+
+        private static Iterator<String> getLines(final Path path) {
+            try {
+                return lines(path).iterator();
+            } catch (final IOException ex) {
+                LOGGER.warn("Could not read Memento cache: {}", ex.getMessage());
+            }
+            return emptyIterator();
+        }
+
+        @Override
+        public boolean hasNext() {
+            return dateLines.hasNext();
+        }
+
+        @Override
+        public VersionRange next() {
+            final String line = dateLines.next();
+            if (nonNull(line)) {
+                final Instant until = parse(line);
+                final VersionRange range = new VersionRange(from, until);
+                from = until;
+                return range;
+            }
+            return null;
+        }
+    }
 }

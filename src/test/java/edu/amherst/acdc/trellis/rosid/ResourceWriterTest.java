@@ -55,18 +55,20 @@ public class ResourceWriterTest {
 
     private static final RDF rdf = new JenaRDF();
     private static final IRI identifier = rdf.createIRI("info:trellis/resource");
-    private File directory = null;
+    private File directory2 = null;
+    private File directory4 = null;
 
     @Before
     public void setUp() throws Exception {
-        directory = new File(getClass().getResource("/res2").toURI());
+        directory2 = new File(getClass().getResource("/res2").toURI());
+        directory4 = new File(getClass().getResource("/res4").toURI());
     }
 
     @Test
-    public void testCacheWriter() throws IOException {
+    public void testCacheWriter1() throws IOException {
         final Instant time = parse("2017-03-15T01:23:45Z");
-        CachedResource.write(directory, identifier, time);
-        final Optional<Resource> resource = CachedResource.find(directory, identifier);
+        CachedResource.write(directory2, identifier, time);
+        final Optional<Resource> resource = CachedResource.find(directory2, identifier);
         assertTrue(resource.isPresent());
         resource.ifPresent(res -> {
             assertEquals(identifier, res.getIdentifier());
@@ -121,6 +123,45 @@ public class ResourceWriterTest {
             assertEquals(parse("2017-03-02T02:34:12Z"), mementos.get(1).getUntil());
             assertEquals(parse("2017-03-02T02:34:12Z"), mementos.get(2).getFrom());
             assertEquals(parse("2017-03-03T02:34:12Z"), mementos.get(2).getUntil());
+        });
+    }
+
+    @Test
+    public void testCacheWriter2() throws IOException {
+        CachedResource.write(directory4, identifier);
+        final Optional<Resource> resource = CachedResource.find(directory4, identifier);
+        assertTrue(resource.isPresent());
+        resource.ifPresent(res -> {
+            assertEquals(identifier, res.getIdentifier());
+            assertEquals(LDP.RDFSource, res.getInteractionModel());
+            assertEquals(of(rdf.createIRI("info:trellis")), res.getContainedBy());
+            assertEquals(empty(), res.getContains().findFirst());
+            assertEquals(empty(), res.getMembershipResource());
+            assertEquals(empty(), res.getMemberRelation());
+            assertEquals(empty(), res.getMemberOfRelation());
+            assertEquals(empty(), res.getInsertedContentRelation());
+            assertEquals(empty(), res.getDatastream());
+            assertFalse(res.isMemento());
+            assertFalse(res.isPage());
+            assertEquals(empty(), res.getNext());
+            assertEquals(empty(), res.getInbox());
+            assertEquals(empty(), res.getAcl());
+            assertEquals(parse("2017-02-15T10:05:00Z"), res.getCreated());
+            assertEquals(parse("2017-02-15T10:05:00Z"), res.getModified());
+            assertEquals(of(rdf.createIRI("http://example.org/user/raadmin")), res.getCreator());
+            assertEquals(0L, res.getTypes().count());
+            assertEquals(0L, res.stream(EnumSet.of(LDP_CONTAINMENT, LDP_MEMBERSHIP)).count());
+
+            final List<Triple> triples = res.stream(USER_MANAGED).collect(toList());
+            assertEquals(0L, triples.size());
+
+            final List<Triple> inbound = res.stream(FEDORA_INBOUND_REFERENCES).collect(toList());
+            assertEquals(1L, inbound.size());
+            assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("info:trellis/other/item"),
+                            DC.hasPart, identifier)));
+
+            final List<VersionRange> mementos = res.getMementos().collect(toList());
+            assertEquals(0L, mementos.size());
         });
     }
 }

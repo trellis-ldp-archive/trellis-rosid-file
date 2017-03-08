@@ -20,38 +20,25 @@ import static edu.amherst.acdc.trellis.api.Resource.TripleContext.LDP_CONTAINMEN
 import static edu.amherst.acdc.trellis.api.Resource.TripleContext.LDP_MEMBERSHIP;
 import static edu.amherst.acdc.trellis.api.Resource.TripleContext.TRELLIS_AUDIT;
 import static edu.amherst.acdc.trellis.api.Resource.TripleContext.USER_MANAGED;
-import static edu.amherst.acdc.trellis.rosid.Constants.MEMENTO_CACHE;
-import static java.nio.file.Files.lines;
-import static java.time.Instant.parse;
 import static java.util.Collections.singleton;
 import static java.util.Collections.unmodifiableMap;
-import static java.util.Objects.nonNull;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
-import static java.util.Spliterator.IMMUTABLE;
-import static java.util.Spliterator.NONNULL;
-import static java.util.Spliterator.ORDERED;
-import static java.util.Spliterators.spliteratorUnknownSize;
 import static java.util.stream.Stream.empty;
 import static java.util.stream.Stream.of;
 
 import edu.amherst.acdc.trellis.api.Datastream;
 import edu.amherst.acdc.trellis.api.Resource;
-import edu.amherst.acdc.trellis.api.VersionRange;
 import edu.amherst.acdc.trellis.vocabulary.Fedora;
 import edu.amherst.acdc.trellis.vocabulary.LDP;
 import edu.amherst.acdc.trellis.vocabulary.Trellis;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.time.Instant;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.RDF;
@@ -172,12 +159,6 @@ abstract class AbstractFileResource implements Resource {
     }
 
     @Override
-    public Stream<VersionRange> getMementos() {
-        return StreamSupport.stream(spliteratorUnknownSize(new MementoReader(new File(directory, MEMENTO_CACHE)),
-                    IMMUTABLE | NONNULL | ORDERED), false);
-    }
-
-    @Override
     public Stream<IRI> getContains() {
         return stream(singleton(LDP_CONTAINMENT)).map(Triple::getObject).flatMap(obj -> {
             if (obj instanceof IRI) {
@@ -185,45 +166,5 @@ abstract class AbstractFileResource implements Resource {
             }
             return empty();
         });
-    }
-
-    /**
-     * A class for reading a file of change times
-     */
-    private static class MementoReader implements Iterator<VersionRange> {
-        private final Iterator<String> dateLines;
-        private Instant from = null;
-
-        /**
-         * Create a new MementoReader
-         * @param file the file
-         */
-        public MementoReader(final File file) {
-            try {
-                dateLines = lines(file.toPath()).iterator();
-                if (dateLines.hasNext()) {
-                    from = parse(dateLines.next());
-                }
-            } catch (final IOException ex) {
-                throw new UncheckedIOException(ex);
-            }
-        }
-
-        @Override
-        public boolean hasNext() {
-            return dateLines.hasNext();
-        }
-
-        @Override
-        public VersionRange next() {
-            final String line = dateLines.next();
-            if (nonNull(line)) {
-                final Instant until = parse(line);
-                final VersionRange range = new VersionRange(from, until);
-                from = until;
-                return range;
-            }
-            return null;
-        }
     }
 }

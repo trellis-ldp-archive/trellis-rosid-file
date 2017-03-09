@@ -263,6 +263,10 @@ task docs(type: Javadoc) {
         links "http://docs.oracle.com/javase/8/docs/api/"
         links "https://commons.apache.org/proper/commons-rdf/apidocs/"
         links "https://kafka.apache.org/0101/javadoc/"
+        // TODO -- add link to trellis-*, when they become available
+        // links "https://trellis-ldp.github.io/trellis-api/0.1.0/"
+        // links "https://trellis-ldp.github.io/trellis-spi/0.1.0/"
+        // links "https://trellis-ldp.github.io/trellis-rosid/0.1.0/"
     }
     destinationDir = new File(projectDir, "docs/${version}")
 }

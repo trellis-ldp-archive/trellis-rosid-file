@@ -63,7 +63,7 @@ public class FileResourceService extends AbstractResourceService {
      * @param producer the kafka producer
      * @throws IOException if the directory is not writable
      */
-    public FileResourceService(final File directory, final Producer<String, Message> producer) throws IOException {
+    protected FileResourceService(final File directory, final Producer<String, Message> producer) throws IOException {
         super(producer);
         requireNonNull(directory, "directory may not be null!");
         this.directory = directory;

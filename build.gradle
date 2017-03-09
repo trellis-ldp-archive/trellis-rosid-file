@@ -256,8 +256,14 @@ sonarqube {
 }
 
 task docs(type: Javadoc) {
+    outputs.upToDateWhen { false }
     source sourceSets.main.allJava
     classpath = files(sourceSets.main.compileClasspath)
+    options {
+        links "http://docs.oracle.com/javase/8/docs/api/"
+        links "https://commons.apache.org/proper/commons-rdf/apidocs/"
+        links "https://kafka.apache.org/0101/javadoc/"
+    }
     destinationDir = new File(projectDir, "docs/${version}")
 }
 

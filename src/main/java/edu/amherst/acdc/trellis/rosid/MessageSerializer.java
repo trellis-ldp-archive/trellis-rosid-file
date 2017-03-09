@@ -27,9 +27,9 @@ import java.io.StringWriter;
 import java.util.Map;
 
 import org.apache.commons.rdf.jena.JenaRDF;
+import org.apache.jena.graph.Graph;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.common.serialization.Serializer;
-import org.apache.jena.graph.Graph;
 
 /**
  * @author acoburn

@@ -24,7 +24,6 @@ import static java.time.Instant.parse;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.toList;
-import static org.apache.kafka.clients.consumer.OffsetResetStrategy.EARLIEST;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -48,8 +47,6 @@ import org.apache.commons.rdf.api.RDF;
 import org.apache.commons.rdf.api.Triple;
 import org.apache.commons.rdf.jena.JenaRDF;
 import org.apache.kafka.common.serialization.StringSerializer;
-import org.apache.kafka.clients.consumer.Consumer;
-import org.apache.kafka.clients.consumer.MockConsumer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.MockProducer;
 import org.junit.Before;
@@ -68,7 +65,6 @@ public class FileResourceServiceTest {
 
     private final IRI identifier = rdf.createIRI("info:trellis/resource");
     private final IRI other = rdf.createIRI("info:trellis/other");
-    private final Consumer<String, Message> mockConsumer = new MockConsumer<>(EARLIEST);
     private final Producer<String, Message> mockProducer = new MockProducer<>(true,
             new StringSerializer(), new MessageSerializer());
 
@@ -84,14 +80,14 @@ public class FileResourceServiceTest {
     @Before
     public void setUp() throws Exception {
         file = new File(getClass().getResource("/root").toURI());
-        service = new FileResourceService(file, mockProducer, mockConsumer);
+        service = new FileResourceService(file, mockProducer);
     }
 
     @Test
     public void testNewRoot() throws IOException {
         final Instant time = parse("2017-02-16T11:15:03Z");
         final File root = new File(file, "root2/a");
-        final ResourceService altService = new FileResourceService(root, mockProducer, mockConsumer);
+        final ResourceService altService = new FileResourceService(root, mockProducer);
         assertFalse(altService.exists(mockSession, identifier, time));
         assertTrue(root.exists());
         altService.bind(mockEventService);
@@ -106,8 +102,7 @@ public class FileResourceServiceTest {
         final File root = new File(file, "root3");
         assertTrue(root.mkdir());
         assertTrue(root.setReadOnly());
-        final ResourceService altService = new FileResourceService(root,
-                mockProducer, mockConsumer);
+        final ResourceService altService = new FileResourceService(root, mockProducer);
     }
 
     @Test

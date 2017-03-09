@@ -34,9 +34,17 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Properties;
 
 import org.apache.commons.rdf.api.Graph;
 import org.apache.commons.rdf.api.IRI;
+import org.apache.kafka.common.serialization.StringDeserializer;
+import org.apache.kafka.common.serialization.StringSerializer;
+import org.apache.kafka.clients.consumer.Consumer;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.Producer;
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.slf4j.Logger;
 
 /**
@@ -48,22 +56,28 @@ public class FileResourceService implements ResourceService, AutoCloseable {
 
     private EventService evtSvc;
     private File directory;
+    private Producer<String, Message> producer;
+    private Consumer<String, Message> consumer;
 
     /**
-     * Create a File-based repository service
-     * @param directory the data directory
+     * Create a File-based repository service, using system properties
      * @throws IOException if the directory is not writable
      */
-    public FileResourceService(final String directory) throws IOException {
-        this(new File(directory));
+    public FileResourceService() throws IOException {
+        this(new File(System.getProperty("trellis.data")),
+            new KafkaProducer<>(kafkaProducerProps(), new StringSerializer(), new MessageSerializer()),
+            new KafkaConsumer<>(kafkaConsumerProps(), new StringDeserializer(), new MessageSerializer()));
     }
 
     /**
      * Create a File-based repository service
      * @param directory the data directory
+     * @param producer the kafka producer
+     * @param consumer the kafka consumer
      * @throws IOException if the directory is not writable
      */
-    public FileResourceService(final File directory) throws IOException {
+    public FileResourceService(final File directory, final Producer<String, Message> producer,
+            final Consumer<String, Message> consumer) throws IOException {
         requireNonNull(directory, "directory may not be null!");
 
         if (!directory.exists()) {
@@ -73,6 +87,8 @@ public class FileResourceService implements ResourceService, AutoCloseable {
             throw new IOException("Cannot write to " + directory.getAbsolutePath());
         }
         this.directory = directory;
+        this.consumer = consumer;
+        this.producer = producer;
     }
 
     @Override
@@ -90,7 +106,7 @@ public class FileResourceService implements ResourceService, AutoCloseable {
     }
 
     @Override
-    public Optional<Resource> find(final Session session, final IRI identifier) {
+    public Optional<Resource> get(final Session session, final IRI identifier) {
         // this ignores the session (e.g. batch ops)
         return of(new File(directory, partition(identifier))).filter(File::exists)
             .flatMap(dir -> new File(dir, RESOURCE_CACHE).exists() ?
@@ -98,21 +114,24 @@ public class FileResourceService implements ResourceService, AutoCloseable {
     }
 
     @Override
-    public Optional<Resource> find(final Session session, final IRI identifier, final Instant time) {
+    public Optional<Resource> get(final Session session, final IRI identifier, final Instant time) {
         // this ignores the session (e.g. batch ops)
         return of(new File(directory, partition(identifier))).filter(File::exists)
             .flatMap(dir -> VersionedResource.find(dir, identifier, time));
     }
 
     @Override
-    public Resource create(final Session session, final IRI identifier, final IRI type) {
-        // TODO
-        return null;
-    }
+    public Boolean put(final Session session, final IRI identifier, final IRI type, final Graph graph) {
+        final File dir = new File(directory, partition(identifier));
+        if (!dir.exists()) {
+            dir.mkdirs();
+        }
 
-    @Override
-    public void update(final Session session, final IRI identifier, final Graph graph) {
-        // TODO
+        final Message msg = new Message(identifier, type, graph);
+        producer.send(new ProducerRecord<>("create", identifier.getIRIString(), msg));
+
+        // TODO -- add zk lock
+        return true;
     }
 
     @Override
@@ -150,7 +169,29 @@ public class FileResourceService implements ResourceService, AutoCloseable {
 
     @Override
     public void close() {
-        // TODO
-        // close any zk/kafka connections
+        // TODO -- close any ZK connections
+        consumer.close();
+        producer.close();
+    }
+
+    private static Properties kafkaConsumerProps() {
+        final Properties props = new Properties();
+        props.put("bootstrap.servers", System.getProperty("kafka.bootstrap.servers"));
+        props.put("group.id", System.getProperty("kafka.group.id"));
+        props.put("enable.auto.commit", System.getProperty("kafka.enable.auto.commit", "false"));
+        props.put("auto.commit.interval.ms", System.getProperty("kafka.auto.commit.interval.ms", "1000"));
+        props.put("session.timeout.ms", System.getProperty("kafka.session.timeout.ms", "30000"));
+        return props;
+    }
+
+    private static Properties kafkaProducerProps() {
+        final Properties props = new Properties();
+        props.put("bootstrap.servers", System.getProperty("kafka.bootstrap.servers"));
+        props.put("acks", System.getProperty("kafka.acks", "all"));
+        props.put("retries", System.getProperty("kafka.retries", "0"));
+        props.put("batch.size", System.getProperty("kafka.batch.size", "16384"));
+        props.put("linger.ms", System.getProperty("kafka.linger.ms", "1"));
+        props.put("buffer.memory", System.getProperty("kafka.buffer.memory", "33554432"));
+        return props;
     }
 }

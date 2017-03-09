@@ -24,6 +24,7 @@ import static java.time.Instant.parse;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.toList;
+import static org.apache.kafka.clients.consumer.OffsetResetStrategy.EARLIEST;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -46,6 +47,11 @@ import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.RDF;
 import org.apache.commons.rdf.api.Triple;
 import org.apache.commons.rdf.jena.JenaRDF;
+import org.apache.kafka.common.serialization.StringSerializer;
+import org.apache.kafka.clients.consumer.Consumer;
+import org.apache.kafka.clients.consumer.MockConsumer;
+import org.apache.kafka.clients.producer.Producer;
+import org.apache.kafka.clients.producer.MockProducer;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -60,8 +66,12 @@ public class FileResourceServiceTest {
 
     private static final RDF rdf = new JenaRDF();
 
-    private IRI identifier = rdf.createIRI("info:trellis/resource");
-    private IRI other = rdf.createIRI("info:trellis/other");
+    private final IRI identifier = rdf.createIRI("info:trellis/resource");
+    private final IRI other = rdf.createIRI("info:trellis/other");
+    private final Consumer<String, Message> mockConsumer = new MockConsumer<>(EARLIEST);
+    private final Producer<String, Message> mockProducer = new MockProducer<>(true,
+            new StringSerializer(), new MessageSerializer());
+
     private ResourceService service;
     private File file;
 
@@ -74,27 +84,21 @@ public class FileResourceServiceTest {
     @Before
     public void setUp() throws Exception {
         file = new File(getClass().getResource("/root").toURI());
-        service = new FileResourceService(file);
-    }
-
-    @Test
-    public void testAltCtr() throws IOException {
-        final Instant time = parse("2017-02-16T11:15:03Z");
-        final ResourceService altService = new FileResourceService(file.getAbsolutePath());
-        altService.bind(mockEventService);
-        altService.unbind(mockEventService);
-        altService.bind(mockEventService);
-        altService.unbind(mockEventService2);
-        assertTrue(altService.exists(mockSession, identifier, time));
+        service = new FileResourceService(file, mockProducer, mockConsumer);
     }
 
     @Test
     public void testNewRoot() throws IOException {
         final Instant time = parse("2017-02-16T11:15:03Z");
         final File root = new File(file, "root2/a");
-        final ResourceService altService = new FileResourceService(root);
+        final ResourceService altService = new FileResourceService(root, mockProducer, mockConsumer);
         assertFalse(altService.exists(mockSession, identifier, time));
         assertTrue(root.exists());
+        altService.bind(mockEventService);
+        altService.unbind(mockEventService);
+        altService.bind(mockEventService);
+        altService.unbind(mockEventService2);
+        assertFalse(altService.exists(mockSession, identifier, time));
     }
 
     @Test(expected = IOException.class)
@@ -102,7 +106,8 @@ public class FileResourceServiceTest {
         final File root = new File(file, "root3");
         assertTrue(root.mkdir());
         assertTrue(root.setReadOnly());
-        final ResourceService altService = new FileResourceService(root);
+        final ResourceService altService = new FileResourceService(root,
+                mockProducer, mockConsumer);
     }
 
     @Test
@@ -114,7 +119,7 @@ public class FileResourceServiceTest {
     @Test
     public void testVersionedResource() {
         final Instant time = parse("2017-02-16T11:15:03Z");
-        final Resource res = service.find(mockSession, identifier, time).get();
+        final Resource res = service.get(mockSession, identifier, time).get();
         assertEquals(identifier, res.getIdentifier());
         assertEquals(LDP.Container, res.getInteractionModel());
         assertEquals(of(rdf.createIRI("info:trellis")), res.getContainedBy());
@@ -177,7 +182,7 @@ public class FileResourceServiceTest {
     @Test
     public void testResourceFuture() {
         final Instant time = parse("2017-03-15T11:15:00Z");
-        final Resource res = service.find(mockSession, identifier, time).get();
+        final Resource res = service.get(mockSession, identifier, time).get();
         assertEquals(identifier, res.getIdentifier());
         assertEquals(LDP.Container, res.getInteractionModel());
         assertEquals(of(rdf.createIRI("info:trellis")), res.getContainedBy());
@@ -242,7 +247,7 @@ public class FileResourceServiceTest {
     @Test
     public void testResourcePast() {
         final Instant time = parse("2017-02-15T11:00:00Z");
-        final Resource res = service.find(mockSession, identifier, time).get();
+        final Resource res = service.get(mockSession, identifier, time).get();
         assertEquals(identifier, res.getIdentifier());
         assertEquals(LDP.Container, res.getInteractionModel());
         assertEquals(of(rdf.createIRI("info:trellis")), res.getContainedBy());
@@ -288,7 +293,7 @@ public class FileResourceServiceTest {
     @Test
     public void testResourcePrehistory() {
         final Instant time = parse("2017-01-15T11:00:00Z");
-        assertFalse(service.find(mockSession, identifier, time).isPresent());
+        assertFalse(service.get(mockSession, identifier, time).isPresent());
     }
 
     @Test
@@ -298,7 +303,7 @@ public class FileResourceServiceTest {
 
     @Test
     public void testCachedResource() {
-        final Resource res = service.find(mockSession, identifier).get();
+        final Resource res = service.get(mockSession, identifier).get();
         assertEquals(identifier, res.getIdentifier());
         assertEquals(LDP.Container, res.getInteractionModel());
         assertEquals(of(rdf.createIRI("info:trellis")), res.getContainedBy());
@@ -362,7 +367,7 @@ public class FileResourceServiceTest {
 
     @Test
     public void testOtherCachedResource() {
-        final Resource res = service.find(mockSession, other).get();
+        final Resource res = service.get(mockSession, other).get();
         assertEquals(other, res.getIdentifier());
         assertEquals(LDP.Container, res.getInteractionModel());
         assertEquals(of(rdf.createIRI("info:trellis")), res.getContainedBy());

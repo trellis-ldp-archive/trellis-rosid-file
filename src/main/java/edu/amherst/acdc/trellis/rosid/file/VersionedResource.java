@@ -13,11 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.amherst.acdc.trellis.rosid;
+package edu.amherst.acdc.trellis.rosid.file;
 
-import static edu.amherst.acdc.trellis.rosid.Constants.RESOURCE_JOURNAL;
-import static edu.amherst.acdc.trellis.rosid.RDFPatch.asStream;
-import static edu.amherst.acdc.trellis.rosid.RDFPatch.asTimeMap;
+import static edu.amherst.acdc.trellis.rosid.ResourceData.from;
+import static edu.amherst.acdc.trellis.rosid.file.Constants.RESOURCE_JOURNAL;
+import static edu.amherst.acdc.trellis.rosid.file.RDFPatch.asStream;
+import static edu.amherst.acdc.trellis.rosid.file.RDFPatch.asTimeMap;
 import static java.util.Collections.unmodifiableSet;
 import static java.util.Optional.of;
 import static java.util.stream.Stream.empty;
@@ -25,6 +26,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 import edu.amherst.acdc.trellis.api.Resource;
 import edu.amherst.acdc.trellis.api.VersionRange;
+import edu.amherst.acdc.trellis.rosid.ResourceData;
 import edu.amherst.acdc.trellis.vocabulary.ACL;
 import edu.amherst.acdc.trellis.vocabulary.LDP;
 import edu.amherst.acdc.trellis.vocabulary.OA;
@@ -98,7 +100,7 @@ class VersionedResource extends AbstractFileResource {
         return of(new File(directory, RESOURCE_JOURNAL)).filter(File::exists).flatMap(file -> {
             final Dataset dataset = rdf.createDataset();
             asStream(rdf, file, identifier, time).filter(isResourceTriple).forEach(dataset::add);
-            return ResourceData.from(identifier, dataset);
+            return from(identifier, dataset);
         });
     }
 

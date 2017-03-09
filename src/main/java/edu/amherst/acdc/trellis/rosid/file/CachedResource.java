@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.amherst.acdc.trellis.rosid;
+package edu.amherst.acdc.trellis.rosid.file;
 
 import static com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS;
-import static edu.amherst.acdc.trellis.rosid.Constants.MEMENTO_CACHE;
-import static edu.amherst.acdc.trellis.rosid.Constants.RESOURCE_CACHE;
-import static edu.amherst.acdc.trellis.rosid.Constants.RESOURCE_JOURNAL;
-import static edu.amherst.acdc.trellis.rosid.Constants.RESOURCE_QUADS;
-import static edu.amherst.acdc.trellis.rosid.FileUtils.stringToQuad;
+import static edu.amherst.acdc.trellis.rosid.file.Constants.MEMENTO_CACHE;
+import static edu.amherst.acdc.trellis.rosid.file.Constants.RESOURCE_CACHE;
+import static edu.amherst.acdc.trellis.rosid.file.Constants.RESOURCE_JOURNAL;
+import static edu.amherst.acdc.trellis.rosid.file.Constants.RESOURCE_QUADS;
+import static edu.amherst.acdc.trellis.rosid.file.FileUtils.stringToQuad;
 import static java.lang.String.join;
 import static java.lang.System.lineSeparator;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -46,6 +46,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import edu.amherst.acdc.trellis.api.Resource;
 import edu.amherst.acdc.trellis.api.VersionRange;
+import edu.amherst.acdc.trellis.rosid.ResourceData;
 import edu.amherst.acdc.trellis.vocabulary.Trellis;
 
 import java.io.BufferedWriter;

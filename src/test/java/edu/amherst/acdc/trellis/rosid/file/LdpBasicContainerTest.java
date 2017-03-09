@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.amherst.acdc.trellis.rosid;
+package edu.amherst.acdc.trellis.rosid.file;
 
 import static edu.amherst.acdc.trellis.api.Resource.TripleContext.FEDORA_INBOUND_REFERENCES;
 import static edu.amherst.acdc.trellis.api.Resource.TripleContext.LDP_CONTAINMENT;
@@ -48,16 +48,16 @@ import org.junit.Test;
 /**
  * @author acoburn
  */
-public class LdpContainerTest {
+public class LdpBasicContainerTest {
 
     private static final RDF rdf = new JenaRDF();
 
     private File file;
-    private IRI identifier = rdf.createIRI("info:trellis/ldpc");
+    private IRI identifier = rdf.createIRI("info:trellis/ldpbc");
 
     @Before
     public void setUp() throws Exception {
-        file = new File(getClass().getResource("/ldpc").toURI());
+        file = new File(getClass().getResource("/ldpbc").toURI());
     }
 
     @Test
@@ -65,13 +65,13 @@ public class LdpContainerTest {
         final Instant time = parse("2017-02-16T11:15:03Z");
         final Resource res = VersionedResource.find(file, identifier, time).get();
         assertEquals(identifier, res.getIdentifier());
-        assertEquals(LDP.Container, res.getInteractionModel());
+        assertEquals(LDP.BasicContainer, res.getInteractionModel());
         assertEquals(of(rdf.createIRI("info:trellis")), res.getContainedBy());
         final List<IRI> contained = res.getContains().collect(toList());
         assertEquals(3L, contained.size());
-        assertTrue(contained.contains(rdf.createIRI("info:trellis/ldpc/1")));
-        assertTrue(contained.contains(rdf.createIRI("info:trellis/ldpc/2")));
-        assertTrue(contained.contains(rdf.createIRI("info:trellis/ldpc/3")));
+        assertTrue(contained.contains(rdf.createIRI("info:trellis/ldpbc/1")));
+        assertTrue(contained.contains(rdf.createIRI("info:trellis/ldpbc/2")));
+        assertTrue(contained.contains(rdf.createIRI("info:trellis/ldpbc/3")));
         assertEquals(empty(), res.getMembershipResource());
         assertEquals(empty(), res.getMemberRelation());
         assertEquals(empty(), res.getMemberOfRelation());
@@ -122,13 +122,13 @@ public class LdpContainerTest {
         final Instant time = parse("2017-03-15T11:15:00Z");
         final Resource res = VersionedResource.find(file, identifier, time).get();
         assertEquals(identifier, res.getIdentifier());
-        assertEquals(LDP.Container, res.getInteractionModel());
+        assertEquals(LDP.BasicContainer, res.getInteractionModel());
         assertEquals(of(rdf.createIRI("info:trellis")), res.getContainedBy());
         final List<IRI> contained = res.getContains().collect(toList());
         assertEquals(3L, contained.size());
-        assertTrue(contained.contains(rdf.createIRI("info:trellis/ldpc/1")));
-        assertTrue(contained.contains(rdf.createIRI("info:trellis/ldpc/2")));
-        assertTrue(contained.contains(rdf.createIRI("info:trellis/ldpc/3")));
+        assertTrue(contained.contains(rdf.createIRI("info:trellis/ldpbc/1")));
+        assertTrue(contained.contains(rdf.createIRI("info:trellis/ldpbc/2")));
+        assertTrue(contained.contains(rdf.createIRI("info:trellis/ldpbc/3")));
         assertEquals(empty(), res.getMembershipResource());
         assertEquals(empty(), res.getMemberRelation());
         assertEquals(empty(), res.getMemberOfRelation());
@@ -181,7 +181,7 @@ public class LdpContainerTest {
         final Instant time = parse("2017-02-15T11:00:00Z");
         final Resource res = VersionedResource.find(file, identifier, time).get();
         assertEquals(identifier, res.getIdentifier());
-        assertEquals(LDP.Container, res.getInteractionModel());
+        assertEquals(LDP.BasicContainer, res.getInteractionModel());
         assertEquals(of(rdf.createIRI("info:trellis")), res.getContainedBy());
         assertEquals(empty(), res.getContains().findFirst());
         assertEquals(empty(), res.getMembershipResource());
@@ -226,19 +226,18 @@ public class LdpContainerTest {
     public void testCachedResource() {
         final Resource res = CachedResource.find(file, identifier).get();
         assertEquals(identifier, res.getIdentifier());
-        assertEquals(LDP.Container, res.getInteractionModel());
+        assertEquals(LDP.BasicContainer, res.getInteractionModel());
         assertEquals(of(rdf.createIRI("info:trellis")), res.getContainedBy());
         final List<IRI> contained = res.getContains().collect(toList());
         assertEquals(3L, contained.size());
-        assertTrue(contained.contains(rdf.createIRI("info:trellis/ldpc/1")));
-        assertTrue(contained.contains(rdf.createIRI("info:trellis/ldpc/2")));
-        assertTrue(contained.contains(rdf.createIRI("info:trellis/ldpc/3")));
+        assertTrue(contained.contains(rdf.createIRI("info:trellis/ldpbc/1")));
+        assertTrue(contained.contains(rdf.createIRI("info:trellis/ldpbc/2")));
+        assertTrue(contained.contains(rdf.createIRI("info:trellis/ldpbc/3")));
         assertEquals(empty(), res.getMembershipResource());
         assertEquals(empty(), res.getMemberRelation());
         assertEquals(empty(), res.getMemberOfRelation());
         assertEquals(empty(), res.getInsertedContentRelation());
         assertEquals(empty(), res.getDatastream());
-        assertEquals(empty(), res.getAnnotationService());
         assertFalse(res.isMemento());
         assertFalse(res.isPage());
         assertEquals(empty(), res.getNext());

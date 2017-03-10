@@ -1,13 +1,15 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<features xmlns="http://karaf.apache.org/xmlns/features/v1.4.0" name="trellis-rosid-${project.version}">
+<features xmlns="http://karaf.apache.org/xmlns/features/v1.4.0" name="trellis-rosid-file-${project.version}">
 
   <repository>mvn:edu.amherst.acdc/trellis-spi/${trellisSpiVersion}/xml/features</repository>
+  <repository>mvn:edu.amherst.acdc/trellis-rosid/${trellisRosidVersion}/xml/features</repository>
 
-  <feature name="trellis-rosid" version="${project.version}">
-    <details>Installs the Trellis Rosid Implementation</details>
+  <feature name="trellis-rosid-file" version="${project.version}">
+    <details>Installs the Trellis Rosid (File) Implementation</details>
 
     <feature>trellis-spi</feature>
+    <feature>trellis-rosid</feature>
 
-    <bundle>mvn:edu.amherst.acdc/trellis-rosid/${project.version}</bundle>
+    <bundle>mvn:edu.amherst.acdc/trellis-rosid-file/${project.version}</bundle>
   </feature>
 </features>

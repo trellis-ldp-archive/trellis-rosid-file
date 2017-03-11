@@ -15,10 +15,6 @@
  */
 package edu.amherst.acdc.trellis.rosid.file;
 
-import static edu.amherst.acdc.trellis.api.Resource.TripleContext.FEDORA_INBOUND_REFERENCES;
-import static edu.amherst.acdc.trellis.api.Resource.TripleContext.LDP_CONTAINMENT;
-import static edu.amherst.acdc.trellis.api.Resource.TripleContext.LDP_MEMBERSHIP;
-import static edu.amherst.acdc.trellis.api.Resource.TripleContext.USER_MANAGED;
 import static edu.amherst.acdc.trellis.vocabulary.RDF.type;
 import static java.time.Instant.parse;
 import static java.util.Optional.empty;
@@ -37,23 +33,20 @@ import edu.amherst.acdc.trellis.vocabulary.RDFS;
 import java.io.File;
 import java.io.IOException;
 import java.time.Instant;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 
 import org.apache.commons.rdf.api.IRI;
-import org.apache.commons.rdf.api.RDF;
+import org.apache.commons.rdf.api.Quad;
 import org.apache.commons.rdf.api.Triple;
-import org.apache.commons.rdf.jena.JenaRDF;
 import org.junit.Before;
 import org.junit.Test;
 
 /**
  * @author acoburn
  */
-public class ResourceWriterTest {
+public class ResourceWriterTest extends BaseRdfTest {
 
-    private static final RDF rdf = new JenaRDF();
     private static final IRI identifier = rdf.createIRI("info:trellis/resource");
     private File directory2 = null;
     private File directory4 = null;
@@ -91,9 +84,9 @@ public class ResourceWriterTest {
             assertEquals(2L, res.getTypes().count());
             assertTrue(res.getTypes().anyMatch(rdf.createIRI("http://example.org/types/Foo")::equals));
             assertTrue(res.getTypes().anyMatch(rdf.createIRI("http://example.org/types/Bar")::equals));
-            assertEquals(0L, res.stream(EnumSet.of(LDP_CONTAINMENT, LDP_MEMBERSHIP)).count());
+            assertEquals(0L, res.stream().filter(isContainment.or(isMembership)).count());
 
-            final List<Triple> triples = res.stream(USER_MANAGED).collect(toList());
+            final List<Triple> triples = res.stream().filter(isUserManaged).map(Quad::asTriple).collect(toList());
             assertEquals(5L, triples.size());
             assertTrue(triples.contains(rdf.createTriple(identifier, LDP.inbox,
                             rdf.createIRI("http://example.org/receiver/inbox"))));
@@ -106,7 +99,7 @@ public class ResourceWriterTest {
             assertTrue(triples.contains(rdf.createTriple(rdf.createIRI("http://example.org/some/other/resource"),
                         RDFS.label, rdf.createLiteral("Some other resource", "eng"))));
 
-            final List<Triple> inbound = res.stream(FEDORA_INBOUND_REFERENCES).collect(toList());
+            final List<Triple> inbound = res.stream().filter(isInbound).map(Quad::asTriple).collect(toList());
             assertEquals(3L, inbound.size());
             assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("info:trellis/other"),
                             DC.hasPart, identifier)));
@@ -150,12 +143,12 @@ public class ResourceWriterTest {
             assertEquals(parse("2017-02-15T10:05:00Z"), res.getModified());
             assertEquals(of(rdf.createIRI("http://example.org/user/raadmin")), res.getCreator());
             assertEquals(0L, res.getTypes().count());
-            assertEquals(0L, res.stream(EnumSet.of(LDP_CONTAINMENT, LDP_MEMBERSHIP)).count());
+            assertEquals(0L, res.stream().filter(isContainment.or(isMembership)).count());
 
-            final List<Triple> triples = res.stream(USER_MANAGED).collect(toList());
+            final List<Triple> triples = res.stream().filter(isUserManaged).map(Quad::asTriple).collect(toList());
             assertEquals(0L, triples.size());
 
-            final List<Triple> inbound = res.stream(FEDORA_INBOUND_REFERENCES).collect(toList());
+            final List<Triple> inbound = res.stream().filter(isInbound).map(Quad::asTriple).collect(toList());
             assertEquals(1L, inbound.size());
             assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("info:trellis/other/item"),
                             DC.hasPart, identifier)));

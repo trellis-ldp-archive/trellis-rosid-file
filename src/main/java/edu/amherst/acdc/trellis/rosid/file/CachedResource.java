@@ -54,7 +54,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Instant;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.Optional;
 import java.util.function.Function;
@@ -63,7 +62,6 @@ import java.util.stream.StreamSupport;
 
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Quad;
-import org.apache.commons.rdf.api.Triple;
 import org.slf4j.Logger;
 
 /**
@@ -165,12 +163,11 @@ class CachedResource extends AbstractFileResource {
     }
 
     @Override
-    public <T extends Resource.TripleCategory> Stream<Triple> stream(final Collection<T> category) {
+    public Stream<Quad> stream() {
         return Optional.of(new File(directory, RESOURCE_QUADS)).filter(File::exists).map(File::toPath)
             .map(uncheckedLines).orElse(empty())
             .map(line -> stringToQuad(rdf, line)).filter(Optional::isPresent).map(Optional::get)
-            .filter(quad -> quad.getGraphName().map(categorymap::get).filter(category::contains).isPresent())
-            .map(Quad::asTriple);
+            .filter(quad -> !quad.getGraphName().filter(Trellis.PreferServerManaged::equals).isPresent());
     }
 
     private Function<Path, Stream<String>> uncheckedLines = path -> {

@@ -15,13 +15,6 @@
  */
 package edu.amherst.acdc.trellis.rosid.file;
 
-import static edu.amherst.acdc.trellis.api.Resource.TripleContext.FEDORA_INBOUND_REFERENCES;
-import static edu.amherst.acdc.trellis.api.Resource.TripleContext.LDP_CONTAINMENT;
-import static edu.amherst.acdc.trellis.api.Resource.TripleContext.LDP_MEMBERSHIP;
-import static edu.amherst.acdc.trellis.api.Resource.TripleContext.TRELLIS_AUDIT;
-import static edu.amherst.acdc.trellis.api.Resource.TripleContext.USER_MANAGED;
-import static java.util.Collections.singleton;
-import static java.util.Collections.unmodifiableMap;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Stream.empty;
@@ -30,20 +23,16 @@ import static java.util.stream.Stream.of;
 import edu.amherst.acdc.trellis.api.Datastream;
 import edu.amherst.acdc.trellis.api.Resource;
 import edu.amherst.acdc.trellis.rosid.ResourceData;
-import edu.amherst.acdc.trellis.vocabulary.Fedora;
 import edu.amherst.acdc.trellis.vocabulary.LDP;
-import edu.amherst.acdc.trellis.vocabulary.Trellis;
 
 import java.io.File;
 import java.time.Instant;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.apache.commons.rdf.api.IRI;
+import org.apache.commons.rdf.api.Quad;
 import org.apache.commons.rdf.api.RDF;
-import org.apache.commons.rdf.api.Triple;
 import org.apache.commons.rdf.jena.JenaRDF;
 
 /**
@@ -53,15 +42,6 @@ import org.apache.commons.rdf.jena.JenaRDF;
 abstract class AbstractFileResource implements Resource {
 
     protected static final RDF rdf = new JenaRDF();
-
-    protected static final Map<IRI, Resource.TripleCategory> categorymap = unmodifiableMap(
-        new HashMap<IRI, Resource.TripleCategory>() { {
-            put(Fedora.PreferInboundReferences, FEDORA_INBOUND_REFERENCES);
-            put(LDP.PreferContainment, LDP_CONTAINMENT);
-            put(LDP.PreferMembership, LDP_MEMBERSHIP);
-            put(Trellis.PreferAudit, TRELLIS_AUDIT);
-            put(Trellis.PreferUserManaged, USER_MANAGED);
-    }});
 
     protected final IRI identifier;
     protected final File directory;
@@ -161,11 +141,12 @@ abstract class AbstractFileResource implements Resource {
 
     @Override
     public Stream<IRI> getContains() {
-        return stream(singleton(LDP_CONTAINMENT)).map(Triple::getObject).flatMap(obj -> {
-            if (obj instanceof IRI) {
-                return of((IRI) obj);
-            }
-            return empty();
-        });
+        return stream().filter(quad -> quad.getGraphName().filter(LDP.PreferContainment::equals).isPresent())
+            .map(Quad::getObject).flatMap(obj -> {
+                if (obj instanceof IRI) {
+                    return of((IRI) obj);
+                }
+                return empty();
+            });
     }
 }

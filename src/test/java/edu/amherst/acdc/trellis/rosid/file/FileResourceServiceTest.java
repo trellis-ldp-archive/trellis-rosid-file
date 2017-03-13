@@ -45,6 +45,7 @@ import org.apache.commons.rdf.api.Triple;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.MockProducer;
+import org.apache.kafka.streams.KafkaStreams;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -71,17 +72,20 @@ public class FileResourceServiceTest extends BaseRdfTest {
     @Mock
     private EventService mockEventService, mockEventService2;
 
+    @Mock
+    private KafkaStreams mockStreams;
+
     @Before
     public void setUp() throws Exception {
         file = new File(getClass().getResource("/root").toURI());
-        service = new FileResourceService(file, mockProducer);
+        service = new FileResourceService(file, mockProducer, mockStreams);
     }
 
     @Test
     public void testNewRoot() throws IOException {
         final Instant time = parse("2017-02-16T11:15:03Z");
         final File root = new File(file, "root2/a");
-        final ResourceService altService = new FileResourceService(root, mockProducer);
+        final ResourceService altService = new FileResourceService(root, mockProducer, mockStreams);
         assertFalse(altService.exists(mockSession, identifier, time));
         assertTrue(root.exists());
         altService.bind(mockEventService);
@@ -96,7 +100,7 @@ public class FileResourceServiceTest extends BaseRdfTest {
         final File root = new File(file, "root3");
         assertTrue(root.mkdir());
         assertTrue(root.setReadOnly());
-        final ResourceService altService = new FileResourceService(root, mockProducer);
+        final ResourceService altService = new FileResourceService(root, mockProducer, mockStreams);
     }
 
     @Test

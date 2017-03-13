@@ -17,6 +17,7 @@ package edu.amherst.acdc.trellis.rosid.file;
 
 import static edu.amherst.acdc.trellis.rosid.ResourceData.from;
 import static edu.amherst.acdc.trellis.rosid.file.Constants.RESOURCE_JOURNAL;
+import static edu.amherst.acdc.trellis.rosid.file.FileUtils.stringToQuad;
 import static edu.amherst.acdc.trellis.rosid.file.RDFPatch.asStream;
 import static edu.amherst.acdc.trellis.rosid.file.RDFPatch.asTimeMap;
 import static java.util.Collections.unmodifiableSet;
@@ -34,6 +35,7 @@ import edu.amherst.acdc.trellis.vocabulary.RDF;
 import edu.amherst.acdc.trellis.vocabulary.Trellis;
 
 import java.io.File;
+import java.io.IOException;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.Optional;
@@ -83,8 +85,30 @@ class VersionedResource extends AbstractFileResource {
      * @param time the time
      * @return the resource, if it exists at the given time
      */
+    public static Optional<Resource> find(final File directory, final String identifier, final Instant time) {
+        return find(directory, rdf.createIRI(identifier), time);
+    }
+
+    /**
+     * Find the resource at a particular point in time
+     * @param directory the directory
+     * @param identifier the identifier
+     * @param time the time
+     * @return the resource, if it exists at the given time
+     */
     public static Optional<Resource> find(final File directory, final IRI identifier, final Instant time) {
         return read(directory, identifier, time).map(data -> new VersionedResource(directory, identifier, data, time));
+    }
+
+    /**
+     * Read the state of the resource data at a particular point in time
+     * @param directory the directory
+     * @param identifier the identifier
+     * @param time the time
+     * @return the resource data, if it exists
+     */
+    public static Optional<ResourceData> read(final File directory, final String identifier, final Instant time) {
+        return read(directory, rdf.createIRI(identifier), time);
     }
 
     /**
@@ -100,6 +124,21 @@ class VersionedResource extends AbstractFileResource {
             asStream(rdf, file, identifier, time).filter(isResourceTriple).forEach(dataset::add);
             return from(identifier, dataset);
         });
+    }
+
+    /**
+     * Write RDF Patch statements to the given resource
+     * @param directory the directory
+     * @param delete the quads to delete
+     * @param add the quads to add
+     * @param time the time
+     * @throws IOException if the writer encounters an error writing to the file
+     */
+    public static void write(final File directory, final Stream<String> delete, final Stream<String> add,
+            final Instant time) throws IOException {
+        RDFPatch.write(new File(directory, RESOURCE_JOURNAL),
+                delete.map(q -> stringToQuad(rdf, q)).filter(Optional::isPresent).map(Optional::get),
+                add.map(q -> stringToQuad(rdf, q)).filter(Optional::isPresent).map(Optional::get), time);
     }
 
     /**

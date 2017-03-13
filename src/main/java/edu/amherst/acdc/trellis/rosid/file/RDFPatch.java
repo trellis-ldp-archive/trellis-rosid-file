@@ -162,8 +162,10 @@ final class RDFPatch {
                 } else if (line.startsWith(END) && hasUserTriples) {
                     final Instant time = parse(line.split(COMMENT_DELIM)[1]);
                     if (nonNull(from)) {
-                        buffer = new VersionRange(from, time);
-                        from = time;
+                        if (time.isAfter(from)) {
+                            buffer = new VersionRange(from, time);
+                            from = time;
+                        }
                         return;
                     }
                     from = time;

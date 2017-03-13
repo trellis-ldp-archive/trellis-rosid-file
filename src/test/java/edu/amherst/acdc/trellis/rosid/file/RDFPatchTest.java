@@ -51,7 +51,7 @@ import org.junit.Test;
 public class RDFPatchTest {
 
     private static final RDF rdf = new JenaRDF();
-    private static final IRI identifier = rdf.createIRI("info:trellis/resource");
+    private static final IRI identifier = rdf.createIRI("trellis:repository/resource");
     private File resDir1 = new File("build/data/res1");
 
     @Before
@@ -140,7 +140,7 @@ public class RDFPatchTest {
         assertFalse(data2.contains(title));
 
         RDFPatch.write(file, empty(), of(rdf.createQuad(LDP.PreferContainment, identifier, LDP.contains,
-                    rdf.createIRI("info:trellis/resource/1"))), later.plusSeconds(10L));
+                    rdf.createIRI("trellis:repository/resource/1"))), later.plusSeconds(10L));
 
         final List<VersionRange> versions = RDFPatch.asTimeMap(file).collect(toList());
         assertEquals(1L, versions.size());

@@ -1,8 +1,8 @@
 {
     "@context" : "https://acdc.amherst.edu/ns/trellisresource.jsonld" ,
-    "@id" : "info:trellis/ldpbc" ,
+    "@id" : "trellis:repository/ldpbc" ,
     "@type" : "http://www.w3.org/ns/ldp#BasicContainer" ,
-    "containedBy" : "info:trellis" ,
+    "containedBy" : "trellis:repository" ,
     "type" : [ "http://example.org/types/Foo", "http://example.org/types/Bar" ] ,
     "inbox" : "http://example.org/receiver/inbox" ,
     "created" : "2017-02-15T10:05:00Z" ,

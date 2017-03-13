@@ -45,7 +45,7 @@ import org.junit.Test;
 public class LdpRdfTest extends BaseRdfTest {
 
     private File file;
-    private IRI identifier = rdf.createIRI("info:trellis/ldprs");
+    private IRI identifier = rdf.createIRI("trellis:repository/ldprs");
 
     @Before
     public void setUp() throws Exception {
@@ -58,7 +58,7 @@ public class LdpRdfTest extends BaseRdfTest {
         final Resource res = VersionedResource.find(file, identifier, time).get();
         assertEquals(identifier, res.getIdentifier());
         assertEquals(LDP.RDFSource, res.getInteractionModel());
-        assertEquals(of(rdf.createIRI("info:trellis")), res.getContainedBy());
+        assertEquals(of(rdf.createIRI("trellis:repository")), res.getContainedBy());
         assertEquals(empty(), res.getContains().findFirst());
         assertEquals(empty(), res.getMembershipResource());
         assertEquals(empty(), res.getMemberRelation());
@@ -98,9 +98,9 @@ public class LdpRdfTest extends BaseRdfTest {
 
         final List<Triple> inbound = res.stream().filter(isInbound).map(Quad::asTriple).collect(toList());
         assertEquals(2L, inbound.size());
-        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("info:trellis/resource"),
+        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/resource"),
                         DC.hasPart, identifier)));
-        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("info:trellis/other/resource"),
+        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/other/resource"),
                         DC.relation, identifier)));
     }
 
@@ -110,7 +110,7 @@ public class LdpRdfTest extends BaseRdfTest {
         final Resource res = VersionedResource.find(file, identifier, time).get();
         assertEquals(identifier, res.getIdentifier());
         assertEquals(LDP.RDFSource, res.getInteractionModel());
-        assertEquals(of(rdf.createIRI("info:trellis")), res.getContainedBy());
+        assertEquals(of(rdf.createIRI("trellis:repository")), res.getContainedBy());
         assertEquals(empty(), res.getContains().findFirst());
         assertEquals(empty(), res.getMembershipResource());
         assertEquals(empty(), res.getMemberRelation());
@@ -145,11 +145,11 @@ public class LdpRdfTest extends BaseRdfTest {
 
         final List<Triple> inbound = res.stream().filter(isInbound).map(Quad::asTriple).collect(toList());
         assertEquals(3L, inbound.size());
-        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("info:trellis/resource"),
+        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/resource"),
                         DC.hasPart, identifier)));
-        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("info:trellis/other/resource"),
+        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/other/resource"),
                         DC.relation, identifier)));
-        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("info:trellis/other/item"),
+        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/other/item"),
                         DC.hasPart, identifier)));
 
         final List<VersionRange> mementos = res.getMementos().collect(toList());
@@ -164,7 +164,7 @@ public class LdpRdfTest extends BaseRdfTest {
         final Resource res = VersionedResource.find(file, identifier, time).get();
         assertEquals(identifier, res.getIdentifier());
         assertEquals(LDP.RDFSource, res.getInteractionModel());
-        assertEquals(of(rdf.createIRI("info:trellis")), res.getContainedBy());
+        assertEquals(of(rdf.createIRI("trellis:repository")), res.getContainedBy());
         assertEquals(empty(), res.getContains().findFirst());
         assertEquals(empty(), res.getMembershipResource());
         assertEquals(empty(), res.getMemberRelation());
@@ -187,9 +187,9 @@ public class LdpRdfTest extends BaseRdfTest {
 
         final List<Triple> inbound = res.stream().filter(isInbound).map(Quad::asTriple).collect(toList());
         assertEquals(2L, inbound.size());
-        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("info:trellis/resource"),
+        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/resource"),
                         DC.hasPart, identifier)));
-        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("info:trellis/other/resource"),
+        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/other/resource"),
                         DC.relation, identifier)));
 
         final List<VersionRange> mementos = res.getMementos().collect(toList());
@@ -209,7 +209,7 @@ public class LdpRdfTest extends BaseRdfTest {
         final Resource res = CachedResource.find(file, identifier).get();
         assertEquals(identifier, res.getIdentifier());
         assertEquals(LDP.RDFSource, res.getInteractionModel());
-        assertEquals(of(rdf.createIRI("info:trellis")), res.getContainedBy());
+        assertEquals(of(rdf.createIRI("trellis:repository")), res.getContainedBy());
         assertEquals(empty(), res.getContains().findFirst());
         assertEquals(empty(), res.getMembershipResource());
         assertEquals(empty(), res.getMemberRelation());
@@ -244,11 +244,11 @@ public class LdpRdfTest extends BaseRdfTest {
 
         final List<Triple> inbound = res.stream().filter(isInbound).map(Quad::asTriple).collect(toList());
         assertEquals(3L, inbound.size());
-        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("info:trellis/resource"),
+        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/resource"),
                         DC.hasPart, identifier)));
-        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("info:trellis/other/resource"),
+        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/other/resource"),
                         DC.relation, identifier)));
-        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("info:trellis/other/item"),
+        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/other/item"),
                         DC.hasPart, identifier)));
 
         final List<VersionRange> mementos = res.getMementos().collect(toList());

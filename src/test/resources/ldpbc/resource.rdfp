@@ -1,31 +1,31 @@
 BEGIN # 2016-12-10T03:27:00Z
-A <info:trellis/resource> <http://purl.org/dc/terms/hasPart> <info:trellis/ldpbc> <http://fedora.info/definitions/repository#PreferInboundReferences> .
+A <trellis:repository/resource> <http://purl.org/dc/terms/hasPart> <trellis:repository/ldpbc> <http://fedora.info/definitions/repository#PreferInboundReferences> .
 END # 2016-12-10T03:27:00Z
 BEGIN # 2017-01-02T14:57:00Z
-A <info:trellis/other/resource> <http://purl.org/dc/terms/relation> <info:trellis/ldpbc> <http://fedora.info/definitions/repository#PreferInboundReferences> .
+A <trellis:repository/other/resource> <http://purl.org/dc/terms/relation> <trellis:repository/ldpbc> <http://fedora.info/definitions/repository#PreferInboundReferences> .
 END # 2017-01-02T14:57:00Z
 BEGIN # 2017-02-15T10:05:00Z
-A <info:trellis/ldpbc> <http://acdc.amherst.edu/ns/trellis#containedBy> <info:trellis> <http://acdc.amherst.edu/ns/trellis#PreferServerManaged> .
-A <info:trellis/ldpbc> <http://purl.org/dc/terms/created> "2017-02-15T10:05:00Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> <http://acdc.amherst.edu/ns/trellis#PreferServerManaged> .
-A <info:trellis/ldpbc> <http://purl.org/dc/terms/creator> <http://example.org/user/raadmin> <http://acdc.amherst.edu/ns/trellis#PreferServerManaged> .
-A <info:trellis/ldpbc> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/ns/ldp#BasicContainer> <http://acdc.amherst.edu/ns/trellis#PreferServerManaged> .
+A <trellis:repository/ldpbc> <http://acdc.amherst.edu/ns/trellis#containedBy> <trellis:repository> <http://acdc.amherst.edu/ns/trellis#PreferServerManaged> .
+A <trellis:repository/ldpbc> <http://purl.org/dc/terms/created> "2017-02-15T10:05:00Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> <http://acdc.amherst.edu/ns/trellis#PreferServerManaged> .
+A <trellis:repository/ldpbc> <http://purl.org/dc/terms/creator> <http://example.org/user/raadmin> <http://acdc.amherst.edu/ns/trellis#PreferServerManaged> .
+A <trellis:repository/ldpbc> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/ns/ldp#BasicContainer> <http://acdc.amherst.edu/ns/trellis#PreferServerManaged> .
 END # 2017-02-15T10:05:00Z
 BEGIN # 2017-02-15T11:15:00Z
-A <info:trellis/ldpbc> <http://www.w3.org/ns/ldp#inbox> <http://example.org/receiver/inbox> <http://acdc.amherst.edu/ns/trellis#PreferUserManaged> .
-A <info:trellis/ldpbc> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://example.org/types/Foo> <http://acdc.amherst.edu/ns/trellis#PreferUserManaged> .
-A <info:trellis/ldpbc> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://example.org/types/Bar> <http://acdc.amherst.edu/ns/trellis#PreferUserManaged> .
-A <info:trellis/ldpbc> <http://www.w3.org/2000/01/rdf-schema#label> "A label"@eng <http://acdc.amherst.edu/ns/trellis#PreferUserManaged> .
+A <trellis:repository/ldpbc> <http://www.w3.org/ns/ldp#inbox> <http://example.org/receiver/inbox> <http://acdc.amherst.edu/ns/trellis#PreferUserManaged> .
+A <trellis:repository/ldpbc> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://example.org/types/Foo> <http://acdc.amherst.edu/ns/trellis#PreferUserManaged> .
+A <trellis:repository/ldpbc> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://example.org/types/Bar> <http://acdc.amherst.edu/ns/trellis#PreferUserManaged> .
+A <trellis:repository/ldpbc> <http://www.w3.org/2000/01/rdf-schema#label> "A label"@eng <http://acdc.amherst.edu/ns/trellis#PreferUserManaged> .
 A <http://example.org/some/other/resource> <http://www.w3.org/2000/01/rdf-schema#label> "Some other resource"@eng <http://acdc.amherst.edu/ns/trellis#PreferUserManaged> .
 END # 2017-02-15T11:15:00Z
 BEGIN # 2017-02-16T11:15:01Z
-A <info:trellis/ldpbc> <http://www.w3.org/ns/ldp#contains> <info:trellis/ldpbc/1> <http://www.w3.org/ns/ldp#PreferContainment> .
+A <trellis:repository/ldpbc> <http://www.w3.org/ns/ldp#contains> <trellis:repository/ldpbc/1> <http://www.w3.org/ns/ldp#PreferContainment> .
 END # 2017-02-16T11:15:01Z
 BEGIN # 2017-02-16T11:15:02Z
-A <info:trellis/ldpbc> <http://www.w3.org/ns/ldp#contains> <info:trellis/ldpbc/2> <http://www.w3.org/ns/ldp#PreferContainment> .
+A <trellis:repository/ldpbc> <http://www.w3.org/ns/ldp#contains> <trellis:repository/ldpbc/2> <http://www.w3.org/ns/ldp#PreferContainment> .
 END # 2017-02-16T11:15:02Z
 BEGIN # 2017-02-16T11:15:03Z
-A <info:trellis/ldpbc> <http://www.w3.org/ns/ldp#contains> <info:trellis/ldpbc/3> <http://www.w3.org/ns/ldp#PreferContainment> .
+A <trellis:repository/ldpbc> <http://www.w3.org/ns/ldp#contains> <trellis:repository/ldpbc/3> <http://www.w3.org/ns/ldp#PreferContainment> .
 END # 2017-02-16T11:15:03Z
 BEGIN # 2017-03-01T15:15:00Z
-A <info:trellis/other/item> <http://purl.org/dc/terms/hasPart> <info:trellis/ldpbc> <http://fedora.info/definitions/repository#PreferInboundReferences> .
+A <trellis:repository/other/item> <http://purl.org/dc/terms/hasPart> <trellis:repository/ldpbc> <http://fedora.info/definitions/repository#PreferInboundReferences> .
 END # 2017-03-01T15:15:00Z

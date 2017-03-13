@@ -1,23 +1,23 @@
 BEGIN # 2017-01-15T09:14:00Z
-A <info:trellis/resource> <http://purl.org/dc/terms/title> "Some title"@en <http://acdc.amherst.edu/ns/trellis#PreferUserManaged> .
-A <info:trellis/resource> <http://purl.org/dc/terms/description> "A longer description"@en <http://acdc.amherst.edu/ns/trellis#PreferUserManaged> .
-A <info:trellis/resource> <http://purl.org/dc/terms/subject> <http://example.org/subject/foo> <http://acdc.amherst.edu/ns/trellis#PreferUserManaged> .
-A <info:trellis/resource> <http://purl.org/dc/terms/subject> <http://example.org/subject/bar> <http://acdc.amherst.edu/ns/trellis#PreferUserManaged> .
+A <trellis:repository/resource> <http://purl.org/dc/terms/title> "Some title"@en <http://acdc.amherst.edu/ns/trellis#PreferUserManaged> .
+A <trellis:repository/resource> <http://purl.org/dc/terms/description> "A longer description"@en <http://acdc.amherst.edu/ns/trellis#PreferUserManaged> .
+A <trellis:repository/resource> <http://purl.org/dc/terms/subject> <http://example.org/subject/foo> <http://acdc.amherst.edu/ns/trellis#PreferUserManaged> .
+A <trellis:repository/resource> <http://purl.org/dc/terms/subject> <http://example.org/subject/bar> <http://acdc.amherst.edu/ns/trellis#PreferUserManaged> .
 END # 2017-01-15T09:14:00Z
 BEGIN # 2017-01-27T12:35:00Z
-A <info:trellis/resource> <http://purl.org/dc/terms/spatial> <http://example.org/location/foo> <http://acdc.amherst.edu/ns/trellis#PreferUserManaged> .
-A <info:trellis/resource> <http://purl.org/dc/terms/extent> "27 Hectares" <http://acdc.amherst.edu/ns/trellis#PreferUserManaged> .
+A <trellis:repository/resource> <http://purl.org/dc/terms/spatial> <http://example.org/location/foo> <http://acdc.amherst.edu/ns/trellis#PreferUserManaged> .
+A <trellis:repository/resource> <http://purl.org/dc/terms/extent> "27 Hectares" <http://acdc.amherst.edu/ns/trellis#PreferUserManaged> .
 END # 2017-01-27T12:35:00Z
 BEGIN # 2017-02-02T05:20:00Z
-D <info:trellis/resource> <http://purl.org/dc/terms/title> "Some title"@en <http://acdc.amherst.edu/ns/trellis#PreferUserManaged> .
-D <info:trellis/resource> <http://purl.org/dc/terms/description> "A longer description"@en <http://acdc.amherst.edu/ns/trellis#PreferUserManaged> .
-D <info:trellis/resource> <http://purl.org/dc/terms/subject> <http://example.org/subject/foo> <http://acdc.amherst.edu/ns/trellis#PreferUserManaged> .
-D <info:trellis/resource> <http://purl.org/dc/terms/subject> <http://example.org/subject/bar> <http://acdc.amherst.edu/ns/trellis#PreferUserManaged> .
-D <info:trellis/resource> <http://purl.org/dc/terms/spatial> <http://example.org/location/foo> <http://acdc.amherst.edu/ns/trellis#PreferUserManaged> .
-D <info:trellis/resource> <http://purl.org/dc/terms/extent> "27 Hectares" <http://acdc.amherst.edu/ns/trellis#PreferUserManaged> .
-A <info:trellis/resource> <http://www.w3.org/2004/02/skos/core#prefLabel> "A resource"@en <http://acdc.amherst.edu/ns/trellis#PreferUserManaged> .
-A <info:trellis/resource> <http://purl.org/dc/terms/isPartOf> <info:trellis/collection> <http://acdc.amherst.edu/ns/trellis#PreferUserManaged> .
+D <trellis:repository/resource> <http://purl.org/dc/terms/title> "Some title"@en <http://acdc.amherst.edu/ns/trellis#PreferUserManaged> .
+D <trellis:repository/resource> <http://purl.org/dc/terms/description> "A longer description"@en <http://acdc.amherst.edu/ns/trellis#PreferUserManaged> .
+D <trellis:repository/resource> <http://purl.org/dc/terms/subject> <http://example.org/subject/foo> <http://acdc.amherst.edu/ns/trellis#PreferUserManaged> .
+D <trellis:repository/resource> <http://purl.org/dc/terms/subject> <http://example.org/subject/bar> <http://acdc.amherst.edu/ns/trellis#PreferUserManaged> .
+D <trellis:repository/resource> <http://purl.org/dc/terms/spatial> <http://example.org/location/foo> <http://acdc.amherst.edu/ns/trellis#PreferUserManaged> .
+D <trellis:repository/resource> <http://purl.org/dc/terms/extent> "27 Hectares" <http://acdc.amherst.edu/ns/trellis#PreferUserManaged> .
+A <trellis:repository/resource> <http://www.w3.org/2004/02/skos/core#prefLabel> "A resource"@en <http://acdc.amherst.edu/ns/trellis#PreferUserManaged> .
+A <trellis:repository/resource> <http://purl.org/dc/terms/isPartOf> <trellis:repository/collection> <http://acdc.amherst.edu/ns/trellis#PreferUserManaged> .
 END # 2017-02-02T05:20:00Z
 BEGIN # 2017-02-10T15:12:00Z
-D <info:trellis/resource> <http://purl.org/dc/terms/isPartOf> <info:trellis/collection> <http://acdc.amherst.edu/ns/trellis#PreferUserManaged> .
+D <trellis:repository/resource> <http://purl.org/dc/terms/isPartOf> <trellis:repository/collection> <http://acdc.amherst.edu/ns/trellis#PreferUserManaged> .
 END # 2017-02-10T15:12:00Z

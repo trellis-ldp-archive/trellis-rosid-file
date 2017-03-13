@@ -35,7 +35,7 @@ public class CachedResourceTest {
     private static final RDF rdf = new JenaRDF();
 
     private File file;
-    private IRI identifier = rdf.createIRI("info:trellis/resource");
+    private IRI identifier = rdf.createIRI("trellis:repository/resource");
 
     @Before
     public void setUp() throws Exception {

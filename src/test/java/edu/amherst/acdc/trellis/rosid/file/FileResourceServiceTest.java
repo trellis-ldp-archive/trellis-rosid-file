@@ -57,8 +57,8 @@ import org.mockito.runners.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class FileResourceServiceTest extends BaseRdfTest {
 
-    private final IRI identifier = rdf.createIRI("info:trellis/resource");
-    private final IRI other = rdf.createIRI("info:trellis/other");
+    private final IRI identifier = rdf.createIRI("trellis:repository/resource");
+    private final IRI other = rdf.createIRI("trellis:repository/other");
     private final Producer<String, Message> mockProducer = new MockProducer<>(true,
             new StringSerializer(), new MessageSerializer());
 
@@ -111,12 +111,12 @@ public class FileResourceServiceTest extends BaseRdfTest {
         final Resource res = service.get(mockSession, identifier, time).get();
         assertEquals(identifier, res.getIdentifier());
         assertEquals(LDP.Container, res.getInteractionModel());
-        assertEquals(of(rdf.createIRI("info:trellis")), res.getContainedBy());
+        assertEquals(of(rdf.createIRI("trellis:repository")), res.getContainedBy());
         final List<IRI> contained = res.getContains().collect(toList());
         assertEquals(3L, contained.size());
-        assertTrue(contained.contains(rdf.createIRI("info:trellis/resource/1")));
-        assertTrue(contained.contains(rdf.createIRI("info:trellis/resource/2")));
-        assertTrue(contained.contains(rdf.createIRI("info:trellis/resource/3")));
+        assertTrue(contained.contains(rdf.createIRI("trellis:repository/resource/1")));
+        assertTrue(contained.contains(rdf.createIRI("trellis:repository/resource/2")));
+        assertTrue(contained.contains(rdf.createIRI("trellis:repository/resource/3")));
         assertEquals(empty(), res.getMembershipResource());
         assertEquals(empty(), res.getMemberRelation());
         assertEquals(empty(), res.getMemberOfRelation());
@@ -156,9 +156,9 @@ public class FileResourceServiceTest extends BaseRdfTest {
 
         final List<Triple> inbound = res.stream().filter(isInbound).map(Quad::asTriple).collect(toList());
         assertEquals(2L, inbound.size());
-        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("info:trellis/other"),
+        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/other"),
                         DC.hasPart, identifier)));
-        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("info:trellis/other/resource"),
+        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/other/resource"),
                         DC.relation, identifier)));
     }
 
@@ -174,12 +174,12 @@ public class FileResourceServiceTest extends BaseRdfTest {
         final Resource res = service.get(mockSession, identifier, time).get();
         assertEquals(identifier, res.getIdentifier());
         assertEquals(LDP.Container, res.getInteractionModel());
-        assertEquals(of(rdf.createIRI("info:trellis")), res.getContainedBy());
+        assertEquals(of(rdf.createIRI("trellis:repository")), res.getContainedBy());
         final List<IRI> contained = res.getContains().collect(toList());
         assertEquals(3L, contained.size());
-        assertTrue(contained.contains(rdf.createIRI("info:trellis/resource/1")));
-        assertTrue(contained.contains(rdf.createIRI("info:trellis/resource/2")));
-        assertTrue(contained.contains(rdf.createIRI("info:trellis/resource/3")));
+        assertTrue(contained.contains(rdf.createIRI("trellis:repository/resource/1")));
+        assertTrue(contained.contains(rdf.createIRI("trellis:repository/resource/2")));
+        assertTrue(contained.contains(rdf.createIRI("trellis:repository/resource/3")));
         assertEquals(empty(), res.getMembershipResource());
         assertEquals(empty(), res.getMemberRelation());
         assertEquals(empty(), res.getMemberOfRelation());
@@ -214,11 +214,11 @@ public class FileResourceServiceTest extends BaseRdfTest {
 
         final List<Triple> inbound = res.stream().filter(isInbound).map(Quad::asTriple).collect(toList());
         assertEquals(3L, inbound.size());
-        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("info:trellis/other"),
+        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/other"),
                         DC.hasPart, identifier)));
-        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("info:trellis/other/resource"),
+        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/other/resource"),
                         DC.relation, identifier)));
-        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("info:trellis/other/item"),
+        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/other/item"),
                         DC.hasPart, identifier)));
 
         final List<VersionRange> mementos = res.getMementos().collect(toList());
@@ -239,7 +239,7 @@ public class FileResourceServiceTest extends BaseRdfTest {
         final Resource res = service.get(mockSession, identifier, time).get();
         assertEquals(identifier, res.getIdentifier());
         assertEquals(LDP.Container, res.getInteractionModel());
-        assertEquals(of(rdf.createIRI("info:trellis")), res.getContainedBy());
+        assertEquals(of(rdf.createIRI("trellis:repository")), res.getContainedBy());
         assertEquals(empty(), res.getContains().findFirst());
         assertEquals(empty(), res.getMembershipResource());
         assertEquals(empty(), res.getMemberRelation());
@@ -262,9 +262,9 @@ public class FileResourceServiceTest extends BaseRdfTest {
 
         final List<Triple> inbound = res.stream().filter(isInbound).map(Quad::asTriple).collect(toList());
         assertEquals(2L, inbound.size());
-        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("info:trellis/other"),
+        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/other"),
                         DC.hasPart, identifier)));
-        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("info:trellis/other/resource"),
+        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/other/resource"),
                         DC.relation, identifier)));
 
         final List<VersionRange> mementos = res.getMementos().collect(toList());
@@ -295,12 +295,12 @@ public class FileResourceServiceTest extends BaseRdfTest {
         final Resource res = service.get(mockSession, identifier).get();
         assertEquals(identifier, res.getIdentifier());
         assertEquals(LDP.Container, res.getInteractionModel());
-        assertEquals(of(rdf.createIRI("info:trellis")), res.getContainedBy());
+        assertEquals(of(rdf.createIRI("trellis:repository")), res.getContainedBy());
         final List<IRI> contained = res.getContains().collect(toList());
         assertEquals(3L, contained.size());
-        assertTrue(contained.contains(rdf.createIRI("info:trellis/resource/1")));
-        assertTrue(contained.contains(rdf.createIRI("info:trellis/resource/2")));
-        assertTrue(contained.contains(rdf.createIRI("info:trellis/resource/3")));
+        assertTrue(contained.contains(rdf.createIRI("trellis:repository/resource/1")));
+        assertTrue(contained.contains(rdf.createIRI("trellis:repository/resource/2")));
+        assertTrue(contained.contains(rdf.createIRI("trellis:repository/resource/3")));
         assertEquals(empty(), res.getMembershipResource());
         assertEquals(empty(), res.getMemberRelation());
         assertEquals(empty(), res.getMemberOfRelation());
@@ -336,11 +336,11 @@ public class FileResourceServiceTest extends BaseRdfTest {
 
         final List<Triple> inbound = res.stream().filter(isInbound).map(Quad::asTriple).collect(toList());
         assertEquals(3L, inbound.size());
-        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("info:trellis/other"),
+        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/other"),
                         DC.hasPart, identifier)));
-        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("info:trellis/other/resource"),
+        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/other/resource"),
                         DC.relation, identifier)));
-        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("info:trellis/other/item"),
+        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/other/item"),
                         DC.hasPart, identifier)));
 
         final List<VersionRange> mementos = res.getMementos().collect(toList());
@@ -359,12 +359,12 @@ public class FileResourceServiceTest extends BaseRdfTest {
         final Resource res = service.get(mockSession, other).get();
         assertEquals(other, res.getIdentifier());
         assertEquals(LDP.Container, res.getInteractionModel());
-        assertEquals(of(rdf.createIRI("info:trellis")), res.getContainedBy());
+        assertEquals(of(rdf.createIRI("trellis:repository")), res.getContainedBy());
         final List<IRI> contained = res.getContains().collect(toList());
         assertEquals(3L, contained.size());
-        assertTrue(contained.contains(rdf.createIRI("info:trellis/other/1")));
-        assertTrue(contained.contains(rdf.createIRI("info:trellis/other/2")));
-        assertTrue(contained.contains(rdf.createIRI("info:trellis/other/3")));
+        assertTrue(contained.contains(rdf.createIRI("trellis:repository/other/1")));
+        assertTrue(contained.contains(rdf.createIRI("trellis:repository/other/2")));
+        assertTrue(contained.contains(rdf.createIRI("trellis:repository/other/3")));
         assertEquals(empty(), res.getMembershipResource());
         assertEquals(empty(), res.getMemberRelation());
         assertEquals(empty(), res.getMemberOfRelation());
@@ -400,11 +400,11 @@ public class FileResourceServiceTest extends BaseRdfTest {
 
         final List<Triple> inbound = res.stream().filter(isInbound).map(Quad::asTriple).collect(toList());
         assertEquals(3L, inbound.size());
-        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("info:trellis/resource"),
+        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/resource"),
                         DC.hasPart, other)));
-        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("info:trellis/other/resource"),
+        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/other/resource"),
                         DC.relation, other)));
-        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("info:trellis/other/item"),
+        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/other/item"),
                         DC.hasPart, other)));
 
         final List<VersionRange> mementos = res.getMementos().collect(toList());

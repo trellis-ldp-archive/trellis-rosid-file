@@ -8,7 +8,7 @@ BEGIN # 2017-02-15T10:05:00Z
 A <trellis:repository/resource> <http://acdc.amherst.edu/ns/trellis#containedBy> <trellis:repository> <http://acdc.amherst.edu/ns/trellis#PreferServerManaged> .
 A <trellis:repository/resource> <http://purl.org/dc/terms/created> "2017-02-15T10:05:00Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> <http://acdc.amherst.edu/ns/trellis#PreferServerManaged> .
 A <trellis:repository/resource> <http://purl.org/dc/terms/creator> <http://example.org/user/raadmin> <http://acdc.amherst.edu/ns/trellis#PreferServerManaged> .
-A <trellis:repository/resource> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/ns/ldp#RDFSource> <http://acdc.amherst.edu/ns/trellis#PreferServerManaged> .
+A <trellis:repository/resource> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/ns/ldp#Container> <http://acdc.amherst.edu/ns/trellis#PreferServerManaged> .
 END # 2017-02-15T10:05:00Z
 BEGIN # 2017-02-15T11:15:00Z
 A <trellis:repository/resource> <http://www.w3.org/ns/ldp#inbox> <http://example.org/receiver/inbox> <http://acdc.amherst.edu/ns/trellis#PreferUserManaged> .
@@ -17,13 +17,15 @@ A <trellis:repository/resource> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type
 A <trellis:repository/resource> <http://www.w3.org/2000/01/rdf-schema#label> "A label"@eng <http://acdc.amherst.edu/ns/trellis#PreferUserManaged> .
 A <http://example.org/some/other/resource> <http://www.w3.org/2000/01/rdf-schema#label> "Some other resource"@eng <http://acdc.amherst.edu/ns/trellis#PreferUserManaged> .
 END # 2017-02-15T11:15:00Z
+BEGIN # 2017-02-16T11:15:01Z
+A <trellis:repository/resource> <http://www.w3.org/ns/ldp#contains> <trellis:repository/resource/1> <http://www.w3.org/ns/ldp#PreferContainment> .
+END # 2017-02-16T11:15:01Z
+BEGIN # 2017-02-16T11:15:02Z
+A <trellis:repository/resource> <http://www.w3.org/ns/ldp#contains> <trellis:repository/resource/2> <http://www.w3.org/ns/ldp#PreferContainment> .
+END # 2017-02-16T11:15:02Z
+BEGIN # 2017-02-16T11:15:03Z
+A <trellis:repository/resource> <http://www.w3.org/ns/ldp#contains> <trellis:repository/resource/3> <http://www.w3.org/ns/ldp#PreferContainment> .
+END # 2017-02-16T11:15:03Z
 BEGIN # 2017-03-01T15:15:00Z
 A <trellis:repository/other/item> <http://purl.org/dc/terms/hasPart> <trellis:repository/resource> <http://fedora.info/definitions/repository#PreferInboundReferences> .
 END # 2017-03-01T15:15:00Z
-BEGIN # 2017-03-02T02:34:12Z
-A <trellis:repository/resource> <http://purl.org/dc/terms/title> "Some title"@eng  <http://acdc.amherst.edu/ns/trellis#PreferUserManaged> .
-END # 2017-03-02T02:34:12Z
-BEGIN # 2017-03-03T02:34:12Z
-D <trellis:repository/resource> <http://purl.org/dc/terms/title> "Some title"@eng  <http://acdc.amherst.edu/ns/trellis#PreferUserManaged> .
-END # 2017-03-03T02:34:12Z
-

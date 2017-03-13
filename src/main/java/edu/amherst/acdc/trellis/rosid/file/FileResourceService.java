@@ -60,6 +60,14 @@ public class FileResourceService extends AbstractResourceService {
 
     private static final Logger LOGGER = getLogger(FileResourceService.class);
 
+    private final Long WINDOW_SIZE = Long.parseLong(System.getProperty("kafka.window.delay.ms", "5000"));
+    private final Integer CACHE_SIZE = Integer.parseInt(System.getProperty("kafka.window.cache.size", "511")); // 2^8-1
+    private final String TOPIC_RECACHE = "trellis.cache";
+    private final String TOPIC_UPDATE = "trellis.update";
+    private final String TOPIC_DELETE = "trellis.delete";
+    private final String TOPIC_LDP_CONTAINER_ADD = "trellis.ldpcontainer.add";
+    private final String TOPIC_LDP_CONTAINER_DELETE = "trellis.ldpcontainer.delete";
+
     private final File directory;
 
     private final KafkaStreams kstreams;
@@ -75,7 +83,7 @@ public class FileResourceService extends AbstractResourceService {
         this.directory = new File(path);
         initFiles();
 
-        this.kstreams = configureStreams();
+        this.kstreams = configureKStreams();
         this.kstreams.start();
     }
 
@@ -112,6 +120,12 @@ public class FileResourceService extends AbstractResourceService {
             .flatMap(dir -> VersionedResource.find(dir, identifier, time));
     }
 
+    @Override
+    public void close() {
+        super.close();
+        kstreams.close();
+    }
+
     private void initFiles() throws IOException {
         if (!directory.exists()) {
             directory.mkdirs();
@@ -123,8 +137,9 @@ public class FileResourceService extends AbstractResourceService {
         LOGGER.info("Using base data directory: {}", directory.getAbsolutePath());
     }
 
-    private KafkaStreams configureStreams() {
+    private KafkaStreams configureKStreams() {
         final String bootstrapServers = System.getProperty("kafka.bootstrap.servers");
+
         final Map<String, Object> props = new HashMap<>();
         props.put(APPLICATION_ID_CONFIG, "trellis-repository-application");
         props.put(BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
@@ -132,19 +147,19 @@ public class FileResourceService extends AbstractResourceService {
         props.put(VALUE_SERDE_CLASS_CONFIG, MessageSerde.class);
 
         final StateStoreSupplier cachingStore = Stores.create("caching").withStringKeys().withStringValues()
-            .inMemory().maxEntries((int)Math.pow(2, 8) - 1).build();
+            .inMemory().maxEntries(CACHE_SIZE).build();
 
         final KStreamBuilder builder = new KStreamBuilder();
         builder.addStateStore(cachingStore);
 
-        builder.stream("trellis.update").foreach((k, v) -> {
+        builder.stream(TOPIC_UPDATE).foreach((k, v) -> {
             // TODO
             // -- change to transform()
             // -- write dataset to resource
             // -- add prov:endedAtTime
             // -- to("trellis.cache")
         });
-        builder.stream("trellis.delete").foreach((k, v) -> {
+        builder.stream(TOPIC_DELETE).foreach((k, v) -> {
             // TODO
             // -- change to transform
             // -- get child resources
@@ -154,48 +169,47 @@ public class FileResourceService extends AbstractResourceService {
             // -- re-cache parent, if it exists
         });
 
-        builder.stream("trellis.ldpcontainer.add").map((k, v) -> {
-            final String identifier = (String) k;
-            final String quad = (String) v;
-            final File dir = new File(directory, partition(identifier));
-            try {
-                VersionedResource.write(dir, empty(), Stream.of(quad), now());
-            } catch (final IOException ex) {
-                LOGGER.error("Error writing to {}: {}", identifier, ex.getMessage());
-            }
-            return new KeyValue<>(k, null);
-        }).to("trellis.cache");
+        builder.stream(TOPIC_LDP_CONTAINER_ADD)
+            .map((k, v) -> {
+                final String identifier = (String) k;
+                final String quad = (String) v;
+                final File dir = new File(directory, partition(identifier));
+                try {
+                    VersionedResource.write(dir, empty(), Stream.of(quad), now());
+                } catch (final IOException ex) {
+                    LOGGER.error("Error adding LDP container triples to {}: {}", identifier, ex.getMessage());
+                }
+                return new KeyValue<>(k, null);
+            })
+            .to(TOPIC_RECACHE);
 
-        builder.stream("trellis.ldpcontainer.delete").map((k, v) -> {
-            final String identifier = (String) k;
-            final String quad = (String) v;
-            final File dir = new File(directory, partition(identifier));
-            try {
-                VersionedResource.write(dir, Stream.of(quad), empty(), now());
-            } catch (final IOException ex) {
-                LOGGER.error("Error writing to {}: {}", identifier, ex.getMessage());
-            }
-            return new KeyValue<>(k, null);
-        }).to("trellis.cache");
+        builder.stream(TOPIC_LDP_CONTAINER_DELETE)
+            .map((k, v) -> {
+                final String identifier = (String) k;
+                final String quad = (String) v;
+                final File dir = new File(directory, partition(identifier));
+                try {
+                    VersionedResource.write(dir, Stream.of(quad), empty(), now());
+                } catch (final IOException ex) {
+                    LOGGER.error("Error removing LDP container triples from {}: {}", identifier, ex.getMessage());
+                }
+                return new KeyValue<>(k, null);
+            })
+            .to(TOPIC_RECACHE);
 
         // Cache the resource
-        builder.stream("trellis.cache").groupByKey().reduce((val1, val2) -> val1, TimeWindows.of(5000L), "caching")
+        builder.stream(TOPIC_RECACHE).groupByKey()
+            .reduce((val1, val2) -> val1, TimeWindows.of(WINDOW_SIZE), "caching")
             .foreach((k, v) -> {
                 final String identifier = (String) k.key();
                 final File dir = new File(directory, partition(identifier));
                 try {
                     CachedResource.write(dir, identifier);
                 } catch (final IOException ex) {
-                    LOGGER.error("Error writing to {}: {}", identifier, ex.getMessage());
+                    LOGGER.error("Error writing cache for {}: {}", identifier, ex.getMessage());
                 }
         });
 
         return new KafkaStreams(builder, new StreamsConfig(props));
-    }
-
-    @Override
-    public void close() {
-        super.close();
-        kstreams.close();
     }
 }

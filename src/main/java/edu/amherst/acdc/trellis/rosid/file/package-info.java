@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 /**
- * Rosid: an implementation of the core Trellis API
+ * Rosid: an implementation of the core Trellis API, using file-based persistence
  *
  * <p>This package implements the core resource and session interfaces of trellis.
  * it provides a persistence layer and read/write operations to that persistence layer.</p>

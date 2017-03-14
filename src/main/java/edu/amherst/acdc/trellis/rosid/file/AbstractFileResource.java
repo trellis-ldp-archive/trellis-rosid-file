@@ -22,7 +22,7 @@ import static java.util.stream.Stream.of;
 
 import edu.amherst.acdc.trellis.api.Datastream;
 import edu.amherst.acdc.trellis.api.Resource;
-import edu.amherst.acdc.trellis.rosid.ResourceData;
+import edu.amherst.acdc.trellis.rosid.common.ResourceData;
 import edu.amherst.acdc.trellis.vocabulary.LDP;
 
 import java.io.File;

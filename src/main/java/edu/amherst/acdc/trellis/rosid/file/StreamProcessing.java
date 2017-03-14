@@ -25,7 +25,7 @@ import static org.apache.kafka.streams.StreamsConfig.KEY_SERDE_CLASS_CONFIG;
 import static org.apache.kafka.streams.StreamsConfig.VALUE_SERDE_CLASS_CONFIG;
 import static org.slf4j.LoggerFactory.getLogger;
 
-import edu.amherst.acdc.trellis.rosid.MessageSerde;
+import edu.amherst.acdc.trellis.rosid.common.MessageSerde;
 
 import java.io.File;
 import java.io.IOException;

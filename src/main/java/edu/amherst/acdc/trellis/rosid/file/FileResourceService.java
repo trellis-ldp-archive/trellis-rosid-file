@@ -23,8 +23,8 @@ import static java.util.Optional.of;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import edu.amherst.acdc.trellis.api.Resource;
-import edu.amherst.acdc.trellis.rosid.AbstractResourceService;
-import edu.amherst.acdc.trellis.rosid.Message;
+import edu.amherst.acdc.trellis.rosid.common.AbstractResourceService;
+import edu.amherst.acdc.trellis.rosid.common.Message;
 import edu.amherst.acdc.trellis.spi.Session;
 
 import java.io.File;

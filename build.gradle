@@ -30,7 +30,7 @@ ext {
     trellisApiVersion = '0.1.0-SNAPSHOT'
     trellisSpiVersion = '0.1.0-SNAPSHOT'
     trellisVocabularyVersion = '0.1.0-SNAPSHOT'
-    trellisRosidVersion = '0.1.0-SNAPSHOT'
+    trellisRosidCommonVersion = '0.1.0-SNAPSHOT'
     commonsCodecVersion = '1.10'
     commonsIoVersion = '2.5'
     commonsRdfVersion = '0.3.0-incubating'
@@ -56,7 +56,7 @@ dependencies {
     compile group: 'edu.amherst.acdc', name: 'trellis-api', version: trellisApiVersion
     compile group: 'edu.amherst.acdc', name: 'trellis-spi', version: trellisSpiVersion
     compile group: 'edu.amherst.acdc', name: 'trellis-vocabulary', version: trellisVocabularyVersion
-    compile group: 'edu.amherst.acdc', name: 'trellis-rosid', version: trellisRosidVersion
+    compile group: 'edu.amherst.acdc', name: 'trellis-rosid-common', version: trellisRosidCommonVersion
     compile group: 'org.apache.zookeeper', name: 'zookeeper', version: zookeeperVersion
     compile group: 'org.apache.kafka', name: 'kafka-streams', version: kafkaVersion
     compile group: 'org.slf4j', name: 'slf4j-api', version: slf4jVersion

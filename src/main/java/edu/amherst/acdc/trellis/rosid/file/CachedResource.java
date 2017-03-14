@@ -46,7 +46,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import edu.amherst.acdc.trellis.api.Resource;
 import edu.amherst.acdc.trellis.api.VersionRange;
-import edu.amherst.acdc.trellis.rosid.ResourceData;
+import edu.amherst.acdc.trellis.rosid.common.ResourceData;
 import edu.amherst.acdc.trellis.vocabulary.Trellis;
 
 import java.io.BufferedWriter;

@@ -15,7 +15,7 @@
  */
 package edu.amherst.acdc.trellis.rosid.file;
 
-import static edu.amherst.acdc.trellis.rosid.ResourceData.from;
+import static edu.amherst.acdc.trellis.rosid.common.ResourceData.from;
 import static edu.amherst.acdc.trellis.rosid.file.Constants.RESOURCE_JOURNAL;
 import static edu.amherst.acdc.trellis.rosid.file.FileUtils.stringToQuad;
 import static edu.amherst.acdc.trellis.rosid.file.RDFPatch.asStream;
@@ -27,7 +27,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 import edu.amherst.acdc.trellis.api.Resource;
 import edu.amherst.acdc.trellis.api.VersionRange;
-import edu.amherst.acdc.trellis.rosid.ResourceData;
+import edu.amherst.acdc.trellis.rosid.common.ResourceData;
 import edu.amherst.acdc.trellis.vocabulary.ACL;
 import edu.amherst.acdc.trellis.vocabulary.LDP;
 import edu.amherst.acdc.trellis.vocabulary.OA;

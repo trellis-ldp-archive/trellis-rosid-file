@@ -23,7 +23,6 @@ import static edu.amherst.acdc.trellis.rosid.common.Constants.TOPIC_UPDATE;
 import static edu.amherst.acdc.trellis.rosid.file.FileUtils.partition;
 import static java.time.Instant.now;
 import static java.util.stream.Stream.empty;
-import static java.util.stream.Stream.of;
 import static org.apache.kafka.streams.StreamsConfig.APPLICATION_ID_CONFIG;
 import static org.apache.kafka.streams.StreamsConfig.BOOTSTRAP_SERVERS_CONFIG;
 import static org.apache.kafka.streams.StreamsConfig.KEY_SERDE_CLASS_CONFIG;
@@ -37,6 +36,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.rdf.api.Dataset;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.KeyValue;
@@ -98,10 +98,10 @@ final class StreamProcessing {
         builder.stream(TOPIC_LDP_CONTAINER_ADD)
             .map((k, v) -> {
                 final String identifier = (String) k;
-                final String quad = (String) v;
+                final Dataset dataset = (Dataset) v;
                 final File dir = new File(directory, partition(identifier));
                 try {
-                    VersionedResource.write(dir, empty(), of(quad), now());
+                    RDFPatch.write(dir, empty(), dataset.stream(), now());
                 } catch (final IOException ex) {
                     LOGGER.error("Error adding LDP container triples to {}: {}", identifier, ex.getMessage());
                 }
@@ -112,10 +112,10 @@ final class StreamProcessing {
         builder.stream(TOPIC_LDP_CONTAINER_DELETE)
             .map((k, v) -> {
                 final String identifier = (String) k;
-                final String quad = (String) v;
+                final Dataset dataset = (Dataset) v;
                 final File dir = new File(directory, partition(identifier));
                 try {
-                    VersionedResource.write(dir, of(quad), empty(), now());
+                    RDFPatch.write(dir, dataset.stream(), empty(), now());
                 } catch (final IOException ex) {
                     LOGGER.error("Error removing LDP container triples from {}: {}", identifier, ex.getMessage());
                 }

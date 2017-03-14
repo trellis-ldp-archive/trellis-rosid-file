@@ -94,8 +94,8 @@ final class RDFPatch {
      * @param time the time
      * @throws IOException if the writer encounters an error writing to the file
      */
-    public static void write(final File file, final Stream<Quad> delete, final Stream<Quad> add, final Instant time)
-            throws IOException {
+    public static void write(final File file, final Stream<? extends Quad> delete, final Stream<? extends Quad> add,
+            final Instant time) throws IOException {
         try (final BufferedWriter writer = newBufferedWriter(file.toPath(), UTF_8, CREATE, APPEND)) {
             writer.write(BEGIN + time + lineSeparator());
             delete.map(quadToString).forEach(quad -> uncheckedWrite(writer, "D " + quad));

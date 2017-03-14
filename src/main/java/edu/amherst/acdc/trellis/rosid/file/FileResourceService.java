@@ -31,8 +31,8 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.Optional;
 
-import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Dataset;
+import org.apache.commons.rdf.api.IRI;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.streams.KafkaStreams;
 import org.slf4j.Logger;

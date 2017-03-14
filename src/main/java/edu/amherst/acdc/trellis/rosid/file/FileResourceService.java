@@ -67,6 +67,7 @@ public class FileResourceService extends AbstractResourceService {
      * Create a File-based repository service
      * @param directory the data directory
      * @param producer the kafka producer
+     * @param streams the kafka streams
      * @throws IOException if the directory is not writable
      */
     protected FileResourceService(final File directory, final Producer<String, Message> producer,

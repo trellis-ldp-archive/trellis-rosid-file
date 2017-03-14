@@ -59,7 +59,7 @@ public class FileResourceService extends AbstractResourceService {
         directory = new File(path);
         initFiles();
 
-        kstreams = StreamProcessing.configure(directory);
+        kstreams = StreamConfiguration.configure(directory);
         kstreams.start();
     }
 

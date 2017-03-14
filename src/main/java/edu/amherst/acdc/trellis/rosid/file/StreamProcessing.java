@@ -15,6 +15,11 @@
  */
 package edu.amherst.acdc.trellis.rosid.file;
 
+import static edu.amherst.acdc.trellis.rosid.common.Constants.TOPIC_DELETE;
+import static edu.amherst.acdc.trellis.rosid.common.Constants.TOPIC_LDP_CONTAINER_ADD;
+import static edu.amherst.acdc.trellis.rosid.common.Constants.TOPIC_LDP_CONTAINER_DELETE;
+import static edu.amherst.acdc.trellis.rosid.common.Constants.TOPIC_RECACHE;
+import static edu.amherst.acdc.trellis.rosid.common.Constants.TOPIC_UPDATE;
 import static edu.amherst.acdc.trellis.rosid.file.FileUtils.partition;
 import static java.time.Instant.now;
 import static java.util.stream.Stream.empty;
@@ -25,7 +30,7 @@ import static org.apache.kafka.streams.StreamsConfig.KEY_SERDE_CLASS_CONFIG;
 import static org.apache.kafka.streams.StreamsConfig.VALUE_SERDE_CLASS_CONFIG;
 import static org.slf4j.LoggerFactory.getLogger;
 
-import edu.amherst.acdc.trellis.rosid.common.MessageSerde;
+import edu.amherst.acdc.trellis.rosid.common.DatasetSerde;
 
 import java.io.File;
 import java.io.IOException;
@@ -52,11 +57,6 @@ final class StreamProcessing {
     private static final Long WINDOW_SIZE = Long.parseLong(System.getProperty("kafka.window.delay.ms", "5000"));
     // 2^12-1
     private static final Integer CACHE_SIZE = Integer.parseInt(System.getProperty("kafka.window.cache.size", "4095"));
-    private static final String TOPIC_RECACHE = "trellis.cache";
-    private static final String TOPIC_UPDATE = "trellis.update";
-    private static final String TOPIC_DELETE = "trellis.delete";
-    private static final String TOPIC_LDP_CONTAINER_ADD = "trellis.ldpcontainer.add";
-    private static final String TOPIC_LDP_CONTAINER_DELETE = "trellis.ldpcontainer.delete";
 
     /**
      * Configure the KafkaStream processor
@@ -70,7 +70,7 @@ final class StreamProcessing {
         props.put(APPLICATION_ID_CONFIG, "trellis-repository-application");
         props.put(BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         props.put(KEY_SERDE_CLASS_CONFIG, Serdes.StringSerde.class);
-        props.put(VALUE_SERDE_CLASS_CONFIG, MessageSerde.class);
+        props.put(VALUE_SERDE_CLASS_CONFIG, DatasetSerde.class);
 
         final StateStoreSupplier cachingStore = Stores.create("caching").withStringKeys().withStringValues()
             .inMemory().maxEntries(CACHE_SIZE).build();

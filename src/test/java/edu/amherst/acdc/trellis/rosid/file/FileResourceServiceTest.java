@@ -34,11 +34,11 @@ import edu.amherst.acdc.trellis.api.VersionRange;
 import edu.amherst.acdc.trellis.spi.EventService;
 import edu.amherst.acdc.trellis.spi.ResourceService;
 import edu.amherst.acdc.trellis.spi.Session;
-import edu.amherst.acdc.trellis.rosid.common.Message;
-import edu.amherst.acdc.trellis.rosid.common.MessageSerializer;
+import edu.amherst.acdc.trellis.rosid.common.DatasetSerialization;
 import edu.amherst.acdc.trellis.vocabulary.DC;
 import edu.amherst.acdc.trellis.vocabulary.LDP;
 import edu.amherst.acdc.trellis.vocabulary.RDFS;
+import org.apache.commons.rdf.api.Dataset;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Quad;
 import org.apache.commons.rdf.api.Triple;
@@ -60,8 +60,8 @@ public class FileResourceServiceTest extends BaseRdfTest {
 
     private final IRI identifier = rdf.createIRI("trellis:repository/resource");
     private final IRI other = rdf.createIRI("trellis:repository/other");
-    private final Producer<String, Message> mockProducer = new MockProducer<>(true,
-            new StringSerializer(), new MessageSerializer());
+    private final Producer<String, Dataset> mockProducer = new MockProducer<>(true,
+            new StringSerializer(), new DatasetSerialization());
 
     private ResourceService service;
     private File file;

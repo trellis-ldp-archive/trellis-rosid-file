@@ -24,7 +24,6 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 import edu.amherst.acdc.trellis.api.Resource;
 import edu.amherst.acdc.trellis.rosid.common.AbstractResourceService;
-import edu.amherst.acdc.trellis.rosid.common.Message;
 import edu.amherst.acdc.trellis.spi.Session;
 
 import java.io.File;
@@ -33,6 +32,7 @@ import java.time.Instant;
 import java.util.Optional;
 
 import org.apache.commons.rdf.api.IRI;
+import org.apache.commons.rdf.api.Dataset;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.streams.KafkaStreams;
 import org.slf4j.Logger;
@@ -70,7 +70,7 @@ public class FileResourceService extends AbstractResourceService {
      * @param streams the kafka streams
      * @throws IOException if the directory is not writable
      */
-    protected FileResourceService(final File directory, final Producer<String, Message> producer,
+    protected FileResourceService(final File directory, final Producer<String, Dataset> producer,
             final KafkaStreams streams) throws IOException {
         super(producer);
         requireNonNull(directory, "directory may not be null!");

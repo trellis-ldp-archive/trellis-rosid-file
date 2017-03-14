@@ -21,4 +21,4 @@
  *
  * @author acoburn
  */
-package edu.amherst.acdc.trellis.rosid;
+package edu.amherst.acdc.trellis.rosid.file;

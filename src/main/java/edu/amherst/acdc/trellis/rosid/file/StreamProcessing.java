@@ -20,7 +20,6 @@ import static java.time.Instant.now;
 import static java.util.stream.Stream.empty;
 import static org.slf4j.LoggerFactory.getLogger;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
@@ -48,9 +47,8 @@ final class StreamProcessing {
     public static KeyValueMapper<String, Dataset, KeyValue<String, Dataset>> ldpAdder(
             final Map<String, Configuration.Storage> config) {
         return (identifier, dataset) -> {
-            final File dir = resourceDirectory(config, identifier);
             try {
-                RDFPatch.write(dir, empty(), dataset.stream(), now());
+                RDFPatch.write(resourceDirectory(config, identifier), empty(), dataset.stream(), now());
             } catch (final IOException ex) {
                 LOGGER.error("Error adding LDP container triples to {}: {}", identifier, ex.getMessage());
             }
@@ -66,9 +64,8 @@ final class StreamProcessing {
     public static KeyValueMapper<String, Dataset, KeyValue<String, Dataset>> ldpDeleter(
             final Map<String, Configuration.Storage> config) {
         return (identifier, dataset) -> {
-            final File dir = resourceDirectory(config, identifier);
             try {
-                RDFPatch.write(dir, dataset.stream(), empty(), now());
+                RDFPatch.write(resourceDirectory(config, identifier), dataset.stream(), empty(), now());
             } catch (final IOException ex) {
                 LOGGER.error("Error removing LDP container triples from {}: {}", identifier, ex.getMessage());
             }
@@ -85,9 +82,8 @@ final class StreamProcessing {
             final Map<String, Configuration.Storage> config) {
         return (window, data) -> {
             final String identifier = window.key();
-            final File dir = resourceDirectory(config, identifier);
             try {
-                CachedResource.write(dir, identifier);
+                CachedResource.write(resourceDirectory(config, identifier), identifier);
             } catch (final IOException ex) {
                 LOGGER.error("Error writing cache for {}: {}", identifier, ex.getMessage());
             }

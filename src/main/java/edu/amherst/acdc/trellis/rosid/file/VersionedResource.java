@@ -151,7 +151,6 @@ class VersionedResource extends AbstractFileResource {
     @Override
     public Stream<Quad> stream() {
         return of(new File(directory, RESOURCE_JOURNAL)).filter(File::exists)
-            .map(file -> asStream(rdf, file, identifier, time)).orElse(empty())
-            .filter(quad -> !quad.getGraphName().filter(Trellis.PreferServerManaged::equals).isPresent());
+            .map(file -> asStream(rdf, file, identifier, time)).orElse(empty());
     }
 }

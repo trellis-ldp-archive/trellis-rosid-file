@@ -33,6 +33,8 @@ import edu.amherst.acdc.trellis.api.VersionRange;
 import edu.amherst.acdc.trellis.vocabulary.DC;
 import edu.amherst.acdc.trellis.vocabulary.LDP;
 import edu.amherst.acdc.trellis.vocabulary.RDFS;
+import edu.amherst.acdc.trellis.vocabulary.Trellis;
+import edu.amherst.acdc.trellis.vocabulary.XSD;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Quad;
 import org.apache.commons.rdf.api.Triple;
@@ -95,6 +97,18 @@ public class LdpRdfTest extends BaseRdfTest {
                         rdf.createLiteral("A label", "eng"))));
         assertTrue(triples.contains(rdf.createTriple(rdf.createIRI("http://example.org/some/other/resource"),
                     RDFS.label, rdf.createLiteral("Some other resource", "eng"))));
+
+        final List<Triple> server = res.stream().filter(isServerManaged).map(Quad::asTriple).collect(toList());
+        assertEquals(5L, server.size());
+        assertTrue(server.contains(rdf.createTriple(identifier, Trellis.containedBy,
+                        rdf.createIRI("trellis:repository"))));
+        assertTrue(server.contains(rdf.createTriple(identifier, DC.created,
+                        rdf.createLiteral("2017-02-15T10:05:00Z", XSD.dateTime))));
+        assertTrue(server.contains(rdf.createTriple(identifier, DC.modified,
+                        rdf.createLiteral("2017-02-15T11:15:00Z", XSD.dateTime))));
+        assertTrue(server.contains(rdf.createTriple(identifier, DC.creator,
+                        rdf.createIRI("http://example.org/user/raadmin"))));
+        assertTrue(server.contains(rdf.createTriple(identifier, type, LDP.RDFSource)));
 
         final List<Triple> inbound = res.stream().filter(isInbound).map(Quad::asTriple).collect(toList());
         assertEquals(2L, inbound.size());

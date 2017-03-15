@@ -21,6 +21,7 @@ import static edu.amherst.acdc.trellis.rosid.file.Constants.RESOURCE_CACHE;
 import static edu.amherst.acdc.trellis.rosid.file.Constants.RESOURCE_JOURNAL;
 import static edu.amherst.acdc.trellis.rosid.file.Constants.RESOURCE_QUADS;
 import static edu.amherst.acdc.trellis.rosid.file.FileUtils.stringToQuad;
+import static edu.amherst.acdc.trellis.vocabulary.Trellis.PreferUserManaged;
 import static java.lang.String.join;
 import static java.lang.System.lineSeparator;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -47,7 +48,6 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import edu.amherst.acdc.trellis.api.Resource;
 import edu.amherst.acdc.trellis.api.VersionRange;
 import edu.amherst.acdc.trellis.rosid.common.ResourceData;
-import edu.amherst.acdc.trellis.vocabulary.Trellis;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -153,7 +153,7 @@ class CachedResource extends AbstractFileResource {
             final Iterator<String> lineIter = RDFPatch.asStream(rdf, file, identifier, time)
                     .map(quad -> join(" ", quad.getSubject().ntriplesString(),
                         quad.getPredicate().ntriplesString(), quad.getObject().ntriplesString(),
-                        quad.getGraphName().orElse(Trellis.PreferUserManaged).ntriplesString(), ".")).iterator();
+                        quad.getGraphName().orElse(PreferUserManaged).ntriplesString(), ".")).iterator();
             while (lineIter.hasNext()) {
                 writer.write(lineIter.next() + lineSeparator());
             }
@@ -185,8 +185,7 @@ class CachedResource extends AbstractFileResource {
     public Stream<Quad> stream() {
         return Optional.of(new File(directory, RESOURCE_QUADS)).filter(File::exists).map(File::toPath)
             .map(uncheckedLines).orElse(empty())
-            .map(line -> stringToQuad(rdf, line)).filter(Optional::isPresent).map(Optional::get)
-            .filter(quad -> !quad.getGraphName().filter(Trellis.PreferServerManaged::equals).isPresent());
+            .map(line -> stringToQuad(rdf, line)).filter(Optional::isPresent).map(Optional::get);
     }
 
     private Function<Path, Stream<String>> uncheckedLines = path -> {

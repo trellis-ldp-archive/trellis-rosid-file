@@ -15,8 +15,15 @@
  */
 package edu.amherst.acdc.trellis.rosid.file;
 
+import static edu.amherst.acdc.trellis.rosid.common.RDFUtils.getInstance;
 import static edu.amherst.acdc.trellis.rosid.file.FileUtils.resourceDirectory;
+import static edu.amherst.acdc.trellis.vocabulary.DC.created;
+import static edu.amherst.acdc.trellis.vocabulary.PROV.wasGeneratedBy;
+import static edu.amherst.acdc.trellis.vocabulary.Trellis.PreferAudit;
+import static edu.amherst.acdc.trellis.vocabulary.Trellis.PreferServerManaged;
+import static edu.amherst.acdc.trellis.vocabulary.Trellis.containedBy;
 import static java.time.Instant.now;
+import static java.util.Optional.of;
 import static java.util.stream.Stream.empty;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -28,6 +35,7 @@ import java.util.stream.Stream;
 import org.apache.commons.rdf.api.Dataset;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.kstream.KeyValueMapper;
+import org.apache.kafka.streams.kstream.Predicate;
 import org.slf4j.Logger;
 
 /**
@@ -135,6 +143,29 @@ final class StreamProcessing {
             };
         };
     }
+
+    /**
+     * A predicate that always returns true
+     */
+    public static final Predicate<String, Dataset> otherwise = (k, v) -> true;
+
+    /**
+     * A predicate determining whether the dataset is new
+     */
+    public static final Predicate<String, Dataset> isNew = (identifier, dataset) ->
+        dataset.contains(of(PreferServerManaged), getInstance().createIRI(identifier), created, null);
+
+    /**
+     * A predicate determining whether the given key is the parent of the original delete target
+     */
+    public static final Predicate<String, Dataset> isDeleteParent = (identifier, dataset) ->
+        dataset.contains(of(PreferServerManaged), null, containedBy, getInstance().createIRI(identifier));
+
+    /**
+     * A predicate determining whether the given key is the original delete target
+     */
+    public static final Predicate<String, Dataset> isDeleteTarget = (identifier, dataset) ->
+        dataset.contains(of(PreferAudit), getInstance().createIRI(identifier), wasGeneratedBy, null);
 
     private StreamProcessing() {
         // prevent instantiation

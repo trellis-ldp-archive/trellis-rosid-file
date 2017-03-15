@@ -15,6 +15,7 @@
  */
 package edu.amherst.acdc.trellis.rosid.file;
 
+import static edu.amherst.acdc.trellis.rosid.common.RDFUtils.getInstance;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Stream.empty;
@@ -33,7 +34,6 @@ import java.util.stream.Stream;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Quad;
 import org.apache.commons.rdf.api.RDF;
-import org.apache.commons.rdf.jena.JenaRDF;
 
 /**
  * An object to mediate access to a file-based resource representation
@@ -41,7 +41,7 @@ import org.apache.commons.rdf.jena.JenaRDF;
  */
 abstract class AbstractFileResource implements Resource {
 
-    protected static final RDF rdf = new JenaRDF();
+    protected static final RDF rdf = getInstance();
 
     protected final IRI identifier;
     protected final File directory;

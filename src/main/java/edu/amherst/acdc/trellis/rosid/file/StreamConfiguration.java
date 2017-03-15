@@ -60,7 +60,7 @@ final class StreamConfiguration {
 
     /**
      * Configure the KafkaStream processor
-     * @param directory the base directory
+     * @param storage the storage configuration
      * @return the configured kafka stream processor
      */
     public static KafkaStreams configure(final Map<String, Configuration.Storage> storage) {

@@ -92,7 +92,7 @@ final class StreamProcessing {
 
     /**
      * A mapping function for updating resources
-     * @param directory the base resource directory
+     * @param config the storage configuration
      * @return a mapping function that generates 0 or more messages for further processing
      */
     public static KeyValueMapper<String, Dataset, Iterable<KeyValue<String, Dataset>>> updater(
@@ -115,7 +115,7 @@ final class StreamProcessing {
 
     /**
      * A mapping function for deleting resources
-     * @param directory the base resource directory
+     * @param config the storage configuration
      * @return a mapping function that generates 0 or more messages for further processing
      */
     public static KeyValueMapper<String, Dataset, Iterable<KeyValue<String, Dataset>>> deleter(

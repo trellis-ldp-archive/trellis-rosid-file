@@ -16,6 +16,7 @@
 package edu.amherst.acdc.trellis.rosid.file;
 
 import static edu.amherst.acdc.trellis.rosid.common.Constants.TOPIC_DELETE;
+import static edu.amherst.acdc.trellis.rosid.common.Constants.TOPIC_EVENT;
 import static edu.amherst.acdc.trellis.rosid.common.Constants.TOPIC_LDP_CONTAINER_ADD;
 import static edu.amherst.acdc.trellis.rosid.common.Constants.TOPIC_LDP_CONTAINER_DELETE;
 import static edu.amherst.acdc.trellis.rosid.common.Constants.TOPIC_RECACHE;
@@ -80,12 +81,12 @@ final class StreamConfiguration {
         builder.addStateStore(cachingStore);
         builder.stream(kserde, vserde, TOPIC_LDP_CONTAINER_ADD).map(ldpAdder(storage)).to(TOPIC_RECACHE);
         builder.stream(kserde, vserde, TOPIC_LDP_CONTAINER_DELETE).map(ldpDeleter(storage)).to(TOPIC_RECACHE);
-        builder.stream(kserde, vserde, TOPIC_RECACHE).groupByKey()
-            .reduce((val1, val2) -> val1, of(WINDOW_SIZE), CACHE_NAME).foreach(cacheWriter(storage));
-
-
         builder.stream(kserde, vserde, TOPIC_UPDATE).flatMap(updater(storage)).to(TOPIC_RECACHE);
         builder.stream(kserde, vserde, TOPIC_DELETE).flatMap(deleter(storage)).to(TOPIC_RECACHE);
+        builder.stream(kserde, vserde, TOPIC_RECACHE).groupByKey()
+            .reduce((val1, val2) -> val1, of(WINDOW_SIZE), CACHE_NAME)
+            .toStream((k, v) -> k.key()).map(cacheWriter(storage)).to(TOPIC_EVENT);
+
         return new KafkaStreams(builder, new StreamsConfig(props));
     }
 

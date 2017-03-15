@@ -27,9 +27,7 @@ import java.util.stream.Stream;
 
 import org.apache.commons.rdf.api.Dataset;
 import org.apache.kafka.streams.KeyValue;
-import org.apache.kafka.streams.kstream.ForeachAction;
 import org.apache.kafka.streams.kstream.KeyValueMapper;
-import org.apache.kafka.streams.kstream.Windowed;
 import org.slf4j.Logger;
 
 /**
@@ -52,7 +50,7 @@ final class StreamProcessing {
             } catch (final IOException ex) {
                 LOGGER.error("Error adding LDP container triples to {}: {}", identifier, ex.getMessage());
             }
-            return new KeyValue<>(identifier, null);
+            return new KeyValue<>(identifier, dataset);
         };
     }
 
@@ -69,7 +67,7 @@ final class StreamProcessing {
             } catch (final IOException ex) {
                 LOGGER.error("Error removing LDP container triples from {}: {}", identifier, ex.getMessage());
             }
-            return new KeyValue<>(identifier, null);
+            return new KeyValue<>(identifier, dataset);
         };
     }
 
@@ -78,15 +76,15 @@ final class StreamProcessing {
      * @param config the storage configuration
      * @return a terminating foreach action
      */
-    public static ForeachAction<Windowed<String>, Dataset> cacheWriter(
+    public static KeyValueMapper<String, Dataset, KeyValue<String, Dataset>> cacheWriter(
             final Map<String, Configuration.Storage> config) {
-        return (window, data) -> {
-            final String identifier = window.key();
+        return (identifier, dataset) -> {
             try {
                 CachedResource.write(resourceDirectory(config, identifier), identifier);
             } catch (final IOException ex) {
                 LOGGER.error("Error writing cache for {}: {}", identifier, ex.getMessage());
             }
+            return new KeyValue<>(identifier, dataset);
         };
     }
 

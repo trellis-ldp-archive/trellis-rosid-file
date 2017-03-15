@@ -26,6 +26,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.time.Instant;
 import java.util.List;
 
@@ -64,7 +65,7 @@ public class FileResourceServiceTest extends BaseRdfTest {
             new StringSerializer(), new DatasetSerialization());
 
     private ResourceService service;
-    private File file;
+    private Configuration config;
 
     @Mock
     private Session mockSession;
@@ -77,17 +78,26 @@ public class FileResourceServiceTest extends BaseRdfTest {
 
     @Before
     public void setUp() throws Exception {
-        file = new File(getClass().getResource("/root").toURI());
-        service = new FileResourceService(file, mockProducer, mockStreams);
+        config = new Configuration();
+        config.storage.get("repository").resources = getClass().getResource("/root").toURI().toString();
+        config.storage.get("repository").datastreams = "info:test";
+        service = new FileResourceService(config, mockProducer, mockStreams);
     }
 
     @Test
     public void testNewRoot() throws IOException {
         final Instant time = parse("2017-02-16T11:15:03Z");
-        final File root = new File(file, "root2/a");
-        final ResourceService altService = new FileResourceService(root, mockProducer, mockStreams);
+        final Configuration configuration = new Configuration();
+        configuration.storage.get("repository").resources = config.storage.get("repository").resources + "/root2/a";
+        configuration.storage.get("repository").datastreams = config.storage.get("repository").resources + "/root2/b";
+        final File root = new File(URI.create(configuration.storage.get("repository").resources));
+        final File dsRoot = new File(URI.create(configuration.storage.get("repository").datastreams));
+        assertFalse(root.exists());
+        assertFalse(dsRoot.exists());
+        final ResourceService altService = new FileResourceService(configuration, mockProducer, mockStreams);
         assertFalse(altService.exists(mockSession, identifier, time));
         assertTrue(root.exists());
+        assertTrue(dsRoot.exists());
         altService.bind(mockEventService);
         altService.unbind(mockEventService);
         altService.bind(mockEventService);
@@ -97,10 +107,13 @@ public class FileResourceServiceTest extends BaseRdfTest {
 
     @Test(expected = IOException.class)
     public void testUnwritableRoot() throws IOException {
-        final File root = new File(file, "root3");
+        final Configuration configuration = new Configuration();
+        configuration.storage.get("repository").resources = config.storage.get("repository").resources + "/root3";
+        configuration.storage.get("repository").datastreams = "info:test";
+        final File root = new File(URI.create(configuration.storage.get("repository").resources));
         assertTrue(root.mkdir());
         assertTrue(root.setReadOnly());
-        final ResourceService altService = new FileResourceService(root, mockProducer, mockStreams);
+        final ResourceService altService = new FileResourceService(configuration, mockProducer, mockStreams);
     }
 
     @Test

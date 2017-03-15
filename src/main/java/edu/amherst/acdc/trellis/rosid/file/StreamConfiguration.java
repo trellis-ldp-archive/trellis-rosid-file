@@ -34,7 +34,6 @@ import static org.apache.kafka.streams.kstream.TimeWindows.of;
 
 import edu.amherst.acdc.trellis.rosid.common.DatasetSerde;
 
-import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -64,7 +63,7 @@ final class StreamConfiguration {
      * @param directory the base directory
      * @return the configured kafka stream processor
      */
-    public static KafkaStreams configure(final File directory) {
+    public static KafkaStreams configure(final Map<String, Configuration.Storage> storage) {
         final String bootstrapServers = System.getProperty("kafka.bootstrap.servers");
 
         final Map<String, Object> props = new HashMap<>();
@@ -79,14 +78,14 @@ final class StreamConfiguration {
 
         final KStreamBuilder builder = new KStreamBuilder();
         builder.addStateStore(cachingStore);
-        builder.stream(kserde, vserde, TOPIC_LDP_CONTAINER_ADD).map(ldpAdder(directory)).to(TOPIC_RECACHE);
-        builder.stream(kserde, vserde, TOPIC_LDP_CONTAINER_DELETE).map(ldpDeleter(directory)).to(TOPIC_RECACHE);
+        builder.stream(kserde, vserde, TOPIC_LDP_CONTAINER_ADD).map(ldpAdder(storage)).to(TOPIC_RECACHE);
+        builder.stream(kserde, vserde, TOPIC_LDP_CONTAINER_DELETE).map(ldpDeleter(storage)).to(TOPIC_RECACHE);
         builder.stream(kserde, vserde, TOPIC_RECACHE).groupByKey()
-            .reduce((val1, val2) -> val1, of(WINDOW_SIZE), CACHE_NAME).foreach(cacheWriter(directory));
+            .reduce((val1, val2) -> val1, of(WINDOW_SIZE), CACHE_NAME).foreach(cacheWriter(storage));
 
 
-        builder.stream(kserde, vserde, TOPIC_UPDATE).flatMap(updater(directory)).to(TOPIC_RECACHE);
-        builder.stream(kserde, vserde, TOPIC_DELETE).flatMap(deleter(directory)).to(TOPIC_RECACHE);
+        builder.stream(kserde, vserde, TOPIC_UPDATE).flatMap(updater(storage)).to(TOPIC_RECACHE);
+        builder.stream(kserde, vserde, TOPIC_DELETE).flatMap(deleter(storage)).to(TOPIC_RECACHE);
         return new KafkaStreams(builder, new StreamsConfig(props));
     }
 

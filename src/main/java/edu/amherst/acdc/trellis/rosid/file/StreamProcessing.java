@@ -15,7 +15,7 @@
  */
 package edu.amherst.acdc.trellis.rosid.file;
 
-import static edu.amherst.acdc.trellis.rosid.file.FileUtils.partition;
+import static edu.amherst.acdc.trellis.rosid.file.FileUtils.resourceDirectory;
 import static java.time.Instant.now;
 import static java.util.stream.Stream.empty;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -23,6 +23,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.stream.Stream;
 
 import org.apache.commons.rdf.api.Dataset;
@@ -41,12 +42,13 @@ final class StreamProcessing {
 
     /**
      * A mapping function for updating LDP Container properties
-     * @param directory the base resource directory
+     * @param config the storage configuration
      * @return a mapping function that generates an additional message for further processing
      */
-    public static KeyValueMapper<String, Dataset, KeyValue<String, Dataset>> ldpAdder(final File directory) {
+    public static KeyValueMapper<String, Dataset, KeyValue<String, Dataset>> ldpAdder(
+            final Map<String, Configuration.Storage> config) {
         return (identifier, dataset) -> {
-            final File dir = new File(directory, partition(identifier));
+            final File dir = resourceDirectory(config, identifier);
             try {
                 RDFPatch.write(dir, empty(), dataset.stream(), now());
             } catch (final IOException ex) {
@@ -58,12 +60,13 @@ final class StreamProcessing {
 
     /**
      * A mapping function for deleting LDP Container properties
-     * @param directory the base resource directory
+     * @param config the storage configuration
      * @return a mapping function that generates an additional message for further processing
      */
-    public static KeyValueMapper<String, Dataset, KeyValue<String, Dataset>> ldpDeleter(final File directory) {
+    public static KeyValueMapper<String, Dataset, KeyValue<String, Dataset>> ldpDeleter(
+            final Map<String, Configuration.Storage> config) {
         return (identifier, dataset) -> {
-            final File dir = new File(directory, partition(identifier));
+            final File dir = resourceDirectory(config, identifier);
             try {
                 RDFPatch.write(dir, dataset.stream(), empty(), now());
             } catch (final IOException ex) {
@@ -75,13 +78,14 @@ final class StreamProcessing {
 
     /**
      * A mapping function for updating the resource cache
-     * @param directory the base resource directory
+     * @param config the storage configuration
      * @return a terminating foreach action
      */
-    public static ForeachAction<Windowed<String>, Dataset> cacheWriter(final File directory) {
+    public static ForeachAction<Windowed<String>, Dataset> cacheWriter(
+            final Map<String, Configuration.Storage> config) {
         return (window, data) -> {
             final String identifier = window.key();
-            final File dir = new File(directory, partition(identifier));
+            final File dir = resourceDirectory(config, identifier);
             try {
                 CachedResource.write(dir, identifier);
             } catch (final IOException ex) {
@@ -95,12 +99,14 @@ final class StreamProcessing {
      * @param directory the base resource directory
      * @return a mapping function that generates 0 or more messages for further processing
      */
-    public static KeyValueMapper<String, Dataset, Iterable<KeyValue<String, Dataset>>> updater(final File directory) {
+    public static KeyValueMapper<String, Dataset, Iterable<KeyValue<String, Dataset>>> updater(
+            final Map<String, Configuration.Storage> config) {
         // TODO
         // -- write dataset to resource
         // -- add prov:endedAtTime
         // -- re-cache parent, if this is new
         return (identifier, dataset) -> {
+            //final File dir = resourceDirectory(config, identifier);
             final Stream<KeyValue<String, Dataset>> stream = empty();
             return new Iterable<KeyValue<String, Dataset>>() {
                 @Override
@@ -116,7 +122,8 @@ final class StreamProcessing {
      * @param directory the base resource directory
      * @return a mapping function that generates 0 or more messages for further processing
      */
-    public static KeyValueMapper<String, Dataset, Iterable<KeyValue<String, Dataset>>> deleter(final File directory) {
+    public static KeyValueMapper<String, Dataset, Iterable<KeyValue<String, Dataset>>> deleter(
+            final Map<String, Configuration.Storage> config) {
         // TODO
         // -- get child resources
         // -- get parent resources
@@ -124,6 +131,7 @@ final class StreamProcessing {
         // -- delete child resources
         // -- re-cache parent, if it exists
         return (identifier, dataset) -> {
+            //final File dir = resourceDirectory(config, identifier);
             final Stream<KeyValue<String, Dataset>> stream = empty();
             return new Iterable<KeyValue<String, Dataset>>() {
                 @Override

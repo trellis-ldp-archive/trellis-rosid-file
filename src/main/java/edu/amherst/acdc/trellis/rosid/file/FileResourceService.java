@@ -16,11 +16,13 @@
 package edu.amherst.acdc.trellis.rosid.file;
 
 import static edu.amherst.acdc.trellis.rosid.file.Constants.RESOURCE_CACHE;
-import static edu.amherst.acdc.trellis.rosid.file.FileUtils.partition;
+import static edu.amherst.acdc.trellis.rosid.file.FileUtils.resourceDirectory;
 import static java.time.Instant.now;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.of;
 import static org.slf4j.LoggerFactory.getLogger;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import edu.amherst.acdc.trellis.api.Resource;
 import edu.amherst.acdc.trellis.rosid.common.AbstractResourceService;
@@ -28,7 +30,9 @@ import edu.amherst.acdc.trellis.spi.Session;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.time.Instant;
+import java.util.Map;
 import java.util.Optional;
 
 import org.apache.commons.rdf.api.Dataset;
@@ -44,7 +48,7 @@ public class FileResourceService extends AbstractResourceService {
 
     private static final Logger LOGGER = getLogger(FileResourceService.class);
 
-    private final File directory;
+    private final Configuration configuration;
 
     private final KafkaStreams kstreams;
 
@@ -54,29 +58,36 @@ public class FileResourceService extends AbstractResourceService {
      */
     public FileResourceService() throws IOException {
         super();
-        final String path = System.getProperty("trellis.data");
-        requireNonNull(path, "trellis.data is unset!");
-        directory = new File(path);
-        initFiles();
+        final String config = System.getProperty("trellis.configuration");
+        requireNonNull(config, "trellis.configuration is unset!");
+        final File configFile = new File(config);
+        if (!configFile.exists()) {
+            throw new IOException("Configuration file (" + config + ") does not exist");
+        }
+        final ObjectMapper mapper = new ObjectMapper();
+        this.configuration = mapper.readValue(new File(config), Configuration.class);
 
-        kstreams = StreamConfiguration.configure(directory);
-        kstreams.start();
+        init();
+
+        this.kstreams = StreamConfiguration.configure(this.configuration.storage);
+        this.kstreams.start();
     }
 
     /**
      * Create a File-based repository service
-     * @param directory the data directory
+     * @param configuration the configuration
      * @param producer the kafka producer
      * @param streams the kafka streams
      * @throws IOException if the directory is not writable
      */
-    protected FileResourceService(final File directory, final Producer<String, Dataset> producer,
+    protected FileResourceService(final Configuration configuration, final Producer<String, Dataset> producer,
             final KafkaStreams streams) throws IOException {
         super(producer);
-        requireNonNull(directory, "directory may not be null!");
+        requireNonNull(configuration, "configuration may not be null!");
         requireNonNull(streams, "streams may not be null!");
-        this.directory = directory;
-        initFiles();
+        this.configuration = configuration;
+
+        init();
 
         this.kstreams = streams;
         this.kstreams.start();
@@ -85,7 +96,7 @@ public class FileResourceService extends AbstractResourceService {
     @Override
     public Optional<Resource> get(final Session session, final IRI identifier) {
         // this ignores the session (e.g. batch ops)
-        return of(new File(directory, partition(identifier))).filter(File::exists)
+        return of(resourceDirectory(configuration.storage, identifier)).filter(File::exists)
             .flatMap(dir -> new File(dir, RESOURCE_CACHE).exists() ?
                     CachedResource.find(dir, identifier) : VersionedResource.find(dir, identifier, now()));
     }
@@ -93,7 +104,7 @@ public class FileResourceService extends AbstractResourceService {
     @Override
     public Optional<Resource> get(final Session session, final IRI identifier, final Instant time) {
         // this ignores the session (e.g. batch ops)
-        return of(new File(directory, partition(identifier))).filter(File::exists)
+        return of(resourceDirectory(configuration.storage, identifier)).filter(File::exists)
             .flatMap(dir -> VersionedResource.find(dir, identifier, time));
     }
 
@@ -103,15 +114,30 @@ public class FileResourceService extends AbstractResourceService {
         kstreams.close();
     }
 
-    private void initFiles() throws IOException {
-        if (!directory.exists()) {
-            directory.mkdirs();
-        }
-        if (!directory.canWrite()) {
-            throw new IOException("Cannot write to " + directory.getAbsolutePath());
-        }
+    private void init() throws IOException {
+        for (final Map.Entry<String, Configuration.Storage> storage : configuration.storage.entrySet()) {
+            final File res = new File(URI.create(storage.getValue().resources));
+            if (!res.exists()) {
+                res.mkdirs();
+            }
+            if (!res.canWrite()) {
+                throw new IOException("Cannot write to " + res.getAbsolutePath());
+            }
 
-        LOGGER.info("Using base data directory: {}", directory.getAbsolutePath());
+            if (storage.getValue().datastreams.startsWith("file:")) {
+                final File ds = new File(URI.create(storage.getValue().datastreams));
+                if (!ds.exists()) {
+                    ds.mkdirs();
+                }
+                if (!ds.canWrite()) {
+                    throw new IOException("Cannot write to " + ds.getAbsolutePath());
+                }
+                if (res.equals(ds)) {
+                    throw new IOException("Resource and datastream locations cannot be the same!");
+                }
+                LOGGER.info("Using datastream data directory for '{}': {}", storage.getKey(), ds.getAbsolutePath());
+            }
+            LOGGER.info("Using resource data directory for '{}': {}", storage.getKey(), res.getAbsolutePath());
+        }
     }
-
 }

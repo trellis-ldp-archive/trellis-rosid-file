@@ -25,9 +25,12 @@ import static org.apache.commons.rdf.jena.JenaRDF.asQuad;
 import static org.apache.jena.riot.Lang.NQUADS;
 import static org.apache.jena.riot.system.StreamRDFLib.sinkQuads;
 
+import java.io.File;
 import java.io.StringReader;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.StringJoiner;
 import java.util.zip.CRC32;
@@ -89,6 +92,28 @@ final class FileUtils {
         final List<org.apache.jena.sparql.core.Quad> c = new ArrayList<>();
         READER.read(new StringReader(line), null, NQUADS.getContentType(), sinkQuads(new SinkToCollection<>(c)), null);
         return of(c).filter(x -> !x.isEmpty()).map(x -> asQuad(rdf, x.get(0)));
+    }
+
+    /**
+     * Get the resource directory for a given identifier
+     * @param config the configuration
+     * @param identifier the identifier
+     * @return the file
+     */
+    public static File resourceDirectory(final Map<String, Configuration.Storage> config, final IRI identifier) {
+        return resourceDirectory(config, identifier.getIRIString());
+    }
+
+    /**
+     * Get the resource directory for a given identifier
+     * @param config the configuration
+     * @param identifier the identifier
+     * @return the file
+     */
+    public static File resourceDirectory(final Map<String, Configuration.Storage> config, final String identifier) {
+        final String repo = identifier.split("/")[0].split(":")[1];
+        final File root = new File(URI.create(config.get(repo).resources));
+        return new File(root, partition(identifier));
     }
 
     private FileUtils() {

@@ -18,6 +18,9 @@ package edu.amherst.acdc.trellis.rosid.file;
 import static edu.amherst.acdc.trellis.rosid.common.RDFUtils.getInstance;
 import static edu.amherst.acdc.trellis.rosid.file.FileUtils.resourceDirectory;
 import static edu.amherst.acdc.trellis.vocabulary.DC.created;
+import static edu.amherst.acdc.trellis.vocabulary.Fedora.PreferInboundReferences;
+import static edu.amherst.acdc.trellis.vocabulary.LDP.PreferContainment;
+import static edu.amherst.acdc.trellis.vocabulary.LDP.PreferMembership;
 import static edu.amherst.acdc.trellis.vocabulary.PROV.wasGeneratedBy;
 import static edu.amherst.acdc.trellis.vocabulary.Trellis.PreferAudit;
 import static edu.amherst.acdc.trellis.vocabulary.Trellis.PreferServerManaged;
@@ -33,6 +36,7 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 import org.apache.commons.rdf.api.Dataset;
+import org.apache.commons.rdf.api.Quad;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.kstream.Predicate;
 import org.slf4j.Logger;
@@ -44,6 +48,9 @@ final class StreamProcessing {
 
     private static final Logger LOGGER = getLogger(StreamProcessing.class);
 
+    private static java.util.function.Predicate<Quad> isContainerQuad = q ->
+        q.getGraphName().filter(n -> PreferContainment.equals(n) || PreferMembership.equals(n)).isPresent();
+
     /**
      * A mapping function for updating LDP Container properties
      * @param config the storage configuration
@@ -54,7 +61,7 @@ final class StreamProcessing {
     public static KeyValue<String, Dataset> ldpAdder(final Map<String, String> config, final String key,
             final Dataset value) {
         try {
-            RDFPatch.write(resourceDirectory(config, key), empty(), value.stream(), now());
+            RDFPatch.write(resourceDirectory(config, key), empty(), value.stream().filter(isContainerQuad), now());
         } catch (final IOException ex) {
             LOGGER.error("Error adding LDP container triples to {}: {}", key, ex.getMessage());
         }
@@ -71,7 +78,7 @@ final class StreamProcessing {
     public static KeyValue<String, Dataset> ldpDeleter(final Map<String, String> config, final String key,
             final Dataset value) {
         try {
-            RDFPatch.write(resourceDirectory(config, key), value.stream(), empty(), now());
+            RDFPatch.write(resourceDirectory(config, key), value.stream().filter(isContainerQuad), empty(), now());
         } catch (final IOException ex) {
             LOGGER.error("Error removing LDP container triples from {}: {}", key, ex.getMessage());
         }
@@ -144,6 +151,37 @@ final class StreamProcessing {
     }
 
     /**
+     * A processing function for adding inbound refs
+     * @param config the storage configuration
+     * @param key the key
+     * @param value the value
+     */
+    public static void inboundAdd(final Map<String, String> config, final String key,
+            final Dataset value) {
+        try {
+            RDFPatch.write(resourceDirectory(config, key), empty(),
+                    value.stream(of(PreferInboundReferences), null, null, null), now());
+        } catch (final IOException ex) {
+            LOGGER.error("Error adding inbound reference triples to {}: {}", key, ex.getMessage());
+        }
+    }
+
+    /**
+     * A processing function for deleting inbound refs
+     * @param config the storage configuration
+     * @param key the key
+     * @param value the value
+     */
+    public static void inboundDelete(final Map<String, String> config, final String key, final Dataset value) {
+        try {
+            RDFPatch.write(resourceDirectory(config, key), value.stream(of(PreferInboundReferences), null, null, null),
+                    empty(), now());
+        } catch (final IOException ex) {
+            LOGGER.error("Error removing inbound reference triples from {}: {}", key, ex.getMessage());
+        }
+    }
+
+    /**
      * A predicate that always returns true
      */
     public static final Predicate<String, Dataset> otherwise = (k, v) -> true;
@@ -165,6 +203,12 @@ final class StreamProcessing {
      */
     public static final Predicate<String, Dataset> isDeleteTarget = (identifier, dataset) ->
         dataset.contains(of(PreferAudit), getInstance().createIRI(identifier), wasGeneratedBy, null);
+
+    /**
+     * A predicate determining whether the given k/v pair contains inbound refs
+     */
+    public static final Predicate<String, Dataset> hasInboundRefs = (identifier, dataset) ->
+        dataset.contains(of(PreferInboundReferences), null, null, null);
 
     private StreamProcessing() {
         // prevent instantiation

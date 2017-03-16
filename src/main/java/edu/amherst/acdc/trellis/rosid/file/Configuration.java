@@ -17,38 +17,18 @@ package edu.amherst.acdc.trellis.rosid.file;
 
 import static java.io.File.separator;
 import static java.lang.System.getProperty;
-import static java.util.Collections.singletonMap;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
  * @author acoburn
  */
 class Configuration {
-
     /**
      * The storage configuration
      */
-    static class Storage {
-
-        /**
-         * The root of the URL path
-         */
-        public String urlPath = "/";
-
-        /**
-         * The storage location of resources
-         */
-        public String resources = "file:" + getProperty("trellis.home") + separator + "resources";
-
-        /**
-         * The storage location of datastreams
-         */
-        public String datastreams = "file:" + getProperty("trellis.home") + separator + "datastreams";
-    }
-
-    /**
-     * The storage configuration
-     */
-    public Map<String, Storage> storage = singletonMap("repository", new Storage());
+    public Map<String, String> storage = new HashMap<String, String>() { {
+        put("repository", "file:" + getProperty("trellis.home") + separator + "resources");
+    }};
 }

@@ -51,7 +51,7 @@ final class StreamProcessing {
      * @return a mapping function that generates an additional message for further processing
      */
     public static KeyValueMapper<String, Dataset, KeyValue<String, Dataset>> ldpAdder(
-            final Map<String, Configuration.Storage> config) {
+            final Map<String, String> config) {
         return (identifier, dataset) -> {
             try {
                 RDFPatch.write(resourceDirectory(config, identifier), empty(), dataset.stream(), now());
@@ -68,7 +68,7 @@ final class StreamProcessing {
      * @return a mapping function that generates an additional message for further processing
      */
     public static KeyValueMapper<String, Dataset, KeyValue<String, Dataset>> ldpDeleter(
-            final Map<String, Configuration.Storage> config) {
+            final Map<String, String> config) {
         return (identifier, dataset) -> {
             try {
                 RDFPatch.write(resourceDirectory(config, identifier), dataset.stream(), empty(), now());
@@ -85,7 +85,7 @@ final class StreamProcessing {
      * @return a terminating foreach action
      */
     public static KeyValueMapper<String, Dataset, KeyValue<String, Dataset>> cacheWriter(
-            final Map<String, Configuration.Storage> config) {
+            final Map<String, String> config) {
         return (identifier, dataset) -> {
             try {
                 CachedResource.write(resourceDirectory(config, identifier), identifier);
@@ -102,7 +102,7 @@ final class StreamProcessing {
      * @return a mapping function that generates 0 or more messages for further processing
      */
     public static KeyValueMapper<String, Dataset, Iterable<KeyValue<String, Dataset>>> updater(
-            final Map<String, Configuration.Storage> config) {
+            final Map<String, String> config) {
         // TODO
         // -- write dataset to resource
         // -- add prov:endedAtTime
@@ -125,7 +125,7 @@ final class StreamProcessing {
      * @return a mapping function that generates 0 or more messages for further processing
      */
     public static KeyValueMapper<String, Dataset, Iterable<KeyValue<String, Dataset>>> deleter(
-            final Map<String, Configuration.Storage> config) {
+            final Map<String, String> config) {
         // TODO
         // -- get child resources
         // -- get parent resources

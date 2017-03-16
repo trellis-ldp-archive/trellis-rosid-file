@@ -115,8 +115,8 @@ public class FileResourceService extends AbstractResourceService {
     }
 
     private void init() throws IOException {
-        for (final Map.Entry<String, Configuration.Storage> storage : configuration.storage.entrySet()) {
-            final File res = new File(URI.create(storage.getValue().resources));
+        for (final Map.Entry<String, String> storage : configuration.storage.entrySet()) {
+            final File res = new File(URI.create(storage.getValue()));
             if (!res.exists()) {
                 res.mkdirs();
             }
@@ -124,19 +124,6 @@ public class FileResourceService extends AbstractResourceService {
                 throw new IOException("Cannot write to " + res.getAbsolutePath());
             }
 
-            if (storage.getValue().datastreams.startsWith("file:")) {
-                final File ds = new File(URI.create(storage.getValue().datastreams));
-                if (!ds.exists()) {
-                    ds.mkdirs();
-                }
-                if (!ds.canWrite()) {
-                    throw new IOException("Cannot write to " + ds.getAbsolutePath());
-                }
-                if (res.equals(ds)) {
-                    throw new IOException("Resource and datastream locations cannot be the same!");
-                }
-                LOGGER.info("Using datastream data directory for '{}': {}", storage.getKey(), ds.getAbsolutePath());
-            }
             LOGGER.info("Using resource data directory for '{}': {}", storage.getKey(), res.getAbsolutePath());
         }
     }

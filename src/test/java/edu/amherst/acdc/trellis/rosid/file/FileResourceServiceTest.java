@@ -79,8 +79,7 @@ public class FileResourceServiceTest extends BaseRdfTest {
     @Before
     public void setUp() throws Exception {
         config = new Configuration();
-        config.storage.get("repository").resources = getClass().getResource("/root").toURI().toString();
-        config.storage.get("repository").datastreams = "info:test";
+        config.storage.put("repository", getClass().getResource("/root").toURI().toString());
         service = new FileResourceService(config, mockProducer, mockStreams);
     }
 
@@ -88,16 +87,12 @@ public class FileResourceServiceTest extends BaseRdfTest {
     public void testNewRoot() throws IOException {
         final Instant time = parse("2017-02-16T11:15:03Z");
         final Configuration configuration = new Configuration();
-        configuration.storage.get("repository").resources = config.storage.get("repository").resources + "/root2/a";
-        configuration.storage.get("repository").datastreams = config.storage.get("repository").resources + "/root2/b";
-        final File root = new File(URI.create(configuration.storage.get("repository").resources));
-        final File dsRoot = new File(URI.create(configuration.storage.get("repository").datastreams));
+        configuration.storage.put("repository", config.storage.get("repository") + "/root2/a");
+        final File root = new File(URI.create(configuration.storage.get("repository")));
         assertFalse(root.exists());
-        assertFalse(dsRoot.exists());
         final ResourceService altService = new FileResourceService(configuration, mockProducer, mockStreams);
         assertFalse(altService.exists(mockSession, identifier, time));
         assertTrue(root.exists());
-        assertTrue(dsRoot.exists());
         altService.bind(mockEventService);
         altService.unbind(mockEventService);
         altService.bind(mockEventService);
@@ -108,9 +103,8 @@ public class FileResourceServiceTest extends BaseRdfTest {
     @Test(expected = IOException.class)
     public void testUnwritableRoot() throws IOException {
         final Configuration configuration = new Configuration();
-        configuration.storage.get("repository").resources = config.storage.get("repository").resources + "/root3";
-        configuration.storage.get("repository").datastreams = "info:test";
-        final File root = new File(URI.create(configuration.storage.get("repository").resources));
+        configuration.storage.put("repository", config.storage.get("repository") + "/root3");
+        final File root = new File(URI.create(configuration.storage.get("repository")));
         assertTrue(root.mkdir());
         assertTrue(root.setReadOnly());
         final ResourceService altService = new FileResourceService(configuration, mockProducer, mockStreams);

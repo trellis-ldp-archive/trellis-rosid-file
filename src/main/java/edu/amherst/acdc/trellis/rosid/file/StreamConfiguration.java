@@ -65,7 +65,7 @@ final class StreamConfiguration {
      * @param storage the storage configuration
      * @return the configured kafka stream processor
      */
-    public static KafkaStreams configure(final Map<String, Configuration.Storage> storage) {
+    public static KafkaStreams configure(final Map<String, String> storage) {
         final String bootstrapServers = System.getProperty("kafka.bootstrap.servers");
 
         final Map<String, Object> props = new HashMap<>();

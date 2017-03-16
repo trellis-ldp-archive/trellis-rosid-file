@@ -100,7 +100,7 @@ final class FileUtils {
      * @param identifier the identifier
      * @return the file
      */
-    public static File resourceDirectory(final Map<String, Configuration.Storage> config, final IRI identifier) {
+    public static File resourceDirectory(final Map<String, String> config, final IRI identifier) {
         return resourceDirectory(config, identifier.getIRIString());
     }
 
@@ -110,9 +110,9 @@ final class FileUtils {
      * @param identifier the identifier
      * @return the file
      */
-    public static File resourceDirectory(final Map<String, Configuration.Storage> config, final String identifier) {
+    public static File resourceDirectory(final Map<String, String> config, final String identifier) {
         final String repo = identifier.split("/")[0].split(":")[1];
-        final File root = new File(URI.create(config.get(repo).resources));
+        final File root = new File(URI.create(config.get(repo)));
         return new File(root, partition(identifier));
     }
 

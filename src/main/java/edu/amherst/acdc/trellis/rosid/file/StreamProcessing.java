@@ -34,7 +34,6 @@ import java.util.stream.Stream;
 
 import org.apache.commons.rdf.api.Dataset;
 import org.apache.kafka.streams.KeyValue;
-import org.apache.kafka.streams.kstream.KeyValueMapper;
 import org.apache.kafka.streams.kstream.Predicate;
 import org.slf4j.Logger;
 
@@ -48,99 +47,99 @@ final class StreamProcessing {
     /**
      * A mapping function for updating LDP Container properties
      * @param config the storage configuration
-     * @return a mapping function that generates an additional message for further processing
+     * @param key the key
+     * @param value the value
+     * @return a new key-value pair
      */
-    public static KeyValueMapper<String, Dataset, KeyValue<String, Dataset>> ldpAdder(
-            final Map<String, String> config) {
-        return (identifier, dataset) -> {
-            try {
-                RDFPatch.write(resourceDirectory(config, identifier), empty(), dataset.stream(), now());
-            } catch (final IOException ex) {
-                LOGGER.error("Error adding LDP container triples to {}: {}", identifier, ex.getMessage());
-            }
-            return new KeyValue<>(identifier, dataset);
-        };
+    public static KeyValue<String, Dataset> ldpAdder(final Map<String, String> config, final String key,
+            final Dataset value) {
+        try {
+            RDFPatch.write(resourceDirectory(config, key), empty(), value.stream(), now());
+        } catch (final IOException ex) {
+            LOGGER.error("Error adding LDP container triples to {}: {}", key, ex.getMessage());
+        }
+        return new KeyValue<>(key, value);
     }
 
     /**
      * A mapping function for deleting LDP Container properties
      * @param config the storage configuration
-     * @return a mapping function that generates an additional message for further processing
+     * @param key the key
+     * @param value the value
+     * @return a new key-value pair
      */
-    public static KeyValueMapper<String, Dataset, KeyValue<String, Dataset>> ldpDeleter(
-            final Map<String, String> config) {
-        return (identifier, dataset) -> {
-            try {
-                RDFPatch.write(resourceDirectory(config, identifier), dataset.stream(), empty(), now());
-            } catch (final IOException ex) {
-                LOGGER.error("Error removing LDP container triples from {}: {}", identifier, ex.getMessage());
-            }
-            return new KeyValue<>(identifier, dataset);
-        };
+    public static KeyValue<String, Dataset> ldpDeleter(final Map<String, String> config, final String key,
+            final Dataset value) {
+        try {
+            RDFPatch.write(resourceDirectory(config, key), value.stream(), empty(), now());
+        } catch (final IOException ex) {
+            LOGGER.error("Error removing LDP container triples from {}: {}", key, ex.getMessage());
+        }
+        return new KeyValue<>(key, value);
     }
 
     /**
      * A mapping function for updating the resource cache
      * @param config the storage configuration
-     * @return a terminating foreach action
+     * @param key the key
+     * @param value the value
+     * @return a new key-value pair
      */
-    public static KeyValueMapper<String, Dataset, KeyValue<String, Dataset>> cacheWriter(
-            final Map<String, String> config) {
-        return (identifier, dataset) -> {
-            try {
-                CachedResource.write(resourceDirectory(config, identifier), identifier);
-            } catch (final IOException ex) {
-                LOGGER.error("Error writing cache for {}: {}", identifier, ex.getMessage());
-            }
-            return new KeyValue<>(identifier, dataset);
-        };
+    public static KeyValue<String, Dataset> cacheWriter(final Map<String, String> config, final String key,
+            final Dataset value) {
+        try {
+            CachedResource.write(resourceDirectory(config, key), key);
+        } catch (final IOException ex) {
+            LOGGER.error("Error writing cache for {}: {}", key, ex.getMessage());
+        }
+        return new KeyValue<>(key, value);
     }
 
     /**
      * A mapping function for updating resources
      * @param config the storage configuration
-     * @return a mapping function that generates 0 or more messages for further processing
+     * @param key the key
+     * @param value the value
+     * @return a set of new key-value pairs
      */
-    public static KeyValueMapper<String, Dataset, Iterable<KeyValue<String, Dataset>>> updater(
-            final Map<String, String> config) {
+    public static Iterable<KeyValue<String, Dataset>> updater(final Map<String, String> config, final String key,
+            final Dataset value) {
         // TODO
         // -- write dataset to resource
         // -- add prov:endedAtTime
         // -- re-cache parent, if this is new
-        return (identifier, dataset) -> {
-            //final File dir = resourceDirectory(config, identifier);
-            final Stream<KeyValue<String, Dataset>> stream = empty();
-            return new Iterable<KeyValue<String, Dataset>>() {
-                @Override
-                public Iterator<KeyValue<String, Dataset>> iterator() {
-                    return stream.iterator();
-                }
-            };
+        //final File dir = resourceDirectory(config, key);
+        final Stream<KeyValue<String, Dataset>> stream = empty();
+        return new Iterable<KeyValue<String, Dataset>>() {
+            @Override
+            public Iterator<KeyValue<String, Dataset>> iterator() {
+                return stream.iterator();
+            }
         };
     }
 
     /**
      * A mapping function for deleting resources
      * @param config the storage configuration
-     * @return a mapping function that generates 0 or more messages for further processing
+     * @param key the key
+     * @param value the value
+     * @return a set of new key-value pairs
      */
-    public static KeyValueMapper<String, Dataset, Iterable<KeyValue<String, Dataset>>> deleter(
-            final Map<String, String> config) {
+    public static Iterable<KeyValue<String, Dataset>> deleter(final Map<String, String> config, final String key,
+            final Dataset value) {
         // TODO
         // -- get child resources
         // -- get parent resources
         // -- delete resource
         // -- delete child resources
         // -- re-cache parent, if it exists
-        return (identifier, dataset) -> {
-            //final File dir = resourceDirectory(config, identifier);
-            final Stream<KeyValue<String, Dataset>> stream = empty();
-            return new Iterable<KeyValue<String, Dataset>>() {
-                @Override
-                public Iterator<KeyValue<String, Dataset>> iterator() {
-                    return stream.iterator();
-                }
-            };
+        //final File dir = resourceDirectory(config, key);
+        final Stream<KeyValue<String, Dataset>> stream = empty();
+        return new Iterable<KeyValue<String, Dataset>>() {
+            @Override
+            public Iterator<KeyValue<String, Dataset>> iterator() {
+                return stream.iterator();
+            }
         };
     }
 

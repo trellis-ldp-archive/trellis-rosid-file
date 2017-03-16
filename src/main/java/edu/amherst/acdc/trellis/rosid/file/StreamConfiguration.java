@@ -83,24 +83,32 @@ final class StreamConfiguration {
 
         @SuppressWarnings("unchecked")
         final KStream<String, Dataset>[] updates = builder.stream(kserde, vserde, TOPIC_UPDATE)
-            .flatMap(updater(storage))
+            .flatMap((k, v) -> updater(storage, k, v))
             .branch(StreamProcessing.isNew, StreamProcessing.otherwise);
         updates[0].to(TOPIC_LDP_CONTAINER_ADD);
         updates[1].to(TOPIC_RECACHE);
 
         @SuppressWarnings("unchecked")
         final KStream<String, Dataset>[] deletes = builder.stream(kserde, vserde, TOPIC_DELETE)
-            .flatMap(deleter(storage))
+            .flatMap((k, v) -> deleter(storage, k, v))
             .branch(StreamProcessing.isDeleteParent, StreamProcessing.isDeleteTarget, StreamProcessing.otherwise);
         deletes[0].to(TOPIC_LDP_CONTAINER_DELETE);
         deletes[1].to(TOPIC_EVENT);
         deletes[2].to(TOPIC_DELETE);
 
-        builder.stream(kserde, vserde, TOPIC_LDP_CONTAINER_ADD).map(ldpAdder(storage)).to(TOPIC_RECACHE);
-        builder.stream(kserde, vserde, TOPIC_LDP_CONTAINER_DELETE).map(ldpDeleter(storage)).to(TOPIC_RECACHE);
+        builder.stream(kserde, vserde, TOPIC_LDP_CONTAINER_ADD)
+            .map((k, v) -> ldpAdder(storage, k, v))
+            .to(TOPIC_RECACHE);
+
+        builder.stream(kserde, vserde, TOPIC_LDP_CONTAINER_DELETE)
+            .map((k, v) -> ldpDeleter(storage, k, v))
+            .to(TOPIC_RECACHE);
+
         builder.stream(kserde, vserde, TOPIC_RECACHE).groupByKey()
             .reduce((val1, val2) -> val1, of(WINDOW_SIZE), CACHE_NAME)
-            .toStream((k, v) -> k.key()).map(cacheWriter(storage)).to(TOPIC_EVENT);
+            .toStream((k, v) -> k.key())
+            .map((k, v) -> cacheWriter(storage, k, v))
+            .to(TOPIC_EVENT);
 
         return new KafkaStreams(builder, new StreamsConfig(props));
     }

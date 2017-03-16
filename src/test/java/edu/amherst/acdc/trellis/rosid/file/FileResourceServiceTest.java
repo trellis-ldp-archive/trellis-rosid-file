@@ -79,7 +79,7 @@ public class FileResourceServiceTest extends BaseRdfTest {
     @Before
     public void setUp() throws Exception {
         config = new Configuration();
-        config.storage.put("repository", getClass().getResource("/root").toURI().toString());
+        config.storage.get("repository").put("resources", getClass().getResource("/root").toURI().toString());
         service = new FileResourceService(config, mockProducer, mockStreams);
     }
 
@@ -87,8 +87,9 @@ public class FileResourceServiceTest extends BaseRdfTest {
     public void testNewRoot() throws IOException {
         final Instant time = parse("2017-02-16T11:15:03Z");
         final Configuration configuration = new Configuration();
-        configuration.storage.put("repository", config.storage.get("repository") + "/root2/a");
-        final File root = new File(URI.create(configuration.storage.get("repository")));
+        configuration.storage.get("repository").put("resources", config.storage.get("repository")
+            .get("resources") + "/root2/a");
+        final File root = new File(URI.create(configuration.storage.get("repository").get("resources")));
         assertFalse(root.exists());
         final ResourceService altService = new FileResourceService(configuration, mockProducer, mockStreams);
         assertFalse(altService.exists(mockSession, identifier, time));
@@ -103,8 +104,9 @@ public class FileResourceServiceTest extends BaseRdfTest {
     @Test(expected = IOException.class)
     public void testUnwritableRoot() throws IOException {
         final Configuration configuration = new Configuration();
-        configuration.storage.put("repository", config.storage.get("repository") + "/root3");
-        final File root = new File(URI.create(configuration.storage.get("repository")));
+        configuration.storage.get("repository").put("resources", config.storage.get("repository")
+            .get("resources") + "/root3");
+        final File root = new File(URI.create(configuration.storage.get("repository").get("resources")));
         assertTrue(root.mkdir());
         assertTrue(root.setReadOnly());
         final ResourceService altService = new FileResourceService(configuration, mockProducer, mockStreams);

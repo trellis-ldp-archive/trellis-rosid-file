@@ -20,6 +20,7 @@ import static edu.amherst.acdc.trellis.rosid.file.FileUtils.resourceDirectory;
 import static java.time.Instant.now;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.of;
+import static java.util.stream.Collectors.toMap;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -50,6 +51,8 @@ public class FileResourceService extends AbstractResourceService {
 
     private final Configuration configuration;
 
+    private final Map<String, String> storageConfig;
+
     private final KafkaStreams kstreams;
 
     /**
@@ -66,10 +69,13 @@ public class FileResourceService extends AbstractResourceService {
         }
         final ObjectMapper mapper = new ObjectMapper();
         this.configuration = mapper.readValue(new File(config), Configuration.class);
+        this.storageConfig = this.configuration.storage.entrySet().stream()
+                .collect(toMap(e -> e.getKey(), e -> e.getValue().get("resources")));
+
 
         init();
 
-        this.kstreams = StreamConfiguration.configure(this.configuration.storage);
+        this.kstreams = StreamConfiguration.configure(storageConfig);
         this.kstreams.start();
     }
 
@@ -86,6 +92,8 @@ public class FileResourceService extends AbstractResourceService {
         requireNonNull(configuration, "configuration may not be null!");
         requireNonNull(streams, "streams may not be null!");
         this.configuration = configuration;
+        this.storageConfig = this.configuration.storage.entrySet().stream()
+                .collect(toMap(e -> e.getKey(), e -> e.getValue().get("resources")));
 
         init();
 
@@ -96,7 +104,7 @@ public class FileResourceService extends AbstractResourceService {
     @Override
     public Optional<Resource> get(final Session session, final IRI identifier) {
         // this ignores the session (e.g. batch ops)
-        return of(resourceDirectory(configuration.storage, identifier)).filter(File::exists)
+        return of(resourceDirectory(storageConfig, identifier)).filter(File::exists)
             .flatMap(dir -> new File(dir, RESOURCE_CACHE).exists() ?
                     CachedResource.find(dir, identifier) : VersionedResource.find(dir, identifier, now()));
     }
@@ -104,7 +112,7 @@ public class FileResourceService extends AbstractResourceService {
     @Override
     public Optional<Resource> get(final Session session, final IRI identifier, final Instant time) {
         // this ignores the session (e.g. batch ops)
-        return of(resourceDirectory(configuration.storage, identifier)).filter(File::exists)
+        return of(resourceDirectory(storageConfig, identifier)).filter(File::exists)
             .flatMap(dir -> VersionedResource.find(dir, identifier, time));
     }
 
@@ -115,7 +123,7 @@ public class FileResourceService extends AbstractResourceService {
     }
 
     private void init() throws IOException {
-        for (final Map.Entry<String, String> storage : configuration.storage.entrySet()) {
+        for (final Map.Entry<String, String> storage : storageConfig.entrySet()) {
             final File res = new File(URI.create(storage.getValue()));
             if (!res.exists()) {
                 res.mkdirs();

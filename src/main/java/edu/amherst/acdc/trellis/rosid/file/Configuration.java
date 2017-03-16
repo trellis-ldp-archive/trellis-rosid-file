@@ -17,6 +17,9 @@ package edu.amherst.acdc.trellis.rosid.file;
 
 import static java.io.File.separator;
 import static java.lang.System.getProperty;
+import static java.util.Collections.singletonMap;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -24,11 +27,12 @@ import java.util.Map;
 /**
  * @author acoburn
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 class Configuration {
     /**
      * The storage configuration
      */
-    public Map<String, String> storage = new HashMap<String, String>() { {
-        put("repository", "file:" + getProperty("trellis.home") + separator + "resources");
-    }};
+    public Map<String, Map<String, String>> storage = singletonMap("repository", new HashMap<String, String>() { {
+        put("resources", "file:" + getProperty("trellis.home") + separator + "resources");
+    }});
 }

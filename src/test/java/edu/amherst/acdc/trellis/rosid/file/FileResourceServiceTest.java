@@ -92,13 +92,13 @@ public class FileResourceServiceTest extends BaseRdfTest {
         final File root = new File(URI.create(configuration.storage.get("repository").get("resources")));
         assertFalse(root.exists());
         final ResourceService altService = new FileResourceService(configuration, mockProducer, mockStreams);
-        assertFalse(altService.exists(mockSession, identifier, time));
+        assertFalse(altService.exists(identifier, time));
         assertTrue(root.exists());
         altService.bind(mockEventService);
         altService.unbind(mockEventService);
         altService.bind(mockEventService);
         altService.unbind(mockEventService2);
-        assertFalse(altService.exists(mockSession, identifier, time));
+        assertFalse(altService.exists(identifier, time));
     }
 
     @Test(expected = IOException.class)
@@ -115,13 +115,13 @@ public class FileResourceServiceTest extends BaseRdfTest {
     @Test
     public void testVersionedResourceExists() {
         final Instant time = parse("2017-02-16T11:15:03Z");
-        assertTrue(service.exists(mockSession, identifier, time));
+        assertTrue(service.exists(identifier, time));
     }
 
     @Test
     public void testVersionedResource() {
         final Instant time = parse("2017-02-16T11:15:03Z");
-        final Resource res = service.get(mockSession, identifier, time).get();
+        final Resource res = service.get(identifier, time).get();
         assertEquals(identifier, res.getIdentifier());
         assertEquals(LDP.Container, res.getInteractionModel());
         assertEquals(of(rdf.createIRI("trellis:repository")), res.getContainedBy());
@@ -178,13 +178,13 @@ public class FileResourceServiceTest extends BaseRdfTest {
     @Test
     public void testFutureResourceExists() {
         final Instant time = parse("2017-03-15T11:15:00Z");
-        assertTrue(service.exists(mockSession, identifier, time));
+        assertTrue(service.exists(identifier, time));
     }
 
     @Test
     public void testResourceFuture() {
         final Instant time = parse("2017-03-15T11:15:00Z");
-        final Resource res = service.get(mockSession, identifier, time).get();
+        final Resource res = service.get(identifier, time).get();
         assertEquals(identifier, res.getIdentifier());
         assertEquals(LDP.Container, res.getInteractionModel());
         assertEquals(of(rdf.createIRI("trellis:repository")), res.getContainedBy());
@@ -243,13 +243,13 @@ public class FileResourceServiceTest extends BaseRdfTest {
     @Test
     public void testPastResourceExists() {
         final Instant time = parse("2017-02-15T11:00:00Z");
-        assertTrue(service.exists(mockSession, identifier, time));
+        assertTrue(service.exists(identifier, time));
     }
 
     @Test
     public void testResourcePast() {
         final Instant time = parse("2017-02-15T11:00:00Z");
-        final Resource res = service.get(mockSession, identifier, time).get();
+        final Resource res = service.get(identifier, time).get();
         assertEquals(identifier, res.getIdentifier());
         assertEquals(LDP.Container, res.getInteractionModel());
         assertEquals(of(rdf.createIRI("trellis:repository")), res.getContainedBy());
@@ -289,23 +289,23 @@ public class FileResourceServiceTest extends BaseRdfTest {
     @Test
     public void testPrehistoryExistence() {
         final Instant time = parse("2017-01-15T11:00:00Z");
-        assertFalse(service.exists(mockSession, identifier, time));
+        assertFalse(service.exists(identifier, time));
     }
 
     @Test
     public void testResourcePrehistory() {
         final Instant time = parse("2017-01-15T11:00:00Z");
-        assertFalse(service.get(mockSession, identifier, time).isPresent());
+        assertFalse(service.get(identifier, time).isPresent());
     }
 
     @Test
     public void testCachedResourceExists() {
-        assertTrue(service.exists(mockSession, identifier));
+        assertTrue(service.exists(identifier));
     }
 
     @Test
     public void testCachedResource() {
-        final Resource res = service.get(mockSession, identifier).get();
+        final Resource res = service.get(identifier).get();
         assertEquals(identifier, res.getIdentifier());
         assertEquals(LDP.Container, res.getInteractionModel());
         assertEquals(of(rdf.createIRI("trellis:repository")), res.getContainedBy());
@@ -364,12 +364,12 @@ public class FileResourceServiceTest extends BaseRdfTest {
 
     @Test
     public void testOtherCachedResourceExists() {
-        assertTrue(service.exists(mockSession, other));
+        assertTrue(service.exists(other));
     }
 
     @Test
     public void testOtherCachedResource() {
-        final Resource res = service.get(mockSession, other).get();
+        final Resource res = service.get(other).get();
         assertEquals(other, res.getIdentifier());
         assertEquals(LDP.Container, res.getInteractionModel());
         assertEquals(of(rdf.createIRI("trellis:repository")), res.getContainedBy());

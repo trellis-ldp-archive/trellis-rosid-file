@@ -27,7 +27,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import edu.amherst.acdc.trellis.api.Resource;
 import edu.amherst.acdc.trellis.rosid.common.AbstractResourceService;
-import edu.amherst.acdc.trellis.spi.Session;
 
 import java.io.File;
 import java.io.IOException;
@@ -102,7 +101,7 @@ public class FileResourceService extends AbstractResourceService {
     }
 
     @Override
-    public Optional<Resource> get(final Session session, final IRI identifier) {
+    public Optional<Resource> get(final IRI identifier) {
         // this ignores the session (e.g. batch ops)
         return of(resourceDirectory(storageConfig, identifier)).filter(File::exists)
             .flatMap(dir -> new File(dir, RESOURCE_CACHE).exists() ?
@@ -110,7 +109,7 @@ public class FileResourceService extends AbstractResourceService {
     }
 
     @Override
-    public Optional<Resource> get(final Session session, final IRI identifier, final Instant time) {
+    public Optional<Resource> get(final IRI identifier, final Instant time) {
         // this ignores the session (e.g. batch ops)
         return of(resourceDirectory(storageConfig, identifier)).filter(File::exists)
             .flatMap(dir -> VersionedResource.find(dir, identifier, time));

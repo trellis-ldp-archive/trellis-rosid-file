@@ -65,9 +65,8 @@ public class RDFPatchTest {
         final Instant time = parse("2017-02-11T02:51:35Z");
         final Graph graph = rdf.createGraph();
         RDFPatch.asStream(rdf, file, identifier, time).map(Quad::asTriple).forEach(graph::add);
-        assertEquals(3L, graph.size());
+        assertEquals(2L, graph.size());
         assertTrue(graph.contains(identifier, rdf.createIRI("http://www.w3.org/2004/02/skos/core#prefLabel"), null));
-        assertTrue(graph.contains(identifier, DC.identifier, null));
     }
 
     @Test
@@ -76,10 +75,9 @@ public class RDFPatchTest {
         final Instant time = parse("2017-02-09T02:51:35Z");
         final Graph graph = rdf.createGraph();
         RDFPatch.asStream(rdf, file, identifier, time).map(Quad::asTriple).forEach(graph::add);
-        assertEquals(4L, graph.size());
+        assertEquals(3L, graph.size());
         assertTrue(graph.contains(identifier, rdf.createIRI("http://www.w3.org/2004/02/skos/core#prefLabel"), null));
         assertTrue(graph.contains(identifier, DC.isPartOf, null));
-        assertTrue(graph.contains(identifier, DC.identifier, null));
     }
 
     @Test
@@ -88,14 +86,13 @@ public class RDFPatchTest {
         final Instant time = parse("2017-01-30T02:51:35Z");
         final Graph graph = rdf.createGraph();
         RDFPatch.asStream(rdf, file, identifier, time).map(Quad::asTriple).forEach(graph::add);
-        assertEquals(8L, graph.size());
+        assertEquals(7L, graph.size());
         assertFalse(graph.contains(identifier, rdf.createIRI("http://www.w3.org/2004/02/skos/core#prefLabel"), null));
         assertTrue(graph.contains(identifier, DC.extent, null));
         assertTrue(graph.contains(identifier, DC.spatial, null));
         assertTrue(graph.contains(identifier, DC.title, null));
         assertTrue(graph.contains(identifier, DC.description, null));
         assertTrue(graph.contains(identifier, DC.subject, null));
-        assertTrue(graph.contains(identifier, DC.identifier, null));
         assertEquals(2L, graph.stream(identifier, DC.subject, null).count());
     }
 
@@ -105,14 +102,13 @@ public class RDFPatchTest {
         final Instant time = parse("2017-01-15T09:14:00Z");
         final Graph graph = rdf.createGraph();
         RDFPatch.asStream(rdf, file, identifier, time).map(Quad::asTriple).forEach(graph::add);
-        assertEquals(6L, graph.size());
+        assertEquals(5L, graph.size());
         assertFalse(graph.contains(identifier, rdf.createIRI("http://www.w3.org/2004/02/skos/core#prefLabel"), null));
         assertFalse(graph.contains(identifier, DC.extent, null));
         assertFalse(graph.contains(identifier, DC.spatial, null));
         assertTrue(graph.contains(identifier, DC.title, null));
         assertTrue(graph.contains(identifier, DC.description, null));
         assertTrue(graph.contains(identifier, DC.subject, null));
-        assertTrue(graph.contains(identifier, DC.identifier, null));
         assertEquals(2L, graph.stream(identifier, DC.subject, null).count());
     }
 
@@ -128,7 +124,7 @@ public class RDFPatchTest {
                     rdf.createLiteral("A longer description")));
         RDFPatch.write(file, delete.stream(), add.stream(), time);
         final List<Quad> data1 = RDFPatch.asStream(rdf, file, identifier, time).collect(toList());
-        assertEquals(add.size() + 2, data1.size());
+        assertEquals(add.size() + 1, data1.size());
         add.forEach(q -> assertTrue(data1.contains(q)));
 
         final Instant later = time.plusSeconds(10L);

@@ -99,7 +99,7 @@ public class LdpRdfTest extends BaseRdfTest {
                     RDFS.label, rdf.createLiteral("Some other resource", "eng"))));
 
         final List<Triple> server = res.stream().filter(isServerManaged).map(Quad::asTriple).collect(toList());
-        assertEquals(6L, server.size());
+        assertEquals(5L, server.size());
         assertTrue(server.contains(rdf.createTriple(identifier, Trellis.containedBy,
                         rdf.createIRI("trellis:repository"))));
         assertTrue(server.contains(rdf.createTriple(identifier, DC.created,
@@ -109,8 +109,6 @@ public class LdpRdfTest extends BaseRdfTest {
         assertTrue(server.contains(rdf.createTriple(identifier, DC.creator,
                         rdf.createIRI("http://example.org/user/raadmin"))));
         assertTrue(server.contains(rdf.createTriple(identifier, type, LDP.RDFSource)));
-        assertTrue(server.contains(rdf.createTriple(identifier, DC.identifier,
-                        rdf.createLiteral("cce4ad40c6fa5bbf947e78c87e73acc1"))));
 
         final List<Triple> inbound = res.stream().filter(isInbound).map(Quad::asTriple).collect(toList());
         assertEquals(2L, inbound.size());

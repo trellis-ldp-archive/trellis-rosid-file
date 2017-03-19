@@ -31,9 +31,6 @@ import static java.util.Spliterator.NONNULL;
 import static java.util.Spliterator.ORDERED;
 import static java.util.Spliterators.spliteratorUnknownSize;
 import static java.util.stream.StreamSupport.stream;
-import static org.apache.commons.codec.digest.DigestUtils.getMd5Digest;
-import static org.apache.commons.codec.digest.DigestUtils.updateDigest;
-import static org.apache.commons.codec.binary.Hex.encodeHexString;
 
 import edu.amherst.acdc.trellis.api.VersionRange;
 import edu.amherst.acdc.trellis.vocabulary.DC;
@@ -46,7 +43,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.io.Writer;
-import java.security.MessageDigest;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -195,7 +191,6 @@ final class RDFPatch {
         private Boolean hasModificationTriples = false;
         private Quad buffer = null;
         private String line = null;
-        private MessageDigest digest = getMd5Digest();
 
         /**
          * Create an iterator that reads a file line-by-line in reverse
@@ -219,22 +214,14 @@ final class RDFPatch {
 
         @Override
         public boolean hasNext() {
-            return nonNull(buffer) || nonNull(digest);
+            return nonNull(buffer);
         }
 
         @Override
         public Quad next() {
             final Quad quad = buffer;
             tryAdvance();
-            if (nonNull(quad)) {
-                return quad;
-            } else if (nonNull(digest)) {
-                final String md5 = encodeHexString(digest.digest());
-                digest = null;
-                return rdf.createQuad(Trellis.PreferServerManaged, identifier,
-                        DC.identifier, rdf.createLiteral(md5));
-            }
-            return null;
+            return quad;
         }
 
         private void tryAdvance() {
@@ -255,7 +242,6 @@ final class RDFPatch {
                             // Inbound refs don't cause the modification date to change
                             if (!quad.getGraphName().filter(Fedora.PreferInboundReferences::equals).isPresent()) {
                                 hasModificationTriples = true;
-                                digest = updateDigest(digest, line);
                             }
                         });
 

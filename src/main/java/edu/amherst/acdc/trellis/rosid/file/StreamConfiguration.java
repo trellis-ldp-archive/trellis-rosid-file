@@ -85,6 +85,8 @@ final class StreamConfiguration {
         final KStreamBuilder builder = new KStreamBuilder();
         builder.addStateStore(cachingStore);
 
+        // TODO -- rework to accomodate the consolidation of topic_delete into topic_update
+        // and be sure to skip the cache delay for "primary" changes.
         @SuppressWarnings("unchecked")
         final KStream<String, Dataset>[] updates = builder.stream(kserde, vserde, TOPIC_UPDATE)
             .flatMap((k, v) -> updater(storage, k, v))

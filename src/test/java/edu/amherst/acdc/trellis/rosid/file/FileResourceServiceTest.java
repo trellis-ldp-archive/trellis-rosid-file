@@ -92,13 +92,13 @@ public class FileResourceServiceTest extends BaseRdfTest {
         final File root = new File(URI.create(configuration.storage.get("repository").get("resources")));
         assertFalse(root.exists());
         final ResourceService altService = new FileResourceService(configuration, mockProducer, mockStreams);
-        assertFalse(altService.exists(identifier, time));
+        assertFalse(altService.get(identifier, time).isPresent());
         assertTrue(root.exists());
         altService.bind(mockEventService);
         altService.unbind(mockEventService);
         altService.bind(mockEventService);
         altService.unbind(mockEventService2);
-        assertFalse(altService.exists(identifier, time));
+        assertFalse(altService.get(identifier, time).isPresent());
     }
 
     @Test(expected = IOException.class)
@@ -110,12 +110,6 @@ public class FileResourceServiceTest extends BaseRdfTest {
         assertTrue(root.mkdir());
         assertTrue(root.setReadOnly());
         final ResourceService altService = new FileResourceService(configuration, mockProducer, mockStreams);
-    }
-
-    @Test
-    public void testVersionedResourceExists() {
-        final Instant time = parse("2017-02-16T11:15:03Z");
-        assertTrue(service.exists(identifier, time));
     }
 
     @Test
@@ -173,12 +167,6 @@ public class FileResourceServiceTest extends BaseRdfTest {
                         DC.hasPart, identifier)));
         assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/other/resource"),
                         DC.relation, identifier)));
-    }
-
-    @Test
-    public void testFutureResourceExists() {
-        final Instant time = parse("2017-03-15T11:15:00Z");
-        assertTrue(service.exists(identifier, time));
     }
 
     @Test
@@ -241,12 +229,6 @@ public class FileResourceServiceTest extends BaseRdfTest {
     }
 
     @Test
-    public void testPastResourceExists() {
-        final Instant time = parse("2017-02-15T11:00:00Z");
-        assertTrue(service.exists(identifier, time));
-    }
-
-    @Test
     public void testResourcePast() {
         final Instant time = parse("2017-02-15T11:00:00Z");
         final Resource res = service.get(identifier, time).get();
@@ -287,20 +269,9 @@ public class FileResourceServiceTest extends BaseRdfTest {
     }
 
     @Test
-    public void testPrehistoryExistence() {
-        final Instant time = parse("2017-01-15T11:00:00Z");
-        assertFalse(service.exists(identifier, time));
-    }
-
-    @Test
     public void testResourcePrehistory() {
         final Instant time = parse("2017-01-15T11:00:00Z");
         assertFalse(service.get(identifier, time).isPresent());
-    }
-
-    @Test
-    public void testCachedResourceExists() {
-        assertTrue(service.exists(identifier));
     }
 
     @Test
@@ -360,11 +331,6 @@ public class FileResourceServiceTest extends BaseRdfTest {
         assertEquals(1L, mementos.size());
         assertEquals(parse("2017-02-15T10:05:00Z"), mementos.get(0).getFrom());
         assertEquals(parse("2017-02-15T11:15:00Z"), mementos.get(0).getUntil());
-    }
-
-    @Test
-    public void testOtherCachedResourceExists() {
-        assertTrue(service.exists(other));
     }
 
     @Test

@@ -16,6 +16,7 @@
 package edu.amherst.acdc.trellis.rosid.file;
 
 import static edu.amherst.acdc.trellis.rosid.file.Constants.RESOURCE_CACHE;
+import static edu.amherst.acdc.trellis.rosid.file.Constants.RESOURCE_JOURNAL;
 import static edu.amherst.acdc.trellis.rosid.file.FileUtils.resourceDirectory;
 import static java.time.Instant.now;
 import static java.util.Objects.requireNonNull;
@@ -34,9 +35,11 @@ import java.net.URI;
 import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import org.apache.commons.rdf.api.Dataset;
 import org.apache.commons.rdf.api.IRI;
+import org.apache.commons.rdf.api.Quad;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.streams.KafkaStreams;
 import org.slf4j.Logger;
@@ -102,7 +105,6 @@ public class FileResourceService extends AbstractResourceService {
 
     @Override
     public Optional<Resource> get(final IRI identifier) {
-        // this ignores the session (e.g. batch ops)
         return of(resourceDirectory(storageConfig, identifier)).filter(File::exists)
             .flatMap(dir -> new File(dir, RESOURCE_CACHE).exists() ?
                     CachedResource.find(dir, identifier) : VersionedResource.find(dir, identifier, now()));
@@ -110,9 +112,21 @@ public class FileResourceService extends AbstractResourceService {
 
     @Override
     public Optional<Resource> get(final IRI identifier, final Instant time) {
-        // this ignores the session (e.g. batch ops)
         return of(resourceDirectory(storageConfig, identifier)).filter(File::exists)
             .flatMap(dir -> VersionedResource.find(dir, identifier, time));
+    }
+
+    @Override
+    protected Boolean write(final IRI identifier, final Stream<? extends Quad> remove,
+            final Stream<? extends Quad> add, final Instant time) {
+        final File dir = resourceDirectory(storageConfig, identifier);
+        try {
+            RDFPatch.write(new File(dir, RESOURCE_JOURNAL), remove, add, time);
+            return true;
+        } catch (final IOException ex) {
+            LOGGER.error("Error writing to resource '{}': {}", identifier.getIRIString(), ex.getMessage());
+            return false;
+        }
     }
 
     @Override

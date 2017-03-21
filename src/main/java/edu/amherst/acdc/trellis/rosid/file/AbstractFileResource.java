@@ -154,6 +154,6 @@ abstract class AbstractFileResource implements Resource {
         if (iri.endsWith("/")) {
             return getParent(iri.substring(0, iri.length() - 1));
         }
-        return Optional.of(iri.lastIndexOf("/")).filter(idx -> idx > 0).map(idx -> iri.substring(0, idx));
+        return Optional.of(iri.lastIndexOf('/')).filter(idx -> idx > 0).map(idx -> iri.substring(0, idx));
     }
 }

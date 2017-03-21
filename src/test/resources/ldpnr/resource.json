@@ -2,7 +2,6 @@
     "@context" : "https://acdc.amherst.edu/ns/trellisresource.jsonld" ,
     "@id" : "trellis:repository/ldpnr" ,
     "@type" : "http://www.w3.org/ns/ldp#NonRDFSource" ,
-    "containedBy" : "trellis:repository" ,
     "datastream" : {
         "@id" : "s3://bucket/some-resource" ,
         "format" : "image/jpeg" ,

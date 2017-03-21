@@ -33,7 +33,6 @@ import edu.amherst.acdc.trellis.api.VersionRange;
 import edu.amherst.acdc.trellis.vocabulary.DC;
 import edu.amherst.acdc.trellis.vocabulary.LDP;
 import edu.amherst.acdc.trellis.vocabulary.RDFS;
-import edu.amherst.acdc.trellis.vocabulary.Trellis;
 import edu.amherst.acdc.trellis.vocabulary.XSD;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Quad;
@@ -99,9 +98,7 @@ public class LdpRdfTest extends BaseRdfTest {
                     RDFS.label, rdf.createLiteral("Some other resource", "eng"))));
 
         final List<Triple> server = res.stream().filter(isServerManaged).map(Quad::asTriple).collect(toList());
-        assertEquals(5L, server.size());
-        assertTrue(server.contains(rdf.createTriple(identifier, Trellis.containedBy,
-                        rdf.createIRI("trellis:repository"))));
+        assertEquals(4L, server.size());
         assertTrue(server.contains(rdf.createTriple(identifier, DC.created,
                         rdf.createLiteral("2017-02-15T10:05:00Z", XSD.dateTime))));
         assertTrue(server.contains(rdf.createTriple(identifier, DC.modified,

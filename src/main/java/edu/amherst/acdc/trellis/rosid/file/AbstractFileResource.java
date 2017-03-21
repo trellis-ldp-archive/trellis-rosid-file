@@ -75,7 +75,18 @@ abstract class AbstractFileResource implements Resource {
 
     @Override
     public Optional<IRI> getContainedBy() {
-        return ofNullable(data.containedBy).map(rdf::createIRI);
+        return getParent(getIdentifier().getIRIString().split("#")[0].split("\\?")[0]).map(rdf::createIRI);
+    }
+
+    private static Optional<String> getParent(final String iri) {
+        if (iri.endsWith("/")) {
+            return getParent(iri.substring(0, iri.length() - 1));
+        }
+        final int idx = iri.lastIndexOf("/");
+        if (idx == -1) {
+            return Optional.empty();
+        }
+        return Optional.of(iri.substring(0, idx));
     }
 
     @Override

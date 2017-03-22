@@ -30,7 +30,6 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 import edu.amherst.acdc.trellis.api.Resource;
 
-import java.io.IOException;
 import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
@@ -81,25 +80,23 @@ final class StreamProcessing {
             final Stream<IRI> adding = value.getGraph(PreferContainment)
                     .map(g -> g.stream().map(Triple::getObject)).orElse(empty())
                     .filter(iri -> iri instanceof IRI).map(iri -> (IRI) iri);
-            try {
-                final Stream<Quad> addMembers;
-                if (DirectContainer.equals(model) || MemberSubject.equals(insertedContent)) {
-                    addMembers = adding.map(iri ->
-                            rdf.createQuad(PreferMembership, identifier, relation, iri));
-                } else {
-                    addMembers = adding.flatMap(iri -> value.stream(
-                        of(PreferUserManaged), iri, resource.get().getInsertedContentRelation().get(), null)
-                            .map(quad -> rdf.createQuad(PreferMembership, identifier, relation, quad.getObject())));
-                }
-                RDFPatch.write(resourceDirectory(config, identifier), empty(), addMembers, time);
-                return new KeyValue<>(identifier.getIRIString(), value);
-            } catch (final IOException ex) {
-                LOGGER.error("Error adding LDP membership triples to {}: {}", identifier.getIRIString(),
-                        ex.getMessage());
+            final Stream<Quad> addMembers;
+            if (DirectContainer.equals(model) || MemberSubject.equals(insertedContent)) {
+                addMembers = adding.map(iri ->
+                        rdf.createQuad(PreferMembership, identifier, relation, iri));
+            } else {
+                addMembers = adding.flatMap(iri -> value.stream(
+                    of(PreferUserManaged), iri, resource.get().getInsertedContentRelation().get(), null)
+                        .map(quad -> rdf.createQuad(PreferMembership, identifier, relation, quad.getObject())));
             }
-        }
 
+            if (RDFPatch.write(resourceDirectory(config, identifier), empty(), addMembers, time)) {
+                return new KeyValue<>(identifier.getIRIString(), value);
+            }
+            LOGGER.error("Error adding LDP membership triples to {}", identifier.getIRIString());
+        }
         return new KeyValue<>(key, rdf.createDataset());
+
     }
 
     /**
@@ -125,22 +122,21 @@ final class StreamProcessing {
             final Stream<IRI> adding = value.getGraph(PreferContainment)
                     .map(g -> g.stream().map(Triple::getObject)).orElse(empty())
                     .filter(iri -> iri instanceof IRI).map(iri -> (IRI) iri);
-            try {
-                final Stream<Quad> deleteMembers;
-                if (DirectContainer.equals(model) || MemberSubject.equals(insertedContent)) {
-                    deleteMembers = adding.map(iri ->
-                            rdf.createQuad(PreferMembership, identifier, relation, iri));
-                } else {
-                    deleteMembers = adding.flatMap(iri -> value.stream(
-                        of(PreferUserManaged), iri, resource.get().getInsertedContentRelation().get(), null)
-                            .map(quad -> rdf.createQuad(PreferMembership, identifier, relation, quad.getObject())));
-                }
-                RDFPatch.write(resourceDirectory(config, identifier), deleteMembers, empty(), time);
-                return new KeyValue<>(identifier.getIRIString(), value);
-            } catch (final IOException ex) {
-                LOGGER.error("Error adding LDP membership triples to {}: {}", identifier.getIRIString(),
-                        ex.getMessage());
+
+            final Stream<Quad> deleteMembers;
+            if (DirectContainer.equals(model) || MemberSubject.equals(insertedContent)) {
+                deleteMembers = adding.map(iri ->
+                        rdf.createQuad(PreferMembership, identifier, relation, iri));
+            } else {
+                deleteMembers = adding.flatMap(iri -> value.stream(
+                    of(PreferUserManaged), iri, resource.get().getInsertedContentRelation().get(), null)
+                        .map(quad -> rdf.createQuad(PreferMembership, identifier, relation, quad.getObject())));
             }
+
+            if (RDFPatch.write(resourceDirectory(config, identifier), deleteMembers, empty(), time)) {
+                return new KeyValue<>(identifier.getIRIString(), value);
+            }
+            LOGGER.error("Error adding LDP membership triples to {}", identifier.getIRIString());
         }
 
         return new KeyValue<>(key, rdf.createDataset());
@@ -155,13 +151,9 @@ final class StreamProcessing {
      */
     public static KeyValue<String, Dataset> ldpAdder(final Map<String, String> config, final String key,
             final Dataset value) {
-
-        try {
-            RDFPatch.write(resourceDirectory(config, key), empty(), value.stream().filter(isContainerQuad), now());
-        } catch (final IOException ex) {
-            LOGGER.error("Error adding LDP container triples to {}: {}", key, ex.getMessage());
+        if (!RDFPatch.write(resourceDirectory(config, key), empty(), value.stream().filter(isContainerQuad), now())) {
+            LOGGER.error("Error adding LDP container triples to {}", key);
         }
-
         return new KeyValue<>(key, value);
     }
 
@@ -174,10 +166,8 @@ final class StreamProcessing {
      */
     public static KeyValue<String, Dataset> ldpDeleter(final Map<String, String> config, final String key,
             final Dataset value) {
-        try {
-            RDFPatch.write(resourceDirectory(config, key), value.stream().filter(isContainerQuad), empty(), now());
-        } catch (final IOException ex) {
-            LOGGER.error("Error removing LDP container triples from {}: {}", key, ex.getMessage());
+        if (!RDFPatch.write(resourceDirectory(config, key), value.stream().filter(isContainerQuad), empty(), now())) {
+            LOGGER.error("Error removing LDP container triples from {}", key);
         }
         return new KeyValue<>(key, value);
     }
@@ -191,10 +181,8 @@ final class StreamProcessing {
      */
     public static KeyValue<String, Dataset> cacheWriter(final Map<String, String> config, final String key,
             final Dataset value) {
-        try {
-            CachedResource.write(resourceDirectory(config, key), key);
-        } catch (final IOException ex) {
-            LOGGER.error("Error writing cache for {}: {}", key, ex.getMessage());
+        if (!CachedResource.write(resourceDirectory(config, key), key)) {
+            LOGGER.error("Error writing cache for {}", key);
         }
         return new KeyValue<>(key, value);
     }
@@ -207,11 +195,9 @@ final class StreamProcessing {
      */
     public static void inboundAdd(final Map<String, String> config, final String key,
             final Dataset value) {
-        try {
-            RDFPatch.write(resourceDirectory(config, key), empty(),
-                    value.stream(of(PreferInboundReferences), null, null, null), now());
-        } catch (final IOException ex) {
-            LOGGER.error("Error adding inbound reference triples to {}: {}", key, ex.getMessage());
+        if (!RDFPatch.write(resourceDirectory(config, key), empty(),
+                    value.stream(of(PreferInboundReferences), null, null, null), now())) {
+            LOGGER.error("Error adding inbound reference triples to {}", key);
         }
     }
 
@@ -222,11 +208,9 @@ final class StreamProcessing {
      * @param value the value
      */
     public static void inboundDelete(final Map<String, String> config, final String key, final Dataset value) {
-        try {
-            RDFPatch.write(resourceDirectory(config, key), value.stream(of(PreferInboundReferences), null, null, null),
-                    empty(), now());
-        } catch (final IOException ex) {
-            LOGGER.error("Error removing inbound reference triples from {}: {}", key, ex.getMessage());
+        if (RDFPatch.write(resourceDirectory(config, key), value.stream(of(PreferInboundReferences), null, null, null),
+                    empty(), now())) {
+            LOGGER.error("Error removing inbound reference triples from {}", key);
         }
     }
 

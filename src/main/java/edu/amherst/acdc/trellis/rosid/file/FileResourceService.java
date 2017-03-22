@@ -120,13 +120,7 @@ public class FileResourceService extends AbstractResourceService {
     protected Boolean write(final IRI identifier, final Stream<? extends Quad> remove,
             final Stream<? extends Quad> add, final Instant time) {
         final File dir = resourceDirectory(storageConfig, identifier);
-        try {
-            RDFPatch.write(new File(dir, RESOURCE_JOURNAL), remove, add, time);
-            return true;
-        } catch (final IOException ex) {
-            LOGGER.error("Error writing to resource '{}': {}", identifier.getIRIString(), ex.getMessage());
-            return false;
-        }
+        return RDFPatch.write(new File(dir, RESOURCE_JOURNAL), remove, add, time);
     }
 
     @Override

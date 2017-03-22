@@ -31,6 +31,7 @@ import static java.util.Spliterator.NONNULL;
 import static java.util.Spliterator.ORDERED;
 import static java.util.Spliterators.spliteratorUnknownSize;
 import static java.util.stream.StreamSupport.stream;
+import static org.slf4j.LoggerFactory.getLogger;
 
 import edu.amherst.acdc.trellis.api.VersionRange;
 import edu.amherst.acdc.trellis.vocabulary.DC;
@@ -42,7 +43,6 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.io.Writer;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -54,11 +54,14 @@ import org.apache.commons.io.input.ReversedLinesFileReader;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Quad;
 import org.apache.commons.rdf.api.RDF;
+import org.slf4j.Logger;
 
 /**
  * @author acoburn
  */
 final class RDFPatch {
+
+    private static final Logger LOGGER = getLogger(RDFPatch.class);
 
     private static final String COMMENT_DELIM = " # ";
     private static final String BEGIN = "BEGIN" + COMMENT_DELIM;
@@ -92,30 +95,32 @@ final class RDFPatch {
      * @param delete the quads to delete
      * @param add the quads to add
      * @param time the time
-     * @throws IOException if the writer encounters an error writing to the file
+     * @return true if the write succeeds; false otherwise
      */
-    public static void write(final File file, final Stream<? extends Quad> delete, final Stream<? extends Quad> add,
-            final Instant time) throws IOException {
+    public static Boolean write(final File file, final Stream<? extends Quad> delete, final Stream<? extends Quad> add,
+            final Instant time) {
         try (final BufferedWriter writer = newBufferedWriter(file.toPath(), UTF_8, CREATE, APPEND)) {
             writer.write(BEGIN + time + lineSeparator());
-            delete.map(quadToString).forEach(quad -> uncheckedWrite(writer, "D " + quad));
-            add.map(quadToString).forEach(quad -> uncheckedWrite(writer, "A " + quad));
+            final Iterator<String> delIter = delete.map(quadToString).iterator();
+            while (delIter.hasNext()) {
+                writer.write("D " + delIter.next() + lineSeparator());
+            }
+            final Iterator<String> addIter = add.map(quadToString).iterator();
+            while (addIter.hasNext()) {
+                writer.write("A " + addIter.next() + lineSeparator());
+            }
             writer.write(END + time + lineSeparator());
+        } catch (final IOException ex) {
+            LOGGER.error("Error writing data to resource {}: {}", file.toString(), ex.getMessage());
+            return false;
         }
+        return true;
     }
 
     private static final Function<Quad, String> quadToString = quad ->
         join(" ", quad.getSubject().ntriplesString(), quad.getPredicate().ntriplesString(),
                 quad.getObject().ntriplesString(),
                 quad.getGraphName().orElse(Trellis.PreferUserManaged).ntriplesString(), ".");
-
-    private static void uncheckedWrite(final Writer writer, final String line) {
-        try {
-            writer.write(line + lineSeparator());
-        } catch (final IOException ex) {
-            throw new UncheckedIOException(ex);
-        }
-    }
 
     /**
      * A class for reading an RDF Patch file into a VersionRange Iterator

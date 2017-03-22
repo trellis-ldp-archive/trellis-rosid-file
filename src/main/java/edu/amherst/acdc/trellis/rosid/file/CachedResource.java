@@ -110,28 +110,20 @@ class CachedResource extends AbstractFileResource {
      * Write the resource data into a file as JSON
      * @param directory the directory
      * @param identifier the resource identifier
+     * @return true if the write operation succeeds
      */
-    public static void write(final File directory, final String identifier) throws IOException {
-        write(directory, rdf.createIRI(identifier));
+    public static Boolean write(final File directory, final String identifier) {
+        return write(directory, rdf.createIRI(identifier));
     }
 
     /**
      * Write the resource data into a file as JSON
      * @param directory the directory
      * @param identifier the resource identifier
+     * @return true if the write operation succeeds
      */
-    public static void write(final File directory, final IRI identifier) throws IOException {
-        write(directory, identifier, now());
-    }
-
-    /**
-     * Write the resource data into a file as JSON
-     * @param directory the directory
-     * @param identifier the resource identifier
-     * @param time the time
-     */
-    public static void write(final File directory, final String identifier, final Instant time) throws IOException {
-        write(directory, rdf.createIRI(identifier), time);
+    public static Boolean write(final File directory, final IRI identifier) {
+        return write(directory, identifier, now());
     }
 
     /**
@@ -139,12 +131,29 @@ class CachedResource extends AbstractFileResource {
      * @param directory the directory
      * @param identifier the resource identifier
      * @param time the time
+     * @return true if the write operation succeeds
      */
-    public static void write(final File directory, final IRI identifier, final Instant time) throws IOException {
+    public static Boolean write(final File directory, final String identifier, final Instant time) {
+        return write(directory, rdf.createIRI(identifier), time);
+    }
+
+    /**
+     * Write the resource data into a file as JSON
+     * @param directory the directory
+     * @param identifier the resource identifier
+     * @param time the time
+     * @return true if the write operation succeeds
+     */
+    public static Boolean write(final File directory, final IRI identifier, final Instant time) {
 
         // Write the JSON file
         final Optional<ResourceData> data = VersionedResource.read(directory, identifier, time);
-        MAPPER.writeValue(new File(directory, RESOURCE_CACHE), data.get());
+        try {
+            MAPPER.writeValue(new File(directory, RESOURCE_CACHE), data.get());
+        } catch (final IOException ex) {
+            LOGGER.error("Error writing resource metadata cache for {}: {}",
+                    identifier.getIRIString(), ex.getMessage());
+        }
 
         // Write the quads
         try (final BufferedWriter writer = newBufferedWriter(new File(directory, RESOURCE_QUADS).toPath(),
@@ -157,6 +166,9 @@ class CachedResource extends AbstractFileResource {
             while (lineIter.hasNext()) {
                 writer.write(lineIter.next() + lineSeparator());
             }
+        } catch (final IOException ex) {
+            LOGGER.error("Error writing resource cache for {}: {}", identifier.getIRIString(), ex.getMessage());
+            return false;
         }
 
         // Write the mementos
@@ -172,7 +184,12 @@ class CachedResource extends AbstractFileResource {
             while (iter.hasNext()) {
                 writer.write(iter.next().getUntil() + lineSeparator());
             }
+        } catch (final IOException ex) {
+            LOGGER.error("Error writing memento cache for {}: {}", identifier.getIRIString(), ex.getMessage());
+            return false;
         }
+
+        return true;
     }
 
     @Override

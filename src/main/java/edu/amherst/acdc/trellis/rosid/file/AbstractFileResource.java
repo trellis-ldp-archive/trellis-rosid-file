@@ -95,7 +95,11 @@ abstract class AbstractFileResource implements Resource {
 
     @Override
     public Optional<IRI> getInsertedContentRelation() {
-        return ofNullable(data.insertedContentRelation).map(rdf::createIRI);
+        final Optional<IRI> relation = ofNullable(data.insertedContentRelation).map(rdf::createIRI);
+        if (!relation.isPresent() && LDP.DirectContainer.equals(getInteractionModel())) {
+            return Optional.of(LDP.MemberSubject);
+        }
+        return relation;
     }
 
     @Override

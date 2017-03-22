@@ -15,21 +15,22 @@
  */
 package edu.amherst.acdc.trellis.rosid.file;
 
-import static edu.amherst.acdc.trellis.rosid.common.Constants.TOPIC_DELETE;
+import static edu.amherst.acdc.trellis.rosid.common.Constants.TOPIC_CACHE;
+import static edu.amherst.acdc.trellis.rosid.common.Constants.TOPIC_CACHE_AGGREGATE;
 import static edu.amherst.acdc.trellis.rosid.common.Constants.TOPIC_EVENT;
 import static edu.amherst.acdc.trellis.rosid.common.Constants.TOPIC_INBOUND_ADD;
 import static edu.amherst.acdc.trellis.rosid.common.Constants.TOPIC_INBOUND_DELETE;
 import static edu.amherst.acdc.trellis.rosid.common.Constants.TOPIC_LDP_CONTAINER_ADD;
 import static edu.amherst.acdc.trellis.rosid.common.Constants.TOPIC_LDP_CONTAINER_DELETE;
-import static edu.amherst.acdc.trellis.rosid.common.Constants.TOPIC_RECACHE;
-import static edu.amherst.acdc.trellis.rosid.common.Constants.TOPIC_UPDATE;
+import static edu.amherst.acdc.trellis.rosid.common.Constants.TOPIC_LDP_MEMBERSHIP_ADD;
+import static edu.amherst.acdc.trellis.rosid.common.Constants.TOPIC_LDP_MEMBERSHIP_DELETE;
 import static edu.amherst.acdc.trellis.rosid.file.StreamProcessing.cacheWriter;
-import static edu.amherst.acdc.trellis.rosid.file.StreamProcessing.deleter;
 import static edu.amherst.acdc.trellis.rosid.file.StreamProcessing.inboundAdd;
 import static edu.amherst.acdc.trellis.rosid.file.StreamProcessing.inboundDelete;
 import static edu.amherst.acdc.trellis.rosid.file.StreamProcessing.ldpAdder;
 import static edu.amherst.acdc.trellis.rosid.file.StreamProcessing.ldpDeleter;
-import static edu.amherst.acdc.trellis.rosid.file.StreamProcessing.updater;
+import static edu.amherst.acdc.trellis.rosid.file.StreamProcessing.memberAdder;
+import static edu.amherst.acdc.trellis.rosid.file.StreamProcessing.memberDeleter;
 import static java.lang.Integer.parseInt;
 import static java.lang.Long.parseLong;
 import static java.lang.System.getProperty;
@@ -47,7 +48,6 @@ import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsConfig;
-import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.KStreamBuilder;
 import org.apache.kafka.streams.processor.StateStoreSupplier;
 import org.apache.kafka.streams.state.Stores;
@@ -85,42 +85,34 @@ final class StreamConfiguration {
         final KStreamBuilder builder = new KStreamBuilder();
         builder.addStateStore(cachingStore);
 
-        // TODO -- rework to accomodate the consolidation of topic_delete into topic_update
-        // and be sure to skip the cache delay for "primary" changes.
-        @SuppressWarnings("unchecked")
-        final KStream<String, Dataset>[] updates = builder.stream(kserde, vserde, TOPIC_UPDATE)
-            .flatMap((k, v) -> updater(storage, k, v))
-            .branch(StreamProcessing.isNew, StreamProcessing.hasInboundRefs, StreamProcessing.otherwise);
-        updates[0].to(TOPIC_LDP_CONTAINER_ADD);
-        updates[1].to(TOPIC_INBOUND_ADD);
-        updates[2].to(TOPIC_RECACHE);
-
-        @SuppressWarnings("unchecked")
-        final KStream<String, Dataset>[] deletes = builder.stream(kserde, vserde, TOPIC_DELETE)
-            .flatMap((k, v) -> deleter(storage, k, v))
-            .branch(StreamProcessing.isDeleteParent, StreamProcessing.isDeleteTarget, StreamProcessing.otherwise);
-        deletes[0].to(TOPIC_LDP_CONTAINER_DELETE);
-        deletes[1].to(TOPIC_INBOUND_DELETE);
-        deletes[2].to(TOPIC_EVENT);
-        deletes[3].to(TOPIC_DELETE);
-
         builder.stream(kserde, vserde, TOPIC_INBOUND_ADD)
             .foreach((k, v) -> inboundAdd(storage, k, v));
 
         builder.stream(kserde, vserde, TOPIC_INBOUND_DELETE)
             .foreach((k, v) -> inboundDelete(storage, k, v));
 
+        builder.stream(kserde, vserde, TOPIC_LDP_MEMBERSHIP_ADD)
+            .map((k, v) -> memberAdder(storage, k, v))
+            .to(TOPIC_CACHE_AGGREGATE);
+
+        builder.stream(kserde, vserde, TOPIC_LDP_MEMBERSHIP_DELETE)
+            .map((k, v) -> memberDeleter(storage, k, v))
+            .to(TOPIC_CACHE_AGGREGATE);
+
         builder.stream(kserde, vserde, TOPIC_LDP_CONTAINER_ADD)
             .map((k, v) -> ldpAdder(storage, k, v))
-            .to(TOPIC_RECACHE);
+            .to(TOPIC_CACHE_AGGREGATE);
 
         builder.stream(kserde, vserde, TOPIC_LDP_CONTAINER_DELETE)
             .map((k, v) -> ldpDeleter(storage, k, v))
-            .to(TOPIC_RECACHE);
+            .to(TOPIC_CACHE_AGGREGATE);
 
-        builder.stream(kserde, vserde, TOPIC_RECACHE).groupByKey()
+        builder.stream(kserde, vserde, TOPIC_CACHE_AGGREGATE).groupByKey()
             .reduce((val1, val2) -> val1, of(WINDOW_SIZE), CACHE_NAME)
             .toStream((k, v) -> k.key())
+            .to(TOPIC_CACHE);
+
+        builder.stream(kserde, vserde, TOPIC_CACHE)
             .map((k, v) -> cacheWriter(storage, k, v))
             .to(TOPIC_EVENT);
 

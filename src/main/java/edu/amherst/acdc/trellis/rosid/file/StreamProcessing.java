@@ -17,28 +17,32 @@ package edu.amherst.acdc.trellis.rosid.file;
 
 import static edu.amherst.acdc.trellis.rosid.common.RDFUtils.getInstance;
 import static edu.amherst.acdc.trellis.rosid.file.FileUtils.resourceDirectory;
-import static edu.amherst.acdc.trellis.vocabulary.DC.created;
 import static edu.amherst.acdc.trellis.vocabulary.Fedora.PreferInboundReferences;
+import static edu.amherst.acdc.trellis.vocabulary.LDP.DirectContainer;
+import static edu.amherst.acdc.trellis.vocabulary.LDP.MemberSubject;
 import static edu.amherst.acdc.trellis.vocabulary.LDP.PreferContainment;
 import static edu.amherst.acdc.trellis.vocabulary.LDP.PreferMembership;
-import static edu.amherst.acdc.trellis.vocabulary.PROV.wasGeneratedBy;
-import static edu.amherst.acdc.trellis.vocabulary.Trellis.PreferAudit;
-import static edu.amherst.acdc.trellis.vocabulary.Trellis.PreferServerManaged;
-import static edu.amherst.acdc.trellis.vocabulary.Trellis.containedBy;
+import static edu.amherst.acdc.trellis.vocabulary.Trellis.PreferUserManaged;
 import static java.time.Instant.now;
 import static java.util.Optional.of;
 import static java.util.stream.Stream.empty;
 import static org.slf4j.LoggerFactory.getLogger;
 
+import edu.amherst.acdc.trellis.api.Resource;
+
 import java.io.IOException;
-import java.util.Iterator;
+import java.time.Instant;
 import java.util.Map;
+import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import org.apache.commons.rdf.api.Dataset;
+import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Quad;
+import org.apache.commons.rdf.api.RDF;
+import org.apache.commons.rdf.api.Triple;
 import org.apache.kafka.streams.KeyValue;
-import org.apache.kafka.streams.kstream.Predicate;
 import org.slf4j.Logger;
 
 /**
@@ -48,8 +52,99 @@ final class StreamProcessing {
 
     private static final Logger LOGGER = getLogger(StreamProcessing.class);
 
-    private static java.util.function.Predicate<Quad> isContainerQuad = q ->
+    private static final RDF rdf = getInstance();
+
+    private static Predicate<Quad> isContainerQuad = q ->
         q.getGraphName().filter(n -> PreferContainment.equals(n) || PreferMembership.equals(n)).isPresent();
+
+    /**
+     * A mapping function for updating LDP Membership properties
+     * @param config the storage configuration
+     * @param key the key
+     * @param value the value
+     * @return a new key-value pair
+     */
+    public static KeyValue<String, Dataset> memberAdder(final Map<String, String> config, final String key,
+            final Dataset value) {
+
+        final Instant time = now();
+        final Optional<Resource> resource = CachedResource.find(resourceDirectory(config, key), rdf.createIRI(key))
+            .filter(res -> res.getInsertedContentRelation().isPresent())
+            .filter(res -> res.getMembershipResource().isPresent())
+            .filter(res -> res.getMemberRelation().isPresent());
+
+        if (resource.isPresent()) {
+            final IRI model = resource.get().getInteractionModel();
+            final IRI identifier = resource.get().getMembershipResource().get();
+            final IRI relation = resource.get().getMemberRelation().get();
+            final IRI insertedContent = resource.get().getInsertedContentRelation().get();
+            final Stream<IRI> adding = value.getGraph(PreferContainment)
+                    .map(g -> g.stream().map(Triple::getObject)).orElse(empty())
+                    .filter(iri -> iri instanceof IRI).map(iri -> (IRI) iri);
+            try {
+                final Stream<Quad> addMembers;
+                if (DirectContainer.equals(model) || MemberSubject.equals(insertedContent)) {
+                    addMembers = adding.map(iri ->
+                            rdf.createQuad(PreferMembership, identifier, relation, iri));
+                } else {
+                    addMembers = adding.flatMap(iri -> value.stream(
+                        of(PreferUserManaged), iri, resource.get().getInsertedContentRelation().get(), null)
+                            .map(quad -> rdf.createQuad(PreferMembership, identifier, relation, quad.getObject())));
+                }
+                RDFPatch.write(resourceDirectory(config, identifier), empty(), addMembers, time);
+                return new KeyValue<>(identifier.getIRIString(), value);
+            } catch (final IOException ex) {
+                LOGGER.error("Error adding LDP membership triples to {}: {}", identifier.getIRIString(),
+                        ex.getMessage());
+            }
+        }
+
+        return new KeyValue<>(key, rdf.createDataset());
+    }
+
+    /**
+     * A mapping function for deleting LDP Membership properties
+     * @param config the storage configuration
+     * @param key the key
+     * @param value the value
+     * @return a new key-value pair
+     */
+    public static KeyValue<String, Dataset> memberDeleter(final Map<String, String> config, final String key,
+            final Dataset value) {
+        final Instant time = now();
+        final Optional<Resource> resource = CachedResource.find(resourceDirectory(config, key), rdf.createIRI(key))
+            .filter(res -> res.getInsertedContentRelation().isPresent())
+            .filter(res -> res.getMembershipResource().isPresent())
+            .filter(res -> res.getMemberRelation().isPresent());
+
+        if (resource.isPresent()) {
+            final IRI model = resource.get().getInteractionModel();
+            final IRI identifier = resource.get().getMembershipResource().get();
+            final IRI relation = resource.get().getMemberRelation().get();
+            final IRI insertedContent = resource.get().getInsertedContentRelation().get();
+            final Stream<IRI> adding = value.getGraph(PreferContainment)
+                    .map(g -> g.stream().map(Triple::getObject)).orElse(empty())
+                    .filter(iri -> iri instanceof IRI).map(iri -> (IRI) iri);
+            try {
+                final Stream<Quad> deleteMembers;
+                if (DirectContainer.equals(model) || MemberSubject.equals(insertedContent)) {
+                    deleteMembers = adding.map(iri ->
+                            rdf.createQuad(PreferMembership, identifier, relation, iri));
+                } else {
+                    deleteMembers = adding.flatMap(iri -> value.stream(
+                        of(PreferUserManaged), iri, resource.get().getInsertedContentRelation().get(), null)
+                            .map(quad -> rdf.createQuad(PreferMembership, identifier, relation, quad.getObject())));
+                }
+                RDFPatch.write(resourceDirectory(config, identifier), deleteMembers, empty(), time);
+                return new KeyValue<>(identifier.getIRIString(), value);
+            } catch (final IOException ex) {
+                LOGGER.error("Error adding LDP membership triples to {}: {}", identifier.getIRIString(),
+                        ex.getMessage());
+            }
+        }
+
+        return new KeyValue<>(key, rdf.createDataset());
+    }
 
     /**
      * A mapping function for updating LDP Container properties
@@ -60,11 +155,13 @@ final class StreamProcessing {
      */
     public static KeyValue<String, Dataset> ldpAdder(final Map<String, String> config, final String key,
             final Dataset value) {
+
         try {
             RDFPatch.write(resourceDirectory(config, key), empty(), value.stream().filter(isContainerQuad), now());
         } catch (final IOException ex) {
             LOGGER.error("Error adding LDP container triples to {}: {}", key, ex.getMessage());
         }
+
         return new KeyValue<>(key, value);
     }
 
@@ -103,54 +200,6 @@ final class StreamProcessing {
     }
 
     /**
-     * A mapping function for updating resources
-     * @param config the storage configuration
-     * @param key the key
-     * @param value the value
-     * @return a set of new key-value pairs
-     */
-    public static Iterable<KeyValue<String, Dataset>> updater(final Map<String, String> config, final String key,
-            final Dataset value) {
-        // TODO
-        // -- write dataset to resource
-        // -- add prov:endedAtTime
-        // -- re-cache parent, if this is new
-        //final File dir = resourceDirectory(config, key);
-        final Stream<KeyValue<String, Dataset>> stream = empty();
-        return new Iterable<KeyValue<String, Dataset>>() {
-            @Override
-            public Iterator<KeyValue<String, Dataset>> iterator() {
-                return stream.iterator();
-            }
-        };
-    }
-
-    /**
-     * A mapping function for deleting resources
-     * @param config the storage configuration
-     * @param key the key
-     * @param value the value
-     * @return a set of new key-value pairs
-     */
-    public static Iterable<KeyValue<String, Dataset>> deleter(final Map<String, String> config, final String key,
-            final Dataset value) {
-        // TODO
-        // -- get child resources
-        // -- get parent resources
-        // -- delete resource
-        // -- delete child resources
-        // -- re-cache parent, if it exists
-        //final File dir = resourceDirectory(config, key);
-        final Stream<KeyValue<String, Dataset>> stream = empty();
-        return new Iterable<KeyValue<String, Dataset>>() {
-            @Override
-            public Iterator<KeyValue<String, Dataset>> iterator() {
-                return stream.iterator();
-            }
-        };
-    }
-
-    /**
      * A processing function for adding inbound refs
      * @param config the storage configuration
      * @param key the key
@@ -180,35 +229,6 @@ final class StreamProcessing {
             LOGGER.error("Error removing inbound reference triples from {}: {}", key, ex.getMessage());
         }
     }
-
-    /**
-     * A predicate that always returns true
-     */
-    public static final Predicate<String, Dataset> otherwise = (k, v) -> true;
-
-    /**
-     * A predicate determining whether the dataset is new
-     */
-    public static final Predicate<String, Dataset> isNew = (identifier, dataset) ->
-        dataset.contains(of(PreferServerManaged), getInstance().createIRI(identifier), created, null);
-
-    /**
-     * A predicate determining whether the given key is the parent of the original delete target
-     */
-    public static final Predicate<String, Dataset> isDeleteParent = (identifier, dataset) ->
-        dataset.contains(of(PreferServerManaged), null, containedBy, getInstance().createIRI(identifier));
-
-    /**
-     * A predicate determining whether the given key is the original delete target
-     */
-    public static final Predicate<String, Dataset> isDeleteTarget = (identifier, dataset) ->
-        dataset.contains(of(PreferAudit), getInstance().createIRI(identifier), wasGeneratedBy, null);
-
-    /**
-     * A predicate determining whether the given k/v pair contains inbound refs
-     */
-    public static final Predicate<String, Dataset> hasInboundRefs = (identifier, dataset) ->
-        dataset.contains(of(PreferInboundReferences), null, null, null);
 
     private StreamProcessing() {
         // prevent instantiation

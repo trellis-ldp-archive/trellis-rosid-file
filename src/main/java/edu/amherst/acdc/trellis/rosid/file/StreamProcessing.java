@@ -63,7 +63,7 @@ final class StreamProcessing {
      * @param value the value
      * @return a new key-value pair
      */
-    public static KeyValue<String, Dataset> memberAdder(final Map<String, String> config, final String key,
+    public static KeyValue<String, Dataset> addMembershipQuads(final Map<String, String> config, final String key,
             final Dataset value) {
 
         final Instant time = now();
@@ -106,7 +106,7 @@ final class StreamProcessing {
      * @param value the value
      * @return a new key-value pair
      */
-    public static KeyValue<String, Dataset> memberDeleter(final Map<String, String> config, final String key,
+    public static KeyValue<String, Dataset> deleteMembershipQuads(final Map<String, String> config, final String key,
             final Dataset value) {
         final Instant time = now();
         final Optional<Resource> resource = CachedResource.find(resourceDirectory(config, key), rdf.createIRI(key))
@@ -149,7 +149,7 @@ final class StreamProcessing {
      * @param value the value
      * @return a new key-value pair
      */
-    public static KeyValue<String, Dataset> ldpAdder(final Map<String, String> config, final String key,
+    public static KeyValue<String, Dataset> addContainmentQuads(final Map<String, String> config, final String key,
             final Dataset value) {
         if (!RDFPatch.write(resourceDirectory(config, key), empty(), value.stream().filter(isContainerQuad), now())) {
             LOGGER.error("Error adding LDP container triples to {}", key);
@@ -164,7 +164,7 @@ final class StreamProcessing {
      * @param value the value
      * @return a new key-value pair
      */
-    public static KeyValue<String, Dataset> ldpDeleter(final Map<String, String> config, final String key,
+    public static KeyValue<String, Dataset> deleteContainmentQuads(final Map<String, String> config, final String key,
             final Dataset value) {
         if (!RDFPatch.write(resourceDirectory(config, key), value.stream().filter(isContainerQuad), empty(), now())) {
             LOGGER.error("Error removing LDP container triples from {}", key);
@@ -179,7 +179,7 @@ final class StreamProcessing {
      * @param value the value
      * @return a new key-value pair
      */
-    public static KeyValue<String, Dataset> cacheWriter(final Map<String, String> config, final String key,
+    public static KeyValue<String, Dataset> writeCacheQuads(final Map<String, String> config, final String key,
             final Dataset value) {
         if (!CachedResource.write(resourceDirectory(config, key), key)) {
             LOGGER.error("Error writing cache for {}", key);
@@ -193,7 +193,7 @@ final class StreamProcessing {
      * @param key the key
      * @param value the value
      */
-    public static void inboundAdd(final Map<String, String> config, final String key,
+    public static void addInboundQuads(final Map<String, String> config, final String key,
             final Dataset value) {
         if (!RDFPatch.write(resourceDirectory(config, key), empty(),
                     value.stream(of(PreferInboundReferences), null, null, null), now())) {
@@ -207,7 +207,7 @@ final class StreamProcessing {
      * @param key the key
      * @param value the value
      */
-    public static void inboundDelete(final Map<String, String> config, final String key, final Dataset value) {
+    public static void deleteInboundQuads(final Map<String, String> config, final String key, final Dataset value) {
         if (RDFPatch.write(resourceDirectory(config, key), value.stream(of(PreferInboundReferences), null, null, null),
                     empty(), now())) {
             LOGGER.error("Error removing inbound reference triples from {}", key);

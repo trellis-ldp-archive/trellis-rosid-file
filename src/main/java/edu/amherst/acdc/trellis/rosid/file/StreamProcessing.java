@@ -16,6 +16,7 @@
 package edu.amherst.acdc.trellis.rosid.file;
 
 import static edu.amherst.acdc.trellis.rosid.common.RDFUtils.getInstance;
+import static edu.amherst.acdc.trellis.rosid.file.Constants.RESOURCE_JOURNAL;
 import static edu.amherst.acdc.trellis.rosid.file.FileUtils.resourceDirectory;
 import static edu.amherst.acdc.trellis.vocabulary.Fedora.PreferInboundReferences;
 import static edu.amherst.acdc.trellis.vocabulary.LDP.DirectContainer;
@@ -26,10 +27,12 @@ import static edu.amherst.acdc.trellis.vocabulary.Trellis.PreferUserManaged;
 import static java.time.Instant.now;
 import static java.util.Optional.of;
 import static java.util.stream.Stream.empty;
+import static org.apache.kafka.streams.KeyValue.pair;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import edu.amherst.acdc.trellis.api.Resource;
 
+import java.io.File;
 import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
@@ -90,12 +93,13 @@ final class StreamProcessing {
                         .map(quad -> rdf.createQuad(PreferMembership, identifier, relation, quad.getObject())));
             }
 
-            if (RDFPatch.write(resourceDirectory(config, identifier), empty(), addMembers, time)) {
-                return new KeyValue<>(identifier.getIRIString(), value);
+            final File file = new File(resourceDirectory(config, identifier), RESOURCE_JOURNAL);
+            if (RDFPatch.write(file, empty(), addMembers, time)) {
+                return pair(identifier.getIRIString(), value);
             }
             LOGGER.error("Error adding LDP membership triples to {}", identifier.getIRIString());
         }
-        return new KeyValue<>(key, rdf.createDataset());
+        return pair(key, rdf.createDataset());
 
     }
 
@@ -133,13 +137,14 @@ final class StreamProcessing {
                         .map(quad -> rdf.createQuad(PreferMembership, identifier, relation, quad.getObject())));
             }
 
-            if (RDFPatch.write(resourceDirectory(config, identifier), deleteMembers, empty(), time)) {
-                return new KeyValue<>(identifier.getIRIString(), value);
+            final File file = new File(resourceDirectory(config, identifier), RESOURCE_JOURNAL);
+            if (RDFPatch.write(file, deleteMembers, empty(), time)) {
+                return pair(identifier.getIRIString(), value);
             }
             LOGGER.error("Error adding LDP membership triples to {}", identifier.getIRIString());
         }
 
-        return new KeyValue<>(key, rdf.createDataset());
+        return pair(key, rdf.createDataset());
     }
 
     /**
@@ -151,10 +156,11 @@ final class StreamProcessing {
      */
     public static KeyValue<String, Dataset> addContainmentQuads(final Map<String, String> config, final String key,
             final Dataset value) {
-        if (!RDFPatch.write(resourceDirectory(config, key), empty(), value.stream().filter(isContainerQuad), now())) {
+        final File file = new File(resourceDirectory(config, key), RESOURCE_JOURNAL);
+        if (!RDFPatch.write(file, empty(), value.stream().filter(isContainerQuad), now())) {
             LOGGER.error("Error adding LDP container triples to {}", key);
         }
-        return new KeyValue<>(key, value);
+        return pair(key, value);
     }
 
     /**
@@ -166,10 +172,11 @@ final class StreamProcessing {
      */
     public static KeyValue<String, Dataset> deleteContainmentQuads(final Map<String, String> config, final String key,
             final Dataset value) {
-        if (!RDFPatch.write(resourceDirectory(config, key), value.stream().filter(isContainerQuad), empty(), now())) {
+        final File file = new File(resourceDirectory(config, key), RESOURCE_JOURNAL);
+        if (!RDFPatch.write(file, value.stream().filter(isContainerQuad), empty(), now())) {
             LOGGER.error("Error removing LDP container triples from {}", key);
         }
-        return new KeyValue<>(key, value);
+        return pair(key, value);
     }
 
     /**
@@ -184,7 +191,7 @@ final class StreamProcessing {
         if (!CachedResource.write(resourceDirectory(config, key), key)) {
             LOGGER.error("Error writing cache for {}", key);
         }
-        return new KeyValue<>(key, value);
+        return pair(key, value);
     }
 
     /**
@@ -195,8 +202,8 @@ final class StreamProcessing {
      */
     public static void addInboundQuads(final Map<String, String> config, final String key,
             final Dataset value) {
-        if (!RDFPatch.write(resourceDirectory(config, key), empty(),
-                    value.stream(of(PreferInboundReferences), null, null, null), now())) {
+        final File file = new File(resourceDirectory(config, key), RESOURCE_JOURNAL);
+        if (!RDFPatch.write(file, empty(), value.stream(of(PreferInboundReferences), null, null, null), now())) {
             LOGGER.error("Error adding inbound reference triples to {}", key);
         }
     }
@@ -208,8 +215,8 @@ final class StreamProcessing {
      * @param value the value
      */
     public static void deleteInboundQuads(final Map<String, String> config, final String key, final Dataset value) {
-        if (RDFPatch.write(resourceDirectory(config, key), value.stream(of(PreferInboundReferences), null, null, null),
-                    empty(), now())) {
+        final File file = new File(resourceDirectory(config, key), RESOURCE_JOURNAL);
+        if (RDFPatch.write(file, value.stream(of(PreferInboundReferences), null, null, null), empty(), now())) {
             LOGGER.error("Error removing inbound reference triples from {}", key);
         }
     }

@@ -149,7 +149,12 @@ class CachedResource extends AbstractFileResource {
         // Write the JSON file
         final Optional<ResourceData> data = VersionedResource.read(directory, identifier, time);
         try {
-            MAPPER.writeValue(new File(directory, RESOURCE_CACHE), data.get());
+            if (data.isPresent()) {
+                MAPPER.writeValue(new File(directory, RESOURCE_CACHE), data.get());
+            } else {
+                LOGGER.error("No resource data to cache for {}", identifier.getIRIString());
+                return false;
+            }
         } catch (final IOException ex) {
             LOGGER.error("Error writing resource metadata cache for {}: {}",
                     identifier.getIRIString(), ex.getMessage());

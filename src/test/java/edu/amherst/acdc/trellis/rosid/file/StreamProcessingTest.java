@@ -95,4 +95,70 @@ public class StreamProcessingTest {
         assertTrue(res.value.contains(quad3));
         assertEquals(3L, res.value.size());
     }
+
+    @Test
+    public void testDeleteInbound() {
+        final IRI id1 = rdf.createIRI(identifier1);
+        final IRI id2 = rdf.createIRI(identifier2);
+        final Quad quad1 = rdf.createQuad(LDP.PreferContainment, id1, LDP.contains, id2);
+        final Quad quad2 = rdf.createQuad(Trellis.PreferUserManaged, id2, DC.title, rdf.createLiteral("Title"));
+        final Quad quad3 = rdf.createQuad(Trellis.PreferServerManaged, id2, type, LDP.RDFSource);
+
+        final Dataset dataset = rdf.createDataset();
+
+        dataset.add(quad1);
+        dataset.add(quad2);
+        dataset.add(quad3);
+
+        final KeyValue<String, Dataset> res = StreamProcessing.deleteInboundQuads(config, identifier1, dataset);
+        assertEquals(identifier1, res.key);
+        assertTrue(res.value.contains(quad1));
+        assertTrue(res.value.contains(quad2));
+        assertTrue(res.value.contains(quad3));
+        assertEquals(3L, res.value.size());
+    }
+
+    @Test
+    public void testAddInbound() {
+        final IRI id1 = rdf.createIRI(identifier1);
+        final IRI id2 = rdf.createIRI(identifier2);
+        final Quad quad1 = rdf.createQuad(LDP.PreferContainment, id1, LDP.contains, id2);
+        final Quad quad2 = rdf.createQuad(Trellis.PreferUserManaged, id2, DC.title, rdf.createLiteral("Title"));
+        final Quad quad3 = rdf.createQuad(Trellis.PreferServerManaged, id2, type, LDP.RDFSource);
+
+        final Dataset dataset = rdf.createDataset();
+
+        dataset.add(quad1);
+        dataset.add(quad2);
+        dataset.add(quad3);
+
+        final KeyValue<String, Dataset> res = StreamProcessing.addInboundQuads(config, identifier1, dataset);
+        assertEquals(identifier1, res.key);
+        assertTrue(res.value.contains(quad1));
+        assertTrue(res.value.contains(quad2));
+        assertTrue(res.value.contains(quad3));
+        assertEquals(3L, res.value.size());
+    }
+
+    @Test
+    public void testWriteCache() {
+        final IRI id1 = rdf.createIRI(identifier1);
+        final IRI id2 = rdf.createIRI(identifier2);
+        final Quad quad1 = rdf.createQuad(LDP.PreferContainment, id1, LDP.contains, id2);
+        final Quad quad2 = rdf.createQuad(Trellis.PreferUserManaged, id2, DC.title, rdf.createLiteral("Title"));
+        final Quad quad3 = rdf.createQuad(Trellis.PreferServerManaged, id2, type, LDP.RDFSource);
+
+        final Dataset dataset = rdf.createDataset();
+
+        dataset.add(quad1);
+        dataset.add(quad2);
+        dataset.add(quad3);
+
+        final KeyValue<String, Dataset> res = StreamProcessing.writeCacheQuads(config, identifier1, dataset);
+        assertEquals(identifier1, res.key);
+        assertTrue(res.value.contains(quad1));
+        assertTrue(res.value.contains(quad2));
+        assertTrue(res.value.contains(quad3));
+        assertEquals(3L, res.value.size());
+    }
 }

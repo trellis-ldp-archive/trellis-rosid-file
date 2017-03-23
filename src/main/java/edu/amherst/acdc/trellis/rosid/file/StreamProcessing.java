@@ -152,7 +152,7 @@ final class StreamProcessing {
      * @param config the storage configuration
      * @param key the key
      * @param value the value
-     * @return a new key-value pair
+     * @return a passed-through key-value pair
      */
     public static KeyValue<String, Dataset> addContainmentQuads(final Map<String, String> config, final String key,
             final Dataset value) {
@@ -168,7 +168,7 @@ final class StreamProcessing {
      * @param config the storage configuration
      * @param key the key
      * @param value the value
-     * @return a new key-value pair
+     * @return a passed-through key-value pair
      */
     public static KeyValue<String, Dataset> deleteContainmentQuads(final Map<String, String> config, final String key,
             final Dataset value) {
@@ -184,7 +184,7 @@ final class StreamProcessing {
      * @param config the storage configuration
      * @param key the key
      * @param value the value
-     * @return a new key-value pair
+     * @return a passed-through key-value pair
      */
     public static KeyValue<String, Dataset> writeCacheQuads(final Map<String, String> config, final String key,
             final Dataset value) {
@@ -199,13 +199,15 @@ final class StreamProcessing {
      * @param config the storage configuration
      * @param key the key
      * @param value the value
+     * @return a passed-through key-value pair
      */
-    public static void addInboundQuads(final Map<String, String> config, final String key,
+    public static KeyValue<String, Dataset> addInboundQuads(final Map<String, String> config, final String key,
             final Dataset value) {
         final File file = new File(resourceDirectory(config, key), RESOURCE_JOURNAL);
         if (!RDFPatch.write(file, empty(), value.stream(of(PreferInboundReferences), null, null, null), now())) {
             LOGGER.error("Error adding inbound reference triples to {}", key);
         }
+        return pair(key, value);
     }
 
     /**
@@ -213,12 +215,15 @@ final class StreamProcessing {
      * @param config the storage configuration
      * @param key the key
      * @param value the value
+     * @return a passed-through key-value pair
      */
-    public static void deleteInboundQuads(final Map<String, String> config, final String key, final Dataset value) {
+    public static KeyValue<String, Dataset> deleteInboundQuads(final Map<String, String> config, final String key,
+            final Dataset value) {
         final File file = new File(resourceDirectory(config, key), RESOURCE_JOURNAL);
         if (RDFPatch.write(file, value.stream(of(PreferInboundReferences), null, null, null), empty(), now())) {
             LOGGER.error("Error removing inbound reference triples from {}", key);
         }
+        return pair(key, value);
     }
 
     private StreamProcessing() {

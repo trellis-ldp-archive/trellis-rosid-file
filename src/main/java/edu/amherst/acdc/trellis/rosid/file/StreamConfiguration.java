@@ -84,11 +84,11 @@ final class StreamConfiguration {
             .map((k, v) -> StreamProcessing.deleteMembershipQuads(storage, k, v))
             .to(Constants.TOPIC_CACHE_AGGREGATE);
 
-        builder.stream(kserde, vserde, Constants.TOPIC_LDP_CONTAINER_ADD)
+        builder.stream(kserde, vserde, Constants.TOPIC_LDP_CONTAINMENT_ADD)
             .map((k, v) -> StreamProcessing.addContainmentQuads(storage, k, v))
             .to(Constants.TOPIC_CACHE_AGGREGATE);
 
-        builder.stream(kserde, vserde, Constants.TOPIC_LDP_CONTAINER_DELETE)
+        builder.stream(kserde, vserde, Constants.TOPIC_LDP_CONTAINMENT_DELETE)
             .map((k, v) -> StreamProcessing.deleteContainmentQuads(storage, k, v))
             .to(Constants.TOPIC_CACHE_AGGREGATE);
 

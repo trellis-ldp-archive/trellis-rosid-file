@@ -24,7 +24,6 @@ import static org.apache.commons.codec.digest.DigestUtils.md5Hex;
 import static org.apache.commons.rdf.jena.JenaRDF.asQuad;
 import static org.apache.jena.riot.Lang.NQUADS;
 import static org.apache.jena.riot.system.StreamRDFLib.sinkQuads;
-import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.File;
 import java.io.StringReader;
@@ -42,14 +41,11 @@ import org.apache.commons.rdf.api.RDF;
 import org.apache.jena.atlas.lib.SinkToCollection;
 import org.apache.jena.riot.RDFParserRegistry;
 import org.apache.jena.riot.ReaderRIOT;
-import org.slf4j.Logger;
 
 /**
  * @author acoburn
  */
 final class FileUtils {
-
-    private static final Logger LOGGER = getLogger(FileUtils.class);
 
     // The length of the CRC directory partition
     public final static int LENGTH = 2;

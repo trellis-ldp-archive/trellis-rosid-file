@@ -35,11 +35,11 @@ ext {
     commonsIoVersion = '2.5'
     commonsRdfVersion = '0.3.0-incubating'
     jacksonVersion = '2.8.5'
-    zookeeperVersion = '3.4.9'
     kafkaVersion = '0.10.2.0'
     slf4jVersion = '1.7.21'
 
     /* Testing */
+    curatorVersion = '3.3.0'
     junitVersion = '4.12'
     mockitoVersion = '1.10.19'
     logbackVersion = '1.1.7'
@@ -57,7 +57,6 @@ dependencies {
     compile group: 'edu.amherst.acdc', name: 'trellis-spi', version: trellisSpiVersion
     compile group: 'edu.amherst.acdc', name: 'trellis-vocabulary', version: trellisVocabularyVersion
     compile group: 'edu.amherst.acdc', name: 'trellis-rosid-common', version: trellisRosidCommonVersion
-    compile group: 'org.apache.zookeeper', name: 'zookeeper', version: zookeeperVersion
     compile group: 'org.apache.kafka', name: 'kafka-streams', version: kafkaVersion
     compile group: 'org.slf4j', name: 'slf4j-api', version: slf4jVersion
     compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: jacksonVersion
@@ -68,6 +67,7 @@ dependencies {
     compile group: 'org.apache.commons', name: 'commons-rdf-api', version: commonsRdfVersion
     compile group: 'org.apache.commons', name: 'commons-rdf-jena', version: commonsRdfVersion
 
+    testCompile group: 'org.apache.curator', name: 'curator-test', version: curatorVersion
     testCompile group: 'org.apache.commons', name: 'commons-rdf-jena', version: commonsRdfVersion
     testCompile group: 'junit', name: 'junit', version: junitVersion
     testCompile group: 'org.mockito', name: 'mockito-core', version: mockitoVersion

@@ -20,6 +20,7 @@ import static java.time.Instant.parse;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.toList;
+import static org.apache.curator.framework.CuratorFrameworkFactory.newClient;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -43,11 +44,15 @@ import org.apache.commons.rdf.api.Dataset;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Quad;
 import org.apache.commons.rdf.api.Triple;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.retry.RetryNTimes;
+import org.apache.curator.test.TestingServer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.MockProducer;
 import org.apache.kafka.streams.KafkaStreams;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -59,11 +64,14 @@ import org.mockito.runners.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class FileResourceServiceTest extends BaseRdfTest {
 
+    private static TestingServer zkServer;
+
     private final IRI identifier = rdf.createIRI("trellis:repository/resource");
     private final IRI other = rdf.createIRI("trellis:repository/other");
     private final Producer<String, Dataset> mockProducer = new MockProducer<>(true,
             new StringSerializer(), new DatasetSerialization());
 
+    private CuratorFramework curator;
     private ResourceService service;
     private Configuration config;
 
@@ -76,11 +84,17 @@ public class FileResourceServiceTest extends BaseRdfTest {
     @Mock
     private KafkaStreams mockStreams;
 
+    @BeforeClass
+    public static void initialize() throws Exception {
+        zkServer = new TestingServer(true);
+    }
+
     @Before
     public void setUp() throws Exception {
         config = new Configuration();
         config.storage.get("repository").put("resources", getClass().getResource("/root").toURI().toString());
-        service = new FileResourceService(config, mockProducer, mockStreams);
+        curator = newClient(zkServer.getConnectString(), new RetryNTimes(10, 1000));
+        service = new FileResourceService(config, curator, mockProducer, mockStreams);
     }
 
     @Test
@@ -91,7 +105,7 @@ public class FileResourceServiceTest extends BaseRdfTest {
             .get("resources") + "/root2/a");
         final File root = new File(URI.create(configuration.storage.get("repository").get("resources")));
         assertFalse(root.exists());
-        final ResourceService altService = new FileResourceService(configuration, mockProducer, mockStreams);
+        final ResourceService altService = new FileResourceService(configuration, curator, mockProducer, mockStreams);
         assertFalse(altService.get(identifier, time).isPresent());
         assertTrue(root.exists());
         altService.bind(mockEventService);
@@ -109,7 +123,7 @@ public class FileResourceServiceTest extends BaseRdfTest {
         final File root = new File(URI.create(configuration.storage.get("repository").get("resources")));
         assertTrue(root.mkdir());
         assertTrue(root.setReadOnly());
-        final ResourceService altService = new FileResourceService(configuration, mockProducer, mockStreams);
+        final ResourceService altService = new FileResourceService(configuration, curator, mockProducer, mockStreams);
     }
 
     @Test

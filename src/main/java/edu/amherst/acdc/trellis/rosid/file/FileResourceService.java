@@ -40,6 +40,7 @@ import java.util.stream.Stream;
 import org.apache.commons.rdf.api.Dataset;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Quad;
+import org.apache.curator.framework.CuratorFramework;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.streams.KafkaStreams;
 import org.slf4j.Logger;
@@ -84,13 +85,14 @@ public class FileResourceService extends AbstractResourceService {
     /**
      * Create a File-based repository service
      * @param configuration the configuration
+     * @param curator the curator framework
      * @param producer the kafka producer
      * @param streams the kafka streams
      * @throws IOException if the directory is not writable
      */
-    protected FileResourceService(final Configuration configuration, final Producer<String, Dataset> producer,
-            final KafkaStreams streams) throws IOException {
-        super(producer);
+    protected FileResourceService(final Configuration configuration, final CuratorFramework curator,
+            final Producer<String, Dataset> producer, final KafkaStreams streams) throws IOException {
+        super(producer, curator);
         requireNonNull(configuration, "configuration may not be null!");
         requireNonNull(streams, "streams may not be null!");
         this.configuration = configuration;

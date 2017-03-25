@@ -59,7 +59,6 @@ public class LdpRdfTest extends BaseRdfTest {
         final Resource res = VersionedResource.find(file, identifier, time).get();
         assertEquals(identifier, res.getIdentifier());
         assertEquals(LDP.RDFSource, res.getInteractionModel());
-        assertEquals(of(rdf.createIRI("trellis:repository")), res.getContainedBy());
         assertEquals(empty(), res.getContains().findFirst());
         assertEquals(empty(), res.getMembershipResource());
         assertEquals(empty(), res.getMemberRelation());
@@ -121,7 +120,6 @@ public class LdpRdfTest extends BaseRdfTest {
         final Resource res = VersionedResource.find(file, identifier, time).get();
         assertEquals(identifier, res.getIdentifier());
         assertEquals(LDP.RDFSource, res.getInteractionModel());
-        assertEquals(of(rdf.createIRI("trellis:repository")), res.getContainedBy());
         assertEquals(empty(), res.getContains().findFirst());
         assertEquals(empty(), res.getMembershipResource());
         assertEquals(empty(), res.getMemberRelation());
@@ -175,7 +173,6 @@ public class LdpRdfTest extends BaseRdfTest {
         final Resource res = VersionedResource.find(file, identifier, time).get();
         assertEquals(identifier, res.getIdentifier());
         assertEquals(LDP.RDFSource, res.getInteractionModel());
-        assertEquals(of(rdf.createIRI("trellis:repository")), res.getContainedBy());
         assertEquals(empty(), res.getContains().findFirst());
         assertEquals(empty(), res.getMembershipResource());
         assertEquals(empty(), res.getMemberRelation());
@@ -220,7 +217,6 @@ public class LdpRdfTest extends BaseRdfTest {
         final Resource res = CachedResource.find(file, identifier).get();
         assertEquals(identifier, res.getIdentifier());
         assertEquals(LDP.RDFSource, res.getInteractionModel());
-        assertEquals(of(rdf.createIRI("trellis:repository")), res.getContainedBy());
         assertEquals(empty(), res.getContains().findFirst());
         assertEquals(empty(), res.getMembershipResource());
         assertEquals(empty(), res.getMemberRelation());

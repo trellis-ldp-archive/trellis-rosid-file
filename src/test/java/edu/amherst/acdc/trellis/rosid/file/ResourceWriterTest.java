@@ -66,7 +66,6 @@ public class ResourceWriterTest extends BaseRdfTest {
         resource.ifPresent(res -> {
             assertEquals(identifier, res.getIdentifier());
             assertEquals(LDP.RDFSource, res.getInteractionModel());
-            assertEquals(of(rdf.createIRI("trellis:repository")), res.getContainedBy());
             assertEquals(empty(), res.getContains().findFirst());
             assertEquals(empty(), res.getMembershipResource());
             assertEquals(empty(), res.getMemberRelation());
@@ -127,7 +126,6 @@ public class ResourceWriterTest extends BaseRdfTest {
         resource.ifPresent(res -> {
             assertEquals(identifier, res.getIdentifier());
             assertEquals(LDP.RDFSource, res.getInteractionModel());
-            assertEquals(of(rdf.createIRI("trellis:repository")), res.getContainedBy());
             assertEquals(empty(), res.getContains().findFirst());
             assertEquals(empty(), res.getMembershipResource());
             assertEquals(empty(), res.getMemberRelation());

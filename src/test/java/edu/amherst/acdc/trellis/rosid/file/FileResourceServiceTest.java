@@ -132,7 +132,6 @@ public class FileResourceServiceTest extends BaseRdfTest {
         final Resource res = service.get(identifier, time).get();
         assertEquals(identifier, res.getIdentifier());
         assertEquals(LDP.Container, res.getInteractionModel());
-        assertEquals(of(rdf.createIRI("trellis:repository")), res.getContainedBy());
         final List<IRI> contained = res.getContains().collect(toList());
         assertEquals(3L, contained.size());
         assertTrue(contained.contains(rdf.createIRI("trellis:repository/resource/1")));
@@ -189,7 +188,6 @@ public class FileResourceServiceTest extends BaseRdfTest {
         final Resource res = service.get(identifier, time).get();
         assertEquals(identifier, res.getIdentifier());
         assertEquals(LDP.Container, res.getInteractionModel());
-        assertEquals(of(rdf.createIRI("trellis:repository")), res.getContainedBy());
         final List<IRI> contained = res.getContains().collect(toList());
         assertEquals(3L, contained.size());
         assertTrue(contained.contains(rdf.createIRI("trellis:repository/resource/1")));
@@ -248,7 +246,6 @@ public class FileResourceServiceTest extends BaseRdfTest {
         final Resource res = service.get(identifier, time).get();
         assertEquals(identifier, res.getIdentifier());
         assertEquals(LDP.Container, res.getInteractionModel());
-        assertEquals(of(rdf.createIRI("trellis:repository")), res.getContainedBy());
         assertEquals(empty(), res.getContains().findFirst());
         assertEquals(empty(), res.getMembershipResource());
         assertEquals(empty(), res.getMemberRelation());
@@ -293,7 +290,6 @@ public class FileResourceServiceTest extends BaseRdfTest {
         final Resource res = service.get(identifier).get();
         assertEquals(identifier, res.getIdentifier());
         assertEquals(LDP.Container, res.getInteractionModel());
-        assertEquals(of(rdf.createIRI("trellis:repository")), res.getContainedBy());
         final List<IRI> contained = res.getContains().collect(toList());
         assertEquals(3L, contained.size());
         assertTrue(contained.contains(rdf.createIRI("trellis:repository/resource/1")));
@@ -352,7 +348,6 @@ public class FileResourceServiceTest extends BaseRdfTest {
         final Resource res = service.get(other).get();
         assertEquals(other, res.getIdentifier());
         assertEquals(LDP.Container, res.getInteractionModel());
-        assertEquals(of(rdf.createIRI("trellis:repository")), res.getContainedBy());
         final List<IRI> contained = res.getContains().collect(toList());
         assertEquals(3L, contained.size());
         assertTrue(contained.contains(rdf.createIRI("trellis:repository/other/1")));

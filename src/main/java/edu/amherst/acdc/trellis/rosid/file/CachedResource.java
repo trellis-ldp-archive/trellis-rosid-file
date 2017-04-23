@@ -34,6 +34,7 @@ import static java.time.Instant.now;
 import static java.time.Instant.parse;
 import static java.util.Collections.emptyIterator;
 import static java.util.Objects.nonNull;
+import static java.util.Objects.isNull;
 import static java.util.Optional.ofNullable;
 import static java.util.Spliterator.IMMUTABLE;
 import static java.util.Spliterator.NONNULL;
@@ -98,6 +99,9 @@ class CachedResource extends AbstractFileResource {
      */
     public static Optional<Resource> find(final File directory, final IRI identifier) {
         ResourceData data = null;
+        if (isNull(directory)) {
+            return Optional.empty();
+        }
         try {
             data = MAPPER.readValue(new File(directory, RESOURCE_CACHE), ResourceData.class);
         } catch (final IOException ex) {
@@ -113,7 +117,7 @@ class CachedResource extends AbstractFileResource {
      * @return true if the write operation succeeds
      */
     public static Boolean write(final File directory, final String identifier) {
-        return write(directory, rdf.createIRI(identifier));
+        return nonNull(directory) && write(directory, rdf.createIRI(identifier));
     }
 
     /**
@@ -123,7 +127,7 @@ class CachedResource extends AbstractFileResource {
      * @return true if the write operation succeeds
      */
     public static Boolean write(final File directory, final IRI identifier) {
-        return write(directory, identifier, now());
+        return nonNull(directory) && write(directory, identifier, now());
     }
 
     /**
@@ -134,7 +138,7 @@ class CachedResource extends AbstractFileResource {
      * @return true if the write operation succeeds
      */
     public static Boolean write(final File directory, final String identifier, final Instant time) {
-        return write(directory, rdf.createIRI(identifier), time);
+        return nonNull(directory) && write(directory, rdf.createIRI(identifier), time);
     }
 
     /**
@@ -145,6 +149,10 @@ class CachedResource extends AbstractFileResource {
      * @return true if the write operation succeeds
      */
     public static Boolean write(final File directory, final IRI identifier, final Instant time) {
+
+        if (isNull(directory)) {
+            return false;
+        }
 
         // Write the JSON file
         final Optional<ResourceData> data = VersionedResource.read(directory, identifier, time);

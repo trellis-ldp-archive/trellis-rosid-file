@@ -112,10 +112,13 @@ final class FileUtils {
      */
     public static File resourceDirectory(final Map<String, String> config, final String identifier) {
         final String repo = identifier.split("/")[0].split(":")[1];
-        final File root = new File(URI.create(config.get(repo)));
-        final File directory = new File(root, partition(identifier));
-        directory.mkdirs();
-        return directory;
+        if (config.containsKey(repo)) {
+            final File root = new File(URI.create(config.get(repo)));
+            final File directory = new File(root, partition(identifier));
+            directory.mkdirs();
+            return directory;
+        }
+        return null;
     }
 
     private FileUtils() {

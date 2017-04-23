@@ -19,8 +19,9 @@ import static edu.amherst.acdc.trellis.rosid.file.Constants.RESOURCE_CACHE;
 import static edu.amherst.acdc.trellis.rosid.file.Constants.RESOURCE_JOURNAL;
 import static edu.amherst.acdc.trellis.rosid.file.FileUtils.resourceDirectory;
 import static java.time.Instant.now;
+import static java.util.Objects.isNull;
 import static java.util.Objects.requireNonNull;
-import static java.util.Optional.of;
+import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -35,6 +36,7 @@ import java.net.URI;
 import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.stream.Stream;
 
 import org.apache.commons.rdf.api.Dataset;
@@ -51,8 +53,6 @@ import org.slf4j.Logger;
 public class FileResourceService extends AbstractResourceService {
 
     private static final Logger LOGGER = getLogger(FileResourceService.class);
-
-    private final Configuration configuration;
 
     private final Map<String, String> storageConfig;
 
@@ -71,14 +71,32 @@ public class FileResourceService extends AbstractResourceService {
             throw new IOException("Configuration file (" + config + ") does not exist");
         }
         final ObjectMapper mapper = new ObjectMapper();
-        this.configuration = mapper.readValue(new File(config), Configuration.class);
-        this.storageConfig = this.configuration.storage.entrySet().stream()
+        final Configuration configuration = mapper.readValue(new File(config), Configuration.class);
+        this.storageConfig = configuration.storage.entrySet().stream()
                 .collect(toMap(e -> e.getKey(), e -> e.getValue().get("resources")));
 
 
         init();
 
         this.kstreams = StreamConfiguration.configure(storageConfig);
+        this.kstreams.start();
+    }
+
+    /**
+     * Create a File-based repository service
+     * @param kafkaProps the kafka config properties
+     * @param zkProps the zookeeper config properties
+     * @param partitions the storage partitions
+     * @throws IOException if the directory is not writable
+     */
+    public FileResourceService(final Properties kafkaProps, final Properties zkProps,
+            final Map<String, String> partitions) throws IOException {
+        super(kafkaProps, zkProps);
+        this.storageConfig = partitions;
+
+        init();
+
+        this.kstreams = StreamConfiguration.configure(kafkaProps.getProperty("bootstrap.servers"), storageConfig);
         this.kstreams.start();
     }
 
@@ -95,8 +113,7 @@ public class FileResourceService extends AbstractResourceService {
         super(producer, curator);
         requireNonNull(configuration, "configuration may not be null!");
         requireNonNull(streams, "streams may not be null!");
-        this.configuration = configuration;
-        this.storageConfig = this.configuration.storage.entrySet().stream()
+        this.storageConfig = configuration.storage.entrySet().stream()
                 .collect(toMap(e -> e.getKey(), e -> e.getValue().get("resources")));
 
         init();
@@ -107,14 +124,14 @@ public class FileResourceService extends AbstractResourceService {
 
     @Override
     public Optional<Resource> get(final IRI identifier) {
-        return of(resourceDirectory(storageConfig, identifier)).filter(File::exists)
+        return ofNullable(resourceDirectory(storageConfig, identifier)).filter(File::exists)
             .flatMap(dir -> new File(dir, RESOURCE_CACHE).exists() ?
                     CachedResource.find(dir, identifier) : VersionedResource.find(dir, identifier, now()));
     }
 
     @Override
     public Optional<Resource> get(final IRI identifier, final Instant time) {
-        return of(resourceDirectory(storageConfig, identifier)).filter(File::exists)
+        return ofNullable(resourceDirectory(storageConfig, identifier)).filter(File::exists)
             .flatMap(dir -> VersionedResource.find(dir, identifier, time));
     }
 
@@ -122,6 +139,10 @@ public class FileResourceService extends AbstractResourceService {
     protected Boolean write(final IRI identifier, final Stream<? extends Quad> remove,
             final Stream<? extends Quad> add, final Instant time) {
         final File dir = resourceDirectory(storageConfig, identifier);
+        if (isNull(dir)) {
+            return false;
+        }
+        dir.mkdirs();
         return RDFPatch.write(new File(dir, RESOURCE_JOURNAL), remove, add, time);
     }
 

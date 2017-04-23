@@ -34,8 +34,7 @@ import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.kstream.KStreamBuilder;
-import org.apache.kafka.streams.processor.StateStoreSupplier;
-import org.apache.kafka.streams.state.Stores;
+//import org.apache.kafka.streams.state.Stores;
 
 /**
  * @author acoburn
@@ -55,20 +54,29 @@ final class StreamConfiguration {
      * @return the configured kafka stream processor
      */
     public static KafkaStreams configure(final Map<String, String> storage) {
-        final String bootstrapServers = System.getProperty("kafka.bootstrap.servers");
+        return configure(getProperty("kafka.bootstrap.servers"), storage);
+    }
 
+    /**
+     * Configure the KafkaStream processor
+     * @param bootstrapServers the kafka servers
+     * @param storage the storage configuration
+     * @return the configured kafka stream processor
+     */
+    public static KafkaStreams configure(final String bootstrapServers, final Map<String, String> storage) {
         final Map<String, Object> props = new HashMap<>();
         props.put(APPLICATION_ID_CONFIG, "trellis-repository-application");
         props.put(BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-
-        final StateStoreSupplier cachingStore = Stores.create(CACHE_NAME).withStringKeys().withStringValues()
-            .inMemory().maxEntries(CACHE_SIZE).build();
 
         final Serde<String> kserde = new Serdes.StringSerde();
         final Serde<Dataset> vserde = new DatasetSerde();
 
         final KStreamBuilder builder = new KStreamBuilder();
-        builder.addStateStore(cachingStore);
+
+        //if (!builder.globalStateStores().containsKey(CACHE_NAME)) {
+            //builder.addStateStore(Stores.create(CACHE_NAME).withStringKeys().withStringValues()
+                //.inMemory().maxEntries(CACHE_SIZE).build());
+        //}
 
         builder.stream(kserde, vserde, Constants.TOPIC_INBOUND_ADD)
             .foreach((k, v) -> StreamProcessing.addInboundQuads(storage, k, v));

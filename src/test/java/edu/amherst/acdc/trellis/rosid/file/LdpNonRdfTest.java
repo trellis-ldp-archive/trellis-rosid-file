@@ -81,7 +81,6 @@ public class LdpNonRdfTest extends BaseRdfTest {
         assertEquals(of(rdf.createIRI("http://example.org/receiver/inbox")), res.getInbox());
         assertEquals(empty(), res.getAcl());
         assertEquals(parse("2017-02-15T11:15:00Z"), res.getModified());
-        assertEquals(of(rdf.createIRI("http://example.org/user/raadmin")), res.getCreator());
         assertEquals(2L, res.getTypes().count());
         assertTrue(res.getTypes().anyMatch(rdf.createIRI("http://example.org/types/Foo")::equals));
         assertTrue(res.getTypes().anyMatch(rdf.createIRI("http://example.org/types/Bar")::equals));
@@ -135,7 +134,6 @@ public class LdpNonRdfTest extends BaseRdfTest {
         assertEquals(of(rdf.createIRI("http://example.org/receiver/inbox")), res.getInbox());
         assertEquals(empty(), res.getAcl());
         assertEquals(parse("2017-02-15T11:15:00Z"), res.getModified());
-        assertEquals(of(rdf.createIRI("http://example.org/user/raadmin")), res.getCreator());
         assertEquals(2L, res.getTypes().count());
         assertTrue(res.getTypes().anyMatch(rdf.createIRI("http://example.org/types/Foo")::equals));
         assertTrue(res.getTypes().anyMatch(rdf.createIRI("http://example.org/types/Bar")::equals));
@@ -191,7 +189,6 @@ public class LdpNonRdfTest extends BaseRdfTest {
         assertEquals(empty(), res.getInbox());
         assertEquals(empty(), res.getAcl());
         assertEquals(parse("2017-02-15T10:05:00Z"), res.getModified());
-        assertEquals(of(rdf.createIRI("http://example.org/user/raadmin")), res.getCreator());
         assertEquals(0L, res.getTypes().count());
         assertEquals(0L, res.stream().filter(isContainment.or(isMembership)).count());
 
@@ -240,7 +237,6 @@ public class LdpNonRdfTest extends BaseRdfTest {
         assertEquals(of(rdf.createIRI("http://example.org/receiver/inbox")), res.getInbox());
         assertEquals(empty(), res.getAcl());
         assertEquals(parse("2017-02-15T11:15:00Z"), res.getModified());
-        assertEquals(of(rdf.createIRI("http://example.org/user/raadmin")), res.getCreator());
         assertEquals(2L, res.getTypes().count());
         assertTrue(res.getTypes().anyMatch(rdf.createIRI("http://example.org/types/Foo")::equals));
         assertTrue(res.getTypes().anyMatch(rdf.createIRI("http://example.org/types/Bar")::equals));

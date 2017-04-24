@@ -98,11 +98,6 @@ abstract class AbstractFileResource implements Resource {
     }
 
     @Override
-    public Optional<IRI> getCreator() {
-        return ofNullable(data.creator).map(rdf::createIRI);
-    }
-
-    @Override
     public Optional<IRI> getAcl() {
         return ofNullable(data.accessControl).map(rdf::createIRI);
     }

@@ -71,7 +71,6 @@ public class LdpNonRdfTest extends BaseRdfTest {
         assertTrue(res.getDatastream().isPresent());
         res.getDatastream().ifPresent(ds -> {
             assertEquals(datastream, ds.getIdentifier());
-            assertEquals(parse("2017-02-15T10:05:00Z"), ds.getCreated());
             assertEquals(parse("2017-02-15T10:05:00Z"), ds.getModified());
             assertEquals(of(123456L), ds.getSize());
             assertEquals(of("image/jpeg"), ds.getMimeType());
@@ -81,7 +80,6 @@ public class LdpNonRdfTest extends BaseRdfTest {
         assertEquals(empty(), res.getNext());
         assertEquals(of(rdf.createIRI("http://example.org/receiver/inbox")), res.getInbox());
         assertEquals(empty(), res.getAcl());
-        assertEquals(parse("2017-02-15T10:05:00Z"), res.getCreated());
         assertEquals(parse("2017-02-15T11:15:00Z"), res.getModified());
         assertEquals(of(rdf.createIRI("http://example.org/user/raadmin")), res.getCreator());
         assertEquals(2L, res.getTypes().count());
@@ -127,7 +125,6 @@ public class LdpNonRdfTest extends BaseRdfTest {
         assertTrue(res.getDatastream().isPresent());
         res.getDatastream().ifPresent(ds -> {
             assertEquals(datastream, ds.getIdentifier());
-            assertEquals(parse("2017-02-15T10:05:00Z"), ds.getCreated());
             assertEquals(parse("2017-02-15T10:05:00Z"), ds.getModified());
             assertEquals(of(123456L), ds.getSize());
             assertEquals(of("image/jpeg"), ds.getMimeType());
@@ -137,7 +134,6 @@ public class LdpNonRdfTest extends BaseRdfTest {
         assertEquals(empty(), res.getNext());
         assertEquals(of(rdf.createIRI("http://example.org/receiver/inbox")), res.getInbox());
         assertEquals(empty(), res.getAcl());
-        assertEquals(parse("2017-02-15T10:05:00Z"), res.getCreated());
         assertEquals(parse("2017-02-15T11:15:00Z"), res.getModified());
         assertEquals(of(rdf.createIRI("http://example.org/user/raadmin")), res.getCreator());
         assertEquals(2L, res.getTypes().count());
@@ -185,7 +181,6 @@ public class LdpNonRdfTest extends BaseRdfTest {
         assertTrue(res.getDatastream().isPresent());
         res.getDatastream().ifPresent(ds -> {
             assertEquals(datastream, ds.getIdentifier());
-            assertEquals(parse("2017-02-15T10:05:00Z"), ds.getCreated());
             assertEquals(parse("2017-02-15T10:05:00Z"), ds.getModified());
             assertEquals(of(123456L), ds.getSize());
             assertEquals(of("image/jpeg"), ds.getMimeType());
@@ -195,7 +190,6 @@ public class LdpNonRdfTest extends BaseRdfTest {
         assertEquals(empty(), res.getNext());
         assertEquals(empty(), res.getInbox());
         assertEquals(empty(), res.getAcl());
-        assertEquals(parse("2017-02-15T10:05:00Z"), res.getCreated());
         assertEquals(parse("2017-02-15T10:05:00Z"), res.getModified());
         assertEquals(of(rdf.createIRI("http://example.org/user/raadmin")), res.getCreator());
         assertEquals(0L, res.getTypes().count());
@@ -236,7 +230,6 @@ public class LdpNonRdfTest extends BaseRdfTest {
         assertTrue(res.getDatastream().isPresent());
         res.getDatastream().ifPresent(ds -> {
             assertEquals(datastream, ds.getIdentifier());
-            assertEquals(parse("2017-02-15T10:05:00Z"), ds.getCreated());
             assertEquals(parse("2017-02-15T10:05:00Z"), ds.getModified());
             assertEquals(of(123456L), ds.getSize());
             assertEquals(of("image/jpeg"), ds.getMimeType());
@@ -246,7 +239,6 @@ public class LdpNonRdfTest extends BaseRdfTest {
         assertEquals(empty(), res.getNext());
         assertEquals(of(rdf.createIRI("http://example.org/receiver/inbox")), res.getInbox());
         assertEquals(empty(), res.getAcl());
-        assertEquals(parse("2017-02-15T10:05:00Z"), res.getCreated());
         assertEquals(parse("2017-02-15T11:15:00Z"), res.getModified());
         assertEquals(of(rdf.createIRI("http://example.org/user/raadmin")), res.getCreator());
         assertEquals(2L, res.getTypes().count());

@@ -125,12 +125,7 @@ abstract class AbstractFileResource implements Resource {
     @Override
     public Optional<Datastream> getDatastream() {
         return ofNullable(data.datastream).map(ds ->
-            new Datastream(rdf.createIRI(ds.id), ds.created, ds.modified, ds.format, ds.size));
-    }
-
-    @Override
-    public Instant getCreated() {
-        return data.created;
+            new Datastream(rdf.createIRI(ds.id), ds.modified, ds.format, ds.size));
     }
 
     @Override

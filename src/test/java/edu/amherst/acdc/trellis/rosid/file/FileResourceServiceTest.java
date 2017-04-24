@@ -147,7 +147,6 @@ public class FileResourceServiceTest extends BaseRdfTest {
         assertEquals(empty(), res.getNext());
         assertEquals(of(rdf.createIRI("http://example.org/receiver/inbox")), res.getInbox());
         assertEquals(empty(), res.getAcl());
-        assertEquals(parse("2017-02-15T10:05:00Z"), res.getCreated());
         assertEquals(parse("2017-02-16T11:15:03Z"), res.getModified());
         assertEquals(of(rdf.createIRI("http://example.org/user/raadmin")), res.getCreator());
         assertEquals(2L, res.getTypes().count());
@@ -203,7 +202,6 @@ public class FileResourceServiceTest extends BaseRdfTest {
         assertEquals(empty(), res.getNext());
         assertEquals(of(rdf.createIRI("http://example.org/receiver/inbox")), res.getInbox());
         assertEquals(empty(), res.getAcl());
-        assertEquals(parse("2017-02-15T10:05:00Z"), res.getCreated());
         assertEquals(parse("2017-02-16T11:15:03Z"), res.getModified());
         assertEquals(of(rdf.createIRI("http://example.org/user/raadmin")), res.getCreator());
         assertEquals(2L, res.getTypes().count());
@@ -257,7 +255,6 @@ public class FileResourceServiceTest extends BaseRdfTest {
         assertEquals(empty(), res.getNext());
         assertEquals(empty(), res.getInbox());
         assertEquals(empty(), res.getAcl());
-        assertEquals(parse("2017-02-15T10:05:00Z"), res.getCreated());
         assertEquals(parse("2017-02-15T10:05:00Z"), res.getModified());
         assertEquals(of(rdf.createIRI("http://example.org/user/raadmin")), res.getCreator());
         assertEquals(0L, res.getTypes().count());
@@ -306,7 +303,6 @@ public class FileResourceServiceTest extends BaseRdfTest {
         assertEquals(empty(), res.getNext());
         assertEquals(of(rdf.createIRI("http://example.org/receiver/inbox")), res.getInbox());
         assertEquals(empty(), res.getAcl());
-        assertEquals(parse("2017-02-15T10:05:00Z"), res.getCreated());
         assertEquals(parse("2017-02-16T11:15:03Z"), res.getModified());
         assertEquals(of(rdf.createIRI("http://example.org/user/raadmin")), res.getCreator());
         assertEquals(2L, res.getTypes().count());
@@ -364,7 +360,6 @@ public class FileResourceServiceTest extends BaseRdfTest {
         assertEquals(empty(), res.getNext());
         assertEquals(of(rdf.createIRI("http://example.org/receiver/inbox")), res.getInbox());
         assertEquals(empty(), res.getAcl());
-        assertEquals(parse("2017-02-15T10:05:00Z"), res.getCreated());
         assertEquals(parse("2017-02-16T11:15:03Z"), res.getModified());
         assertEquals(of(rdf.createIRI("http://example.org/user/raadmin")), res.getCreator());
         assertEquals(2L, res.getTypes().count());

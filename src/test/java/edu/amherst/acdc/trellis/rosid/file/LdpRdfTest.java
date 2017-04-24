@@ -70,7 +70,6 @@ public class LdpRdfTest extends BaseRdfTest {
         assertEquals(empty(), res.getNext());
         assertEquals(of(rdf.createIRI("http://example.org/receiver/inbox")), res.getInbox());
         assertEquals(empty(), res.getAcl());
-        assertEquals(parse("2017-02-15T10:05:00Z"), res.getCreated());
         assertEquals(parse("2017-02-15T11:15:00Z"), res.getModified());
         assertEquals(of(rdf.createIRI("http://example.org/user/raadmin")), res.getCreator());
         assertEquals(2L, res.getTypes().count());
@@ -97,9 +96,7 @@ public class LdpRdfTest extends BaseRdfTest {
                     RDFS.label, rdf.createLiteral("Some other resource", "eng"))));
 
         final List<Triple> server = res.stream().filter(isServerManaged).map(Quad::asTriple).collect(toList());
-        assertEquals(4L, server.size());
-        assertTrue(server.contains(rdf.createTriple(identifier, DC.created,
-                        rdf.createLiteral("2017-02-15T10:05:00Z", XSD.dateTime))));
+        assertEquals(3L, server.size());
         assertTrue(server.contains(rdf.createTriple(identifier, DC.modified,
                         rdf.createLiteral("2017-02-15T11:15:00Z", XSD.dateTime))));
         assertTrue(server.contains(rdf.createTriple(identifier, DC.creator,
@@ -131,7 +128,6 @@ public class LdpRdfTest extends BaseRdfTest {
         assertEquals(empty(), res.getNext());
         assertEquals(of(rdf.createIRI("http://example.org/receiver/inbox")), res.getInbox());
         assertEquals(empty(), res.getAcl());
-        assertEquals(parse("2017-02-15T10:05:00Z"), res.getCreated());
         assertEquals(parse("2017-02-15T11:15:00Z"), res.getModified());
         assertEquals(of(rdf.createIRI("http://example.org/user/raadmin")), res.getCreator());
         assertEquals(2L, res.getTypes().count());
@@ -184,7 +180,6 @@ public class LdpRdfTest extends BaseRdfTest {
         assertEquals(empty(), res.getNext());
         assertEquals(empty(), res.getInbox());
         assertEquals(empty(), res.getAcl());
-        assertEquals(parse("2017-02-15T10:05:00Z"), res.getCreated());
         assertEquals(parse("2017-02-15T10:05:00Z"), res.getModified());
         assertEquals(of(rdf.createIRI("http://example.org/user/raadmin")), res.getCreator());
         assertEquals(0L, res.getTypes().count());
@@ -228,7 +223,6 @@ public class LdpRdfTest extends BaseRdfTest {
         assertEquals(empty(), res.getNext());
         assertEquals(of(rdf.createIRI("http://example.org/receiver/inbox")), res.getInbox());
         assertEquals(empty(), res.getAcl());
-        assertEquals(parse("2017-02-15T10:05:00Z"), res.getCreated());
         assertEquals(parse("2017-02-15T11:15:00Z"), res.getModified());
         assertEquals(of(rdf.createIRI("http://example.org/user/raadmin")), res.getCreator());
         assertEquals(2L, res.getTypes().count());

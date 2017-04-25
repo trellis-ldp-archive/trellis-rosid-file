@@ -154,7 +154,12 @@ public class FileResourceService extends AbstractResourceService {
 
     private void init() throws IOException {
         for (final Map.Entry<String, String> storage : storageConfig.entrySet()) {
-            final File res = new File(URI.create(storage.getValue()));
+            final File res;
+            if (storage.getValue().startsWith("file:")) {
+                res = new File(URI.create(storage.getValue()));
+            } else {
+                res = new File(storage.getValue());
+            }
             if (!res.exists()) {
                 res.mkdirs();
             }

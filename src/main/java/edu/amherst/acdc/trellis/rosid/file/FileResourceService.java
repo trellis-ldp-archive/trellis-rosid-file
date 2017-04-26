@@ -84,7 +84,6 @@ public class FileResourceService extends AbstractResourceService {
         this.storageConfig = configuration.storage.entrySet().stream()
                 .collect(toMap(e -> e.getKey(), e -> e.getValue().get("resources")));
 
-
         init();
 
         this.kstreams = StreamConfiguration.configure(storageConfig);
@@ -163,22 +162,21 @@ public class FileResourceService extends AbstractResourceService {
 
     private void init() throws IOException {
         for (final Map.Entry<String, String> storage : storageConfig.entrySet()) {
-            final File res;
-            if (storage.getValue().startsWith("file:")) {
-                res = new File(URI.create(storage.getValue()));
-            } else {
-                res = new File(storage.getValue());
+            final File data = storage.getValue().startsWith("file:") ?
+                 new File(URI.create(storage.getValue())) : new File(storage.getValue());
+            LOGGER.info("Using resource data directory for '{}': {}", storage.getKey(), data.getAbsolutePath());
+            if (!data.exists()) {
+                data.mkdirs();
             }
-            if (!res.exists()) {
-                res.mkdirs();
-            }
-            if (!res.canWrite()) {
-                throw new IOException("Cannot write to " + res.getAbsolutePath());
+            if (!data.canWrite()) {
+                throw new IOException("Cannot write to " + data.getAbsolutePath());
             }
             final IRI identifier = rdf.createIRI("trellis:" + storage.getKey());
             final File root = resourceDirectory(storageConfig, identifier);
+            final File rootData = new File(root, RESOURCE_JOURNAL);
 
-            if (!root.exists()) {
+            if (!root.exists() || !rootData.exists()) {
+                LOGGER.info("Initializing root container for '{}'", identifier.getIRIString());
                 root.mkdirs();
                 final Instant time = now();
                 final BlankNode bnode = rdf.createBlankNode(randomUUID().toString());
@@ -188,11 +186,9 @@ public class FileResourceService extends AbstractResourceService {
                         rdf.createQuad(Trellis.PreferAudit, bnode, RDF.type, PROV.Activity),
                         rdf.createQuad(Trellis.PreferAudit, bnode, PROV.generatedAtTime,
                             rdf.createLiteral(time.toString(), XSD.dateTime)));
-                RDFPatch.write(new File(root, RESOURCE_JOURNAL), empty(), quads, now());
+                RDFPatch.write(rootData, empty(), quads, now());
                 CachedResource.write(root, identifier);
             }
-
-            LOGGER.info("Using resource data directory for '{}': {}", storage.getKey(), res.getAbsolutePath());
         }
     }
 }

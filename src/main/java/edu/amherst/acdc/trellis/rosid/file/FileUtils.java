@@ -113,7 +113,12 @@ final class FileUtils {
     public static File resourceDirectory(final Map<String, String> config, final String identifier) {
         final String repo = identifier.split("/")[0].split(":")[1];
         if (config.containsKey(repo)) {
-            final File root = new File(URI.create(config.get(repo)));
+            final File root;
+            if (config.get(repo).startsWith("file:")) {
+                root = new File(URI.create(config.get(repo)));
+            } else {
+                root = new File(config.get(repo));
+            }
             final File directory = new File(root, partition(identifier));
             directory.mkdirs();
             return directory;

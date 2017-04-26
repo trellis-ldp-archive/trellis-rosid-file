@@ -22,13 +22,21 @@ import static java.time.Instant.now;
 import static java.util.Objects.isNull;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
+import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Stream.empty;
+import static java.util.stream.Stream.of;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import edu.amherst.acdc.trellis.api.Resource;
 import edu.amherst.acdc.trellis.rosid.common.AbstractResourceService;
+import edu.amherst.acdc.trellis.vocabulary.LDP;
+import edu.amherst.acdc.trellis.vocabulary.PROV;
+import edu.amherst.acdc.trellis.vocabulary.RDF;
+import edu.amherst.acdc.trellis.vocabulary.Trellis;
+import edu.amherst.acdc.trellis.vocabulary.XSD;
 
 import java.io.File;
 import java.io.IOException;
@@ -39,6 +47,7 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.stream.Stream;
 
+import org.apache.commons.rdf.api.BlankNode;
 import org.apache.commons.rdf.api.Dataset;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Quad;
@@ -165,6 +174,22 @@ public class FileResourceService extends AbstractResourceService {
             }
             if (!res.canWrite()) {
                 throw new IOException("Cannot write to " + res.getAbsolutePath());
+            }
+            final IRI identifier = rdf.createIRI("trellis:" + storage.getKey());
+            final File root = resourceDirectory(storageConfig, identifier);
+
+            if (!root.exists()) {
+                root.mkdirs();
+                final Instant time = now();
+                final BlankNode bnode = rdf.createBlankNode(randomUUID().toString());
+                final Stream<Quad> quads = of(
+                        rdf.createQuad(Trellis.PreferServerManaged, identifier, RDF.type, LDP.Container),
+                        rdf.createQuad(Trellis.PreferAudit, identifier, PROV.wasGeneratedBy, bnode),
+                        rdf.createQuad(Trellis.PreferAudit, bnode, RDF.type, PROV.Activity),
+                        rdf.createQuad(Trellis.PreferAudit, bnode, PROV.generatedAtTime,
+                            rdf.createLiteral(time.toString(), XSD.dateTime)));
+                RDFPatch.write(new File(root, RESOURCE_JOURNAL), empty(), quads, now());
+                CachedResource.write(root, identifier);
             }
 
             LOGGER.info("Using resource data directory for '{}': {}", storage.getKey(), res.getAbsolutePath());

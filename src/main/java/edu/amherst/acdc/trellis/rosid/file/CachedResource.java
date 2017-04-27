@@ -21,8 +21,6 @@ import static edu.amherst.acdc.trellis.rosid.file.Constants.RESOURCE_CACHE;
 import static edu.amherst.acdc.trellis.rosid.file.Constants.RESOURCE_JOURNAL;
 import static edu.amherst.acdc.trellis.rosid.file.Constants.RESOURCE_QUADS;
 import static edu.amherst.acdc.trellis.rosid.file.FileUtils.stringToQuad;
-import static edu.amherst.acdc.trellis.vocabulary.Trellis.PreferUserManaged;
-import static java.lang.String.join;
 import static java.lang.System.lineSeparator;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.Files.lines;
@@ -173,9 +171,7 @@ class CachedResource extends AbstractFileResource {
                     UTF_8, CREATE, WRITE, TRUNCATE_EXISTING)) {
             final File file = new File(directory, RESOURCE_JOURNAL);
             final Iterator<String> lineIter = RDFPatch.asStream(rdf, file, identifier, time)
-                    .map(quad -> join(" ", quad.getSubject().ntriplesString(),
-                        quad.getPredicate().ntriplesString(), quad.getObject().ntriplesString(),
-                        quad.getGraphName().orElse(PreferUserManaged).ntriplesString(), ".")).iterator();
+                    .map(RDFPatch.quadToString).iterator();
             while (lineIter.hasNext()) {
                 writer.write(lineIter.next() + lineSeparator());
             }

@@ -25,6 +25,8 @@ import static org.apache.commons.rdf.jena.JenaRDF.asQuad;
 import static org.apache.jena.riot.Lang.NQUADS;
 import static org.apache.jena.riot.system.StreamRDFLib.sinkQuads;
 
+import edu.amherst.acdc.trellis.vocabulary.Trellis;
+
 import java.io.File;
 import java.io.StringReader;
 import java.net.URI;
@@ -35,9 +37,11 @@ import java.util.Optional;
 import java.util.StringJoiner;
 import java.util.zip.CRC32;
 
+import org.apache.commons.rdf.api.BlankNode;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Quad;
 import org.apache.commons.rdf.api.RDF;
+import org.apache.commons.rdf.api.RDFTerm;
 import org.apache.jena.atlas.lib.SinkToCollection;
 import org.apache.jena.riot.RDFParserRegistry;
 import org.apache.jena.riot.ReaderRIOT;
@@ -50,6 +54,8 @@ final class FileUtils {
     // The length of the CRC directory partition
     public final static int LENGTH = 2;
     public final static int MAX = 3;
+
+    private static final String BNODE_IRI_PREFIX = "trellis:bnode/";
 
     private static final ReaderRIOT READER = RDFParserRegistry.getFactory(NQUADS).create(NQUADS);
 
@@ -91,7 +97,27 @@ final class FileUtils {
     public static Optional<Quad> stringToQuad(final RDF rdf, final String line) {
         final List<org.apache.jena.sparql.core.Quad> c = new ArrayList<>();
         READER.read(new StringReader(line), null, NQUADS.getContentType(), sinkQuads(new SinkToCollection<>(c)), null);
-        return of(c).filter(x -> !x.isEmpty()).map(x -> asQuad(rdf, x.get(0)));
+        return of(c).filter(x -> !x.isEmpty()).map(x -> asQuad(rdf, x.get(0))).map(quad ->
+            rdf.createQuad(quad.getGraphName().orElse(Trellis.PreferUserManaged),
+                isSkolemizedBNode(quad.getSubject()) ? deskolemize(rdf, (IRI) quad.getSubject()) : quad.getSubject(),
+                quad.getPredicate(),
+                isSkolemizedBNode(quad.getObject()) ? deskolemize(rdf, (IRI) quad.getObject()) : quad.getObject()));
+    }
+
+    public static Boolean isSkolemizedBNode(final RDFTerm term) {
+        return term instanceof IRI && term.ntriplesString().startsWith("<" + BNODE_IRI_PREFIX);
+    }
+
+    public static BlankNode deskolemize(final RDF rdf, final IRI iri) {
+        final String term = iri.getIRIString();
+        if (term.startsWith(BNODE_IRI_PREFIX)) {
+            return rdf.createBlankNode(term.substring(BNODE_IRI_PREFIX.length(), term.length()));
+        }
+        return rdf.createBlankNode();
+    }
+
+    public static String skolemize(final BlankNode bnode) {
+        return "<" + BNODE_IRI_PREFIX + bnode.uniqueReference() + ">";
     }
 
     /**

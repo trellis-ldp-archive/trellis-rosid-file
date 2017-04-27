@@ -15,6 +15,7 @@
  */
 package edu.amherst.acdc.trellis.rosid.file;
 
+import static edu.amherst.acdc.trellis.rosid.file.FileUtils.skolemize;
 import static edu.amherst.acdc.trellis.rosid.file.FileUtils.stringToQuad;
 import static java.lang.String.join;
 import static java.lang.System.lineSeparator;
@@ -51,6 +52,7 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import org.apache.commons.io.input.ReversedLinesFileReader;
+import org.apache.commons.rdf.api.BlankNode;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Quad;
 import org.apache.commons.rdf.api.RDF;
@@ -117,9 +119,13 @@ final class RDFPatch {
         return true;
     }
 
-    private static final Function<Quad, String> quadToString = quad ->
-        join(" ", quad.getSubject().ntriplesString(), quad.getPredicate().ntriplesString(),
-                quad.getObject().ntriplesString(),
+    public static final Function<Quad, String> quadToString = quad ->
+        join(" ",
+                quad.getSubject() instanceof BlankNode ?
+                    skolemize((BlankNode) quad.getSubject()) : quad.getSubject().ntriplesString(),
+                quad.getPredicate().ntriplesString(),
+                quad.getObject() instanceof BlankNode ?
+                    skolemize((BlankNode) quad.getObject()) : quad.getObject().ntriplesString(),
                 quad.getGraphName().orElse(Trellis.PreferUserManaged).ntriplesString(), ".");
 
     /**

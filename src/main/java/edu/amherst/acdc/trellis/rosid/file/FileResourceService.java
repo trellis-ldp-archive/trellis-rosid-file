@@ -22,7 +22,6 @@ import static java.time.Instant.now;
 import static java.util.Objects.isNull;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
-import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Stream.empty;
 import static java.util.stream.Stream.of;
@@ -179,7 +178,7 @@ public class FileResourceService extends AbstractResourceService {
                 LOGGER.info("Initializing root container for '{}'", identifier.getIRIString());
                 root.mkdirs();
                 final Instant time = now();
-                final BlankNode bnode = rdf.createBlankNode(randomUUID().toString());
+                final BlankNode bnode = rdf.createBlankNode();
                 final Stream<Quad> quads = of(
                         rdf.createQuad(Trellis.PreferServerManaged, identifier, RDF.type, LDP.Container),
                         rdf.createQuad(Trellis.PreferAudit, identifier, PROV.wasGeneratedBy, bnode),

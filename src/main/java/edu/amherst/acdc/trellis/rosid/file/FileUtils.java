@@ -38,6 +38,7 @@ import java.util.StringJoiner;
 import java.util.zip.CRC32;
 
 import org.apache.commons.rdf.api.BlankNode;
+import org.apache.commons.rdf.api.BlankNodeOrIRI;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Quad;
 import org.apache.commons.rdf.api.RDF;
@@ -104,18 +105,34 @@ final class FileUtils {
                 isSkolemizedBNode(quad.getObject()) ? deskolemize(rdf, (IRI) quad.getObject()) : quad.getObject()));
     }
 
+    /**
+     * Test whether the provide RDF Term is a skolemized blank node
+     * @param term the RDF term
+     * @return true if this is a skolemized blank node; false otherwise
+     */
     public static Boolean isSkolemizedBNode(final RDFTerm term) {
         return term instanceof IRI && term.ntriplesString().startsWith("<" + BNODE_IRI_PREFIX);
     }
 
-    public static BlankNode deskolemize(final RDF rdf, final IRI iri) {
+    /**
+     * Convert an IRI to a BlankNode if it is an internally-skolemized BNode
+     * @param rdf the RDF object
+     * @param iri the IRI
+     * @return the blank node or IRI
+     */
+    public static BlankNodeOrIRI deskolemize(final RDF rdf, final IRI iri) {
         final String term = iri.getIRIString();
         if (term.startsWith(BNODE_IRI_PREFIX)) {
             return rdf.createBlankNode(term.substring(BNODE_IRI_PREFIX.length(), term.length()));
         }
-        return rdf.createBlankNode();
+        return iri;
     }
 
+    /**
+     * Skolemize a blank node as an IRI string
+     * @param bnode the blank node
+     * @return an IRI string
+     */
     public static String skolemize(final BlankNode bnode) {
         return "<" + BNODE_IRI_PREFIX + bnode.uniqueReference() + ">";
     }

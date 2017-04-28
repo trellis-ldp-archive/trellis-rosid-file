@@ -18,7 +18,11 @@ package edu.amherst.acdc.trellis.rosid.file;
 import static java.io.File.separator;
 import static java.lang.String.join;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
+import org.apache.commons.rdf.api.BlankNode;
+import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.RDF;
 import org.apache.commons.rdf.jena.JenaRDF;
 import org.junit.Test;
@@ -44,5 +48,26 @@ public class FileUtilsTest {
                 FileUtils.partition("trellis:repository/other"));
         assertEquals(join(separator, "2a", "79", "8c", "70a37cae7da1c312e0d052297e9921aa"),
                 FileUtils.partition(rdf.createIRI("trellis:repository/other")));
+    }
+
+    @Test
+    public void testSkolemize() {
+        final BlankNode bnode = rdf.createBlankNode();
+        assertEquals("<trellis:bnode/" + bnode.uniqueReference() + ">", FileUtils.skolemize(bnode));
+    }
+
+    @Test
+    public void testDeskolemize() {
+        final BlankNode bnode = rdf.createBlankNode();
+        final IRI iri = rdf.createIRI("trellis:bnode/" + bnode.uniqueReference());
+        assertEquals(FileUtils.deskolemize(rdf, iri), FileUtils.deskolemize(rdf, iri));
+    }
+
+    @Test
+    public void isSkolemizedBNode() {
+        assertTrue(FileUtils.isSkolemizedBNode(rdf.createIRI("trellis:bnode/one")));
+        assertFalse(FileUtils.isSkolemizedBNode(rdf.createIRI("trellis:resource/foo")));
+        assertFalse(FileUtils.isSkolemizedBNode(rdf.createBlankNode()));
+        assertFalse(FileUtils.isSkolemizedBNode(rdf.createLiteral("test")));
     }
 }

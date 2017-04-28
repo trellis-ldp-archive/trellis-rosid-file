@@ -36,7 +36,10 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
+import org.apache.commons.rdf.api.BlankNode;
+import org.apache.commons.rdf.api.Dataset;
 import org.apache.commons.rdf.api.Graph;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Quad;
@@ -53,10 +56,12 @@ public class RDFPatchTest {
     private static final RDF rdf = new JenaRDF();
     private static final IRI identifier = rdf.createIRI("trellis:repository/resource");
     private File resDir1 = new File("build/data/res1");
+    private File resDir10 = new File("build/data/res10");
 
     @Before
     public void setUp() throws IOException {
         resDir1.mkdirs();
+        resDir10.mkdirs();
     }
 
     @Test
@@ -124,6 +129,7 @@ public class RDFPatchTest {
                     rdf.createLiteral("A longer description")));
         RDFPatch.write(file, delete.stream(), add.stream(), time);
         final List<Quad> data1 = RDFPatch.asStream(rdf, file, identifier, time).collect(toList());
+        System.out.println(data1.toString());
         assertEquals(add.size() + 1, data1.size());
         add.forEach(q -> assertTrue(data1.contains(q)));
 
@@ -146,5 +152,26 @@ public class RDFPatchTest {
         assertEquals(1L, versions.size());
         assertEquals(time, versions.get(0).getFrom());
         assertEquals(later, versions.get(0).getUntil());
+    }
+
+    @Test
+    public void testBNodeWriter() throws IOException {
+        final IRI subj = rdf.createIRI("trellis:repository/resource2");
+        final File file = new File(resDir10, RESOURCE_JOURNAL);
+        final Instant time = now();
+        final List<Quad> add = new ArrayList<>();
+        final BlankNode bnode = rdf.createBlankNode();
+        add.add(rdf.createQuad(Trellis.PreferUserManaged, subj, DC.subject, bnode));
+        add.add(rdf.createQuad(Trellis.PreferUserManaged, bnode, RDFS.label, rdf.createLiteral("Label")));
+        RDFPatch.write(file, empty(), add.stream(), time);
+        final Dataset dataset = rdf.createDataset();
+        RDFPatch.asStream(rdf, file, subj, time).forEach(dataset::add);
+        assertEquals(add.size() + 1, dataset.size());
+
+        dataset.stream(Optional.of(Trellis.PreferUserManaged), subj, DC.subject, null).forEach(quad -> {
+            assertTrue(quad.getObject() instanceof BlankNode);
+            assertTrue(dataset.contains(Optional.of(Trellis.PreferUserManaged), (BlankNode) quad.getObject(),
+                        RDFS.label, null));
+        });
     }
 }

@@ -51,8 +51,6 @@ final class FileUtils {
     public final static int LENGTH = 2;
     public final static int MAX = 3;
 
-    private static final String BNODE_IRI_PREFIX = "trellis:bnode/";
-
     private static final ReaderRIOT READER = RDFParserRegistry.getFactory(NQUADS).create(NQUADS);
 
     /**

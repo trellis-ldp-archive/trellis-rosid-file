@@ -44,7 +44,7 @@ final class StreamConfiguration {
     private static final Long WINDOW_SIZE = parseLong(getProperty("kafka.window.delay.ms", "5000"));
 
     // 2^12-1
-    private static final Integer CACHE_SIZE = parseInt(getProperty("kafka.window.cache.size", "4095"));
+    //private static final Integer CACHE_SIZE = parseInt(getProperty("kafka.window.cache.size", "4095"));
 
     private static final String CACHE_NAME = "trellis.caching";
 

@@ -36,10 +36,7 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
-import org.apache.commons.rdf.api.BlankNode;
-import org.apache.commons.rdf.api.Dataset;
 import org.apache.commons.rdf.api.Graph;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Quad;
@@ -152,26 +149,5 @@ public class RDFPatchTest {
         assertEquals(1L, versions.size());
         assertEquals(time, versions.get(0).getFrom());
         assertEquals(later, versions.get(0).getUntil());
-    }
-
-    @Test
-    public void testBNodeWriter() throws IOException {
-        final IRI subj = rdf.createIRI("trellis:repository/resource2");
-        final File file = new File(resDir10, RESOURCE_JOURNAL);
-        final Instant time = now();
-        final List<Quad> add = new ArrayList<>();
-        final BlankNode bnode = rdf.createBlankNode();
-        add.add(rdf.createQuad(Trellis.PreferUserManaged, subj, DC.subject, bnode));
-        add.add(rdf.createQuad(Trellis.PreferUserManaged, bnode, RDFS.label, rdf.createLiteral("Label")));
-        RDFPatch.write(file, empty(), add.stream(), time);
-        final Dataset dataset = rdf.createDataset();
-        RDFPatch.asStream(rdf, file, subj, time).forEach(dataset::add);
-        assertEquals(add.size() + 1, dataset.size());
-
-        dataset.stream(Optional.of(Trellis.PreferUserManaged), subj, DC.subject, null).forEach(quad -> {
-            assertTrue(quad.getObject() instanceof BlankNode);
-            assertTrue(dataset.contains(Optional.of(Trellis.PreferUserManaged), (BlankNode) quad.getObject(),
-                        RDFS.label, null));
-        });
     }
 }

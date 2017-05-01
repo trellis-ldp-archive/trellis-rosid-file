@@ -46,7 +46,6 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.stream.Stream;
 
-import org.apache.commons.rdf.api.BlankNode;
 import org.apache.commons.rdf.api.Dataset;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Quad;
@@ -178,12 +177,12 @@ public class FileResourceService extends AbstractResourceService {
                 LOGGER.info("Initializing root container for '{}'", identifier.getIRIString());
                 root.mkdirs();
                 final Instant time = now();
-                final BlankNode bnode = rdf.createBlankNode();
+                final IRI skolem = (IRI) skolemize(rdf.createBlankNode());
                 final Stream<Quad> quads = of(
                         rdf.createQuad(Trellis.PreferServerManaged, identifier, RDF.type, LDP.Container),
-                        rdf.createQuad(Trellis.PreferAudit, identifier, PROV.wasGeneratedBy, bnode),
-                        rdf.createQuad(Trellis.PreferAudit, bnode, RDF.type, PROV.Activity),
-                        rdf.createQuad(Trellis.PreferAudit, bnode, PROV.generatedAtTime,
+                        rdf.createQuad(Trellis.PreferAudit, identifier, PROV.wasGeneratedBy, skolem),
+                        rdf.createQuad(Trellis.PreferAudit, skolem, RDF.type, PROV.Activity),
+                        rdf.createQuad(Trellis.PreferAudit, skolem, PROV.generatedAtTime,
                             rdf.createLiteral(time.toString(), XSD.dateTime)));
                 RDFPatch.write(rootData, empty(), quads, now());
                 CachedResource.write(root, identifier);

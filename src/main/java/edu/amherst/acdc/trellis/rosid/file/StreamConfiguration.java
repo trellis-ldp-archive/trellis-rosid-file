@@ -15,7 +15,6 @@
  */
 package edu.amherst.acdc.trellis.rosid.file;
 
-import static java.lang.Integer.parseInt;
 import static java.lang.Long.parseLong;
 import static java.lang.System.getProperty;
 import static org.apache.kafka.streams.StreamsConfig.APPLICATION_ID_CONFIG;

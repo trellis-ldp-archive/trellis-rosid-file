@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import edu.amherst.acdc.trellis.api.Resource;
 import edu.amherst.acdc.trellis.rosid.common.AbstractResourceService;
+import edu.amherst.acdc.trellis.vocabulary.AS;
 import edu.amherst.acdc.trellis.vocabulary.LDP;
 import edu.amherst.acdc.trellis.vocabulary.PROV;
 import edu.amherst.acdc.trellis.vocabulary.RDF;
@@ -182,6 +183,7 @@ public class FileResourceService extends AbstractResourceService {
                         rdf.createQuad(Trellis.PreferServerManaged, identifier, RDF.type, LDP.Container),
                         rdf.createQuad(Trellis.PreferAudit, identifier, PROV.wasGeneratedBy, skolem),
                         rdf.createQuad(Trellis.PreferAudit, skolem, RDF.type, PROV.Activity),
+                        rdf.createQuad(Trellis.PreferAudit, skolem, RDF.type, AS.Create),
                         rdf.createQuad(Trellis.PreferAudit, skolem, PROV.generatedAtTime,
                             rdf.createLiteral(time.toString(), XSD.dateTime)));
                 RDFPatch.write(rootData, empty(), quads, now());

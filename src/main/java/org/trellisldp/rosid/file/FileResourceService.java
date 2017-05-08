@@ -29,6 +29,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.trellisldp.api.Resource;
 import org.trellisldp.rosid.common.AbstractResourceService;
+import org.trellisldp.spi.EventService;
 import org.trellisldp.vocabulary.AS;
 import org.trellisldp.vocabulary.LDP;
 import org.trellisldp.vocabulary.PROV;
@@ -66,10 +67,11 @@ public class FileResourceService extends AbstractResourceService {
 
     /**
      * Create a File-based repository service
+     * @param service the event service
      * @throws IOException if the directory is not writable
      */
-    public FileResourceService() throws IOException {
-        super();
+    public FileResourceService(final EventService service) throws IOException {
+        super(service);
         final String config = System.getProperty("trellis.configuration");
         requireNonNull(config, "trellis.configuration is unset!");
         final File configFile = new File(config);
@@ -89,14 +91,15 @@ public class FileResourceService extends AbstractResourceService {
 
     /**
      * Create a File-based repository service
+     * @param service the event service
      * @param kafkaProps the kafka config properties
      * @param zkProps the zookeeper config properties
      * @param partitions the storage partitions
      * @throws IOException if the directory is not writable
      */
-    public FileResourceService(final Properties kafkaProps, final Properties zkProps,
+    public FileResourceService(final EventService service, final Properties kafkaProps, final Properties zkProps,
             final Map<String, String> partitions) throws IOException {
-        super(kafkaProps, zkProps);
+        super(service, kafkaProps, zkProps);
         this.storageConfig = partitions;
 
         init();
@@ -107,15 +110,17 @@ public class FileResourceService extends AbstractResourceService {
 
     /**
      * Create a File-based repository service
+     * @param service the event service
      * @param configuration the configuration
      * @param curator the curator framework
      * @param producer the kafka producer
      * @param streams the kafka streams
      * @throws IOException if the directory is not writable
      */
-    protected FileResourceService(final Configuration configuration, final CuratorFramework curator,
-            final Producer<String, Dataset> producer, final KafkaStreams streams) throws IOException {
-        super(producer, curator);
+    protected FileResourceService(final EventService service, final Configuration configuration,
+            final CuratorFramework curator, final Producer<String, Dataset> producer, final KafkaStreams streams)
+            throws IOException {
+        super(service, producer, curator);
         requireNonNull(configuration, "configuration may not be null!");
         requireNonNull(streams, "streams may not be null!");
         this.storageConfig = configuration.storage.entrySet().stream()

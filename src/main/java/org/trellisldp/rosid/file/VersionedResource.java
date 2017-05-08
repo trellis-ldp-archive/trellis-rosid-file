@@ -13,23 +13,14 @@
  */
 package org.trellisldp.rosid.file;
 
-import static org.trellisldp.rosid.common.ResourceData.from;
-import static org.trellisldp.rosid.file.Constants.RESOURCE_JOURNAL;
-import static org.trellisldp.rosid.file.RDFPatch.asStream;
-import static org.trellisldp.rosid.file.RDFPatch.asTimeMap;
 import static java.util.Collections.unmodifiableSet;
 import static java.util.Optional.of;
 import static java.util.stream.Stream.empty;
 import static org.slf4j.LoggerFactory.getLogger;
-
-import org.trellisldp.api.Resource;
-import org.trellisldp.api.VersionRange;
-import org.trellisldp.rosid.common.ResourceData;
-import org.trellisldp.vocabulary.ACL;
-import org.trellisldp.vocabulary.LDP;
-import org.trellisldp.vocabulary.OA;
-import org.trellisldp.vocabulary.RDF;
-import org.trellisldp.vocabulary.Trellis;
+import static org.trellisldp.rosid.common.ResourceData.from;
+import static org.trellisldp.rosid.file.Constants.RESOURCE_JOURNAL;
+import static org.trellisldp.rosid.file.RDFPatch.asStream;
+import static org.trellisldp.rosid.file.RDFPatch.asTimeMap;
 
 import java.io.File;
 import java.time.Instant;
@@ -43,6 +34,15 @@ import org.apache.commons.rdf.api.Dataset;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Quad;
 import org.slf4j.Logger;
+
+import org.trellisldp.api.Resource;
+import org.trellisldp.api.VersionRange;
+import org.trellisldp.rosid.common.ResourceData;
+import org.trellisldp.vocabulary.ACL;
+import org.trellisldp.vocabulary.LDP;
+import org.trellisldp.vocabulary.OA;
+import org.trellisldp.vocabulary.RDF;
+import org.trellisldp.vocabulary.Trellis;
 
 /**
  * An object that mediates access to the resource version files.

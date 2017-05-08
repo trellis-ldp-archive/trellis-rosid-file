@@ -13,9 +13,6 @@
  */
 package org.trellisldp.rosid.file;
 
-import static org.trellisldp.rosid.file.Constants.RESOURCE_CACHE;
-import static org.trellisldp.rosid.file.Constants.RESOURCE_JOURNAL;
-import static org.trellisldp.rosid.file.FileUtils.resourceDirectory;
 import static java.time.Instant.now;
 import static java.util.Objects.isNull;
 import static java.util.Objects.requireNonNull;
@@ -24,18 +21,11 @@ import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Stream.empty;
 import static java.util.stream.Stream.of;
 import static org.slf4j.LoggerFactory.getLogger;
+import static org.trellisldp.rosid.file.Constants.RESOURCE_CACHE;
+import static org.trellisldp.rosid.file.Constants.RESOURCE_JOURNAL;
+import static org.trellisldp.rosid.file.FileUtils.resourceDirectory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import org.trellisldp.api.Resource;
-import org.trellisldp.rosid.common.AbstractResourceService;
-import org.trellisldp.spi.EventService;
-import org.trellisldp.vocabulary.AS;
-import org.trellisldp.vocabulary.LDP;
-import org.trellisldp.vocabulary.PROV;
-import org.trellisldp.vocabulary.RDF;
-import org.trellisldp.vocabulary.Trellis;
-import org.trellisldp.vocabulary.XSD;
 
 import java.io.File;
 import java.io.IOException;
@@ -53,6 +43,15 @@ import org.apache.curator.framework.CuratorFramework;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.streams.KafkaStreams;
 import org.slf4j.Logger;
+import org.trellisldp.api.Resource;
+import org.trellisldp.rosid.common.AbstractResourceService;
+import org.trellisldp.spi.EventService;
+import org.trellisldp.vocabulary.AS;
+import org.trellisldp.vocabulary.LDP;
+import org.trellisldp.vocabulary.PROV;
+import org.trellisldp.vocabulary.RDF;
+import org.trellisldp.vocabulary.Trellis;
+import org.trellisldp.vocabulary.XSD;
 
 /**
  * @author acoburn

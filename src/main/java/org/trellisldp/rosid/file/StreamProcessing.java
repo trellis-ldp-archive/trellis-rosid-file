@@ -13,6 +13,12 @@
  */
 package org.trellisldp.rosid.file;
 
+import static java.time.Instant.now;
+import static java.util.Objects.isNull;
+import static java.util.Optional.of;
+import static java.util.stream.Stream.empty;
+import static org.apache.kafka.streams.KeyValue.pair;
+import static org.slf4j.LoggerFactory.getLogger;
 import static org.trellisldp.rosid.common.RDFUtils.getInstance;
 import static org.trellisldp.rosid.file.Constants.RESOURCE_JOURNAL;
 import static org.trellisldp.rosid.file.FileUtils.resourceDirectory;
@@ -22,14 +28,6 @@ import static org.trellisldp.vocabulary.LDP.MemberSubject;
 import static org.trellisldp.vocabulary.LDP.PreferContainment;
 import static org.trellisldp.vocabulary.LDP.PreferMembership;
 import static org.trellisldp.vocabulary.Trellis.PreferUserManaged;
-import static java.time.Instant.now;
-import static java.util.Objects.isNull;
-import static java.util.Optional.of;
-import static java.util.stream.Stream.empty;
-import static org.apache.kafka.streams.KeyValue.pair;
-import static org.slf4j.LoggerFactory.getLogger;
-
-import org.trellisldp.api.Resource;
 
 import java.io.File;
 import java.time.Instant;
@@ -45,6 +43,7 @@ import org.apache.commons.rdf.api.RDF;
 import org.apache.commons.rdf.api.Triple;
 import org.apache.kafka.streams.KeyValue;
 import org.slf4j.Logger;
+import org.trellisldp.api.Resource;
 
 /**
  * @author acoburn

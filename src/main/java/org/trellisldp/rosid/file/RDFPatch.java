@@ -13,7 +13,6 @@
  */
 package org.trellisldp.rosid.file;
 
-import static org.trellisldp.rosid.file.FileUtils.stringToQuad;
 import static java.lang.String.join;
 import static java.lang.System.lineSeparator;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -30,12 +29,7 @@ import static java.util.Spliterator.ORDERED;
 import static java.util.Spliterators.spliteratorUnknownSize;
 import static java.util.stream.StreamSupport.stream;
 import static org.slf4j.LoggerFactory.getLogger;
-
-import org.trellisldp.api.VersionRange;
-import org.trellisldp.vocabulary.DC;
-import org.trellisldp.vocabulary.Fedora;
-import org.trellisldp.vocabulary.Trellis;
-import org.trellisldp.vocabulary.XSD;
+import static org.trellisldp.rosid.file.FileUtils.stringToQuad;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -53,6 +47,11 @@ import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Quad;
 import org.apache.commons.rdf.api.RDF;
 import org.slf4j.Logger;
+import org.trellisldp.api.VersionRange;
+import org.trellisldp.vocabulary.DC;
+import org.trellisldp.vocabulary.Fedora;
+import org.trellisldp.vocabulary.Trellis;
+import org.trellisldp.vocabulary.XSD;
 
 /**
  * @author acoburn

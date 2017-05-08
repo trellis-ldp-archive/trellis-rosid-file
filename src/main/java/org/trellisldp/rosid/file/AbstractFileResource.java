@@ -13,16 +13,11 @@
  */
 package org.trellisldp.rosid.file;
 
-import static org.trellisldp.rosid.common.RDFUtils.getInstance;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Stream.empty;
 import static java.util.stream.Stream.of;
-
-import org.trellisldp.api.Datastream;
-import org.trellisldp.api.Resource;
-import org.trellisldp.rosid.common.ResourceData;
-import org.trellisldp.vocabulary.LDP;
+import static org.trellisldp.rosid.common.RDFUtils.getInstance;
 
 import java.io.File;
 import java.time.Instant;
@@ -32,6 +27,10 @@ import java.util.stream.Stream;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Quad;
 import org.apache.commons.rdf.api.RDF;
+import org.trellisldp.api.Datastream;
+import org.trellisldp.api.Resource;
+import org.trellisldp.rosid.common.ResourceData;
+import org.trellisldp.vocabulary.LDP;
 
 /**
  * An object to mediate access to a file-based resource representation

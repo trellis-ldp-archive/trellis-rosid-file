@@ -14,11 +14,6 @@
 package org.trellisldp.rosid.file;
 
 import static com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS;
-import static org.trellisldp.rosid.file.Constants.MEMENTO_CACHE;
-import static org.trellisldp.rosid.file.Constants.RESOURCE_CACHE;
-import static org.trellisldp.rosid.file.Constants.RESOURCE_JOURNAL;
-import static org.trellisldp.rosid.file.Constants.RESOURCE_QUADS;
-import static org.trellisldp.rosid.file.FileUtils.stringToQuad;
 import static java.lang.System.lineSeparator;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.Files.lines;
@@ -38,13 +33,14 @@ import static java.util.Spliterator.ORDERED;
 import static java.util.Spliterators.spliteratorUnknownSize;
 import static java.util.stream.Stream.empty;
 import static org.slf4j.LoggerFactory.getLogger;
+import static org.trellisldp.rosid.file.Constants.MEMENTO_CACHE;
+import static org.trellisldp.rosid.file.Constants.RESOURCE_CACHE;
+import static org.trellisldp.rosid.file.Constants.RESOURCE_JOURNAL;
+import static org.trellisldp.rosid.file.Constants.RESOURCE_QUADS;
+import static org.trellisldp.rosid.file.FileUtils.stringToQuad;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-
-import org.trellisldp.api.Resource;
-import org.trellisldp.api.VersionRange;
-import org.trellisldp.rosid.common.ResourceData;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -60,6 +56,10 @@ import java.util.stream.StreamSupport;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Quad;
 import org.slf4j.Logger;
+
+import org.trellisldp.api.Resource;
+import org.trellisldp.api.VersionRange;
+import org.trellisldp.rosid.common.ResourceData;
 
 /**
  * An object that mediates access to the resource cache files.

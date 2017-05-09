@@ -98,7 +98,6 @@ public class FileResourceService extends AbstractResourceService {
         requireNonNull(configuration, "configuration may not be null!");
         this.resourceConfig = getStorageConfig(getPropertySection(configuration, "trellis.storage."), ".resources");
         this.blobConfig = getStorageConfig(getPropertySection(configuration, "trellis.storage."), ".blobs");
-        LOGGER.info("Config: {}", this.resourceConfig.toString());
 
         init();
 

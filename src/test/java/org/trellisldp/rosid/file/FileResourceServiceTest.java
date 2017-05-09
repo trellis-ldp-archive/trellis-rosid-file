@@ -28,15 +28,8 @@ import java.io.IOException;
 import java.net.URI;
 import java.time.Instant;
 import java.util.List;
+import java.util.Properties;
 
-import org.trellisldp.api.Resource;
-import org.trellisldp.api.VersionRange;
-import org.trellisldp.spi.EventService;
-import org.trellisldp.spi.ResourceService;
-import org.trellisldp.rosid.common.DatasetSerialization;
-import org.trellisldp.vocabulary.DC;
-import org.trellisldp.vocabulary.LDP;
-import org.trellisldp.vocabulary.RDFS;
 import org.apache.commons.rdf.api.Dataset;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Quad;
@@ -54,6 +47,14 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.trellisldp.api.Resource;
+import org.trellisldp.api.VersionRange;
+import org.trellisldp.spi.EventService;
+import org.trellisldp.spi.ResourceService;
+import org.trellisldp.rosid.common.DatasetSerialization;
+import org.trellisldp.vocabulary.DC;
+import org.trellisldp.vocabulary.LDP;
+import org.trellisldp.vocabulary.RDFS;
 
 /**
  * @author acoburn
@@ -70,7 +71,7 @@ public class FileResourceServiceTest extends BaseRdfTest {
 
     private CuratorFramework curator;
     private ResourceService service;
-    private Configuration config;
+    private Properties config;
 
     @Mock
     private EventService mockEventService, mockEventService2;
@@ -85,8 +86,8 @@ public class FileResourceServiceTest extends BaseRdfTest {
 
     @Before
     public void setUp() throws Exception {
-        config = new Configuration();
-        config.storage.get("repository").put("resources", getClass().getResource("/root").toURI().toString());
+        config = new Properties();
+        config.setProperty("trellis.storage.repository.resources", getClass().getResource("/root").toURI().toString());
         curator = newClient(zkServer.getConnectString(), new RetryNTimes(10, 1000));
         service = new FileResourceService(mockEventService, config, curator, mockProducer, mockStreams);
     }
@@ -94,10 +95,10 @@ public class FileResourceServiceTest extends BaseRdfTest {
     @Test
     public void testNewRoot() throws IOException {
         final Instant time = parse("2017-02-16T11:15:03Z");
-        final Configuration configuration = new Configuration();
-        configuration.storage.get("repository").put("resources", config.storage.get("repository")
-            .get("resources") + "/root2/a");
-        final File root = new File(URI.create(configuration.storage.get("repository").get("resources")));
+        final Properties configuration = new Properties();
+        configuration.setProperty("trellis.storage.repository.resources",
+                config.getProperty("trellis.storage.repository.resources") + "/root2/a");
+        final File root = new File(URI.create(configuration.getProperty("trellis.storage.repository.resources")));
         assertFalse(root.exists());
         final ResourceService altService = new FileResourceService(mockEventService, configuration, curator,
                 mockProducer, mockStreams);
@@ -108,10 +109,10 @@ public class FileResourceServiceTest extends BaseRdfTest {
 
     @Test(expected = IOException.class)
     public void testUnwritableRoot() throws IOException {
-        final Configuration configuration = new Configuration();
-        configuration.storage.get("repository").put("resources", config.storage.get("repository")
-            .get("resources") + "/root3");
-        final File root = new File(URI.create(configuration.storage.get("repository").get("resources")));
+        final Properties configuration = new Properties();
+        configuration.setProperty("trellis.storage.repository.resources",
+                config.getProperty("trellis.storage.repository.resources") + "/root3");
+        final File root = new File(URI.create(configuration.getProperty("trellis.storage.repository.resources")));
         assertTrue(root.mkdir());
         assertTrue(root.setReadOnly());
         final ResourceService altService = new FileResourceService(mockEventService, configuration, curator,

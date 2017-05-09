@@ -25,8 +25,6 @@ import static org.trellisldp.rosid.file.Constants.RESOURCE_CACHE;
 import static org.trellisldp.rosid.file.Constants.RESOURCE_JOURNAL;
 import static org.trellisldp.rosid.file.FileUtils.resourceDirectory;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -60,50 +58,27 @@ public class FileResourceService extends AbstractResourceService {
 
     private static final Logger LOGGER = getLogger(FileResourceService.class);
 
-    private final Map<String, String> storageConfig;
+    private final Map<String, String> resourceConfig;
+    private final Map<String, String> blobConfig;
 
     private final KafkaStreams kstreams;
 
     /**
      * Create a File-based repository service
      * @param service the event service
+     * @param configuration the configuration
      * @throws IOException if the directory is not writable
      */
-    public FileResourceService(final EventService service) throws IOException {
-        super(service);
-        final String config = System.getProperty("trellis.configuration");
-        requireNonNull(config, "trellis.configuration is unset!");
-        final File configFile = new File(config);
-        if (!configFile.exists()) {
-            throw new IOException("Configuration file (" + config + ") does not exist");
-        }
-        final ObjectMapper mapper = new ObjectMapper();
-        final Configuration configuration = mapper.readValue(new File(config), Configuration.class);
-        this.storageConfig = configuration.storage.entrySet().stream()
-                .collect(toMap(e -> e.getKey(), e -> e.getValue().get("resources")));
+    public FileResourceService(final EventService service, final Properties configuration) throws IOException {
+        super(service, getPropertySection(configuration, "kafka."), getPropertySection(configuration, "zk."));
+        requireNonNull(configuration, "configuration may not be null!");
+        this.resourceConfig = getStorageConfig(getPropertySection(configuration, "trellis.storage."), ".resources");
+        this.blobConfig = getStorageConfig(getPropertySection(configuration, "trellis.storage."), ".blobs");
 
         init();
 
-        this.kstreams = StreamConfiguration.configure(storageConfig);
-        this.kstreams.start();
-    }
-
-    /**
-     * Create a File-based repository service
-     * @param service the event service
-     * @param kafkaProps the kafka config properties
-     * @param zkProps the zookeeper config properties
-     * @param partitions the storage partitions
-     * @throws IOException if the directory is not writable
-     */
-    public FileResourceService(final EventService service, final Properties kafkaProps, final Properties zkProps,
-            final Map<String, String> partitions) throws IOException {
-        super(service, kafkaProps, zkProps);
-        this.storageConfig = partitions;
-
-        init();
-
-        this.kstreams = StreamConfiguration.configure(kafkaProps.getProperty("bootstrap.servers"), storageConfig);
+        this.kstreams = StreamConfiguration.configure(configuration.getProperty("kafka.bootstrap.servers"),
+                this.resourceConfig);
         this.kstreams.start();
     }
 
@@ -116,14 +91,14 @@ public class FileResourceService extends AbstractResourceService {
      * @param streams the kafka streams
      * @throws IOException if the directory is not writable
      */
-    protected FileResourceService(final EventService service, final Configuration configuration,
+    protected FileResourceService(final EventService service, final Properties configuration,
             final CuratorFramework curator, final Producer<String, Dataset> producer, final KafkaStreams streams)
             throws IOException {
         super(service, producer, curator);
         requireNonNull(configuration, "configuration may not be null!");
-        requireNonNull(streams, "streams may not be null!");
-        this.storageConfig = configuration.storage.entrySet().stream()
-                .collect(toMap(e -> e.getKey(), e -> e.getValue().get("resources")));
+        this.resourceConfig = getStorageConfig(getPropertySection(configuration, "trellis.storage."), ".resources");
+        this.blobConfig = getStorageConfig(getPropertySection(configuration, "trellis.storage."), ".blobs");
+        LOGGER.info("Config: {}", this.resourceConfig.toString());
 
         init();
 
@@ -133,21 +108,21 @@ public class FileResourceService extends AbstractResourceService {
 
     @Override
     public Optional<Resource> get(final IRI identifier) {
-        return ofNullable(resourceDirectory(storageConfig, identifier)).filter(File::exists)
+        return ofNullable(resourceDirectory(resourceConfig, identifier)).filter(File::exists)
             .flatMap(dir -> new File(dir, RESOURCE_CACHE).exists() ?
                     CachedResource.find(dir, identifier) : VersionedResource.find(dir, identifier, now()));
     }
 
     @Override
     public Optional<Resource> get(final IRI identifier, final Instant time) {
-        return ofNullable(resourceDirectory(storageConfig, identifier)).filter(File::exists)
+        return ofNullable(resourceDirectory(resourceConfig, identifier)).filter(File::exists)
             .flatMap(dir -> VersionedResource.find(dir, identifier, time));
     }
 
     @Override
     protected Boolean write(final IRI identifier, final Stream<? extends Quad> remove,
             final Stream<? extends Quad> add, final Instant time) {
-        final File dir = resourceDirectory(storageConfig, identifier);
+        final File dir = resourceDirectory(resourceConfig, identifier);
         if (isNull(dir)) {
             return false;
         }
@@ -162,7 +137,7 @@ public class FileResourceService extends AbstractResourceService {
     }
 
     private void init() throws IOException {
-        for (final Map.Entry<String, String> storage : storageConfig.entrySet()) {
+        for (final Map.Entry<String, String> storage : resourceConfig.entrySet()) {
             final File data = storage.getValue().startsWith("file:") ?
                  new File(URI.create(storage.getValue())) : new File(storage.getValue());
             LOGGER.info("Using resource data directory for '{}': {}", storage.getKey(), data.getAbsolutePath());
@@ -173,7 +148,7 @@ public class FileResourceService extends AbstractResourceService {
                 throw new IOException("Cannot write to " + data.getAbsolutePath());
             }
             final IRI identifier = rdf.createIRI("trellis:" + storage.getKey());
-            final File root = resourceDirectory(storageConfig, identifier);
+            final File root = resourceDirectory(resourceConfig, identifier);
             final File rootData = new File(root, RESOURCE_JOURNAL);
 
             if (!root.exists() || !rootData.exists()) {
@@ -193,4 +168,19 @@ public class FileResourceService extends AbstractResourceService {
             }
         }
     }
+
+    private static Map<String, String> getStorageConfig(final Properties props, final String suffix) {
+        // trellis.storage.repo1.resources
+        // trellis.storage.repo1.blobs
+        return props.stringPropertyNames().stream().filter(key -> key.endsWith(suffix))
+            .collect(toMap(key -> key.split("\\.")[0], props::getProperty));
+    }
+
+    private static Properties getPropertySection(final Properties configuration, final String prefix) {
+        final Properties props = new Properties();
+        configuration.stringPropertyNames().stream().filter(key -> key.startsWith(prefix))
+            .forEach(key -> props.setProperty(key.substring(prefix.length()), configuration.getProperty(key)));
+        return props;
+    }
+
 }

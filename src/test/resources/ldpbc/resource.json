@@ -1,5 +1,5 @@
 {
-    "@context" : "https://acdc.amherst.edu/ns/trellisresource.jsonld" ,
+    "@context" : "https://www.trellisldp.org/ns/trellisresource.jsonld" ,
     "@id" : "trellis:repository/ldpbc" ,
     "@type" : "http://www.w3.org/ns/ldp#BasicContainer" ,
     "type" : [ "http://example.org/types/Foo", "http://example.org/types/Bar" ] ,

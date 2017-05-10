@@ -13,6 +13,7 @@
  */
 package org.trellisldp.rosid.file;
 
+import static java.net.URI.create;
 import static java.time.Instant.now;
 import static java.util.Objects.isNull;
 import static java.util.Objects.requireNonNull;
@@ -27,7 +28,6 @@ import static org.trellisldp.rosid.file.FileUtils.resourceDirectory;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URI;
 import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
@@ -58,8 +58,11 @@ public class FileResourceService extends AbstractResourceService {
 
     private static final Logger LOGGER = getLogger(FileResourceService.class);
 
+    private static final String STORAGE_PREFIX = "trellis.storage.";
+    private static final String ZK_PREFIX = "zk.";
+    private static final String KAFKA_PREFIX = "kafka.";
+
     private final Map<String, String> resourceConfig;
-    private final Map<String, String> blobConfig;
 
     private final KafkaStreams kstreams;
 
@@ -70,14 +73,13 @@ public class FileResourceService extends AbstractResourceService {
      * @throws IOException if the directory is not writable
      */
     public FileResourceService(final EventService service, final Properties configuration) throws IOException {
-        super(service, getPropertySection(configuration, "kafka."), getPropertySection(configuration, "zk."));
+        super(service, getPropertySection(configuration, KAFKA_PREFIX), getPropertySection(configuration, ZK_PREFIX));
         requireNonNull(configuration, "configuration may not be null!");
-        this.resourceConfig = getStorageConfig(getPropertySection(configuration, "trellis.storage."), ".resources");
-        this.blobConfig = getStorageConfig(getPropertySection(configuration, "trellis.storage."), ".blobs");
+        this.resourceConfig = getStorageConfig(getPropertySection(configuration, STORAGE_PREFIX), ".resources");
 
         init();
 
-        this.kstreams = StreamConfiguration.configure(configuration.getProperty("kafka.bootstrap.servers"),
+        this.kstreams = StreamConfiguration.configure(configuration.getProperty(KAFKA_PREFIX + "bootstrap.servers"),
                 this.resourceConfig);
         this.kstreams.start();
     }
@@ -96,8 +98,7 @@ public class FileResourceService extends AbstractResourceService {
             throws IOException {
         super(service, producer, curator);
         requireNonNull(configuration, "configuration may not be null!");
-        this.resourceConfig = getStorageConfig(getPropertySection(configuration, "trellis.storage."), ".resources");
-        this.blobConfig = getStorageConfig(getPropertySection(configuration, "trellis.storage."), ".blobs");
+        this.resourceConfig = getStorageConfig(getPropertySection(configuration, STORAGE_PREFIX), ".resources");
 
         init();
 
@@ -138,7 +139,7 @@ public class FileResourceService extends AbstractResourceService {
     private void init() throws IOException {
         for (final Map.Entry<String, String> storage : resourceConfig.entrySet()) {
             final File data = storage.getValue().startsWith("file:") ?
-                 new File(URI.create(storage.getValue())) : new File(storage.getValue());
+                 new File(create(storage.getValue())) : new File(storage.getValue());
             LOGGER.info("Using resource data directory for '{}': {}", storage.getKey(), data.getAbsolutePath());
             if (!data.exists()) {
                 data.mkdirs();

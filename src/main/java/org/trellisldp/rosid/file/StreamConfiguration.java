@@ -19,9 +19,6 @@ import static org.apache.kafka.streams.StreamsConfig.APPLICATION_ID_CONFIG;
 import static org.apache.kafka.streams.StreamsConfig.BOOTSTRAP_SERVERS_CONFIG;
 import static org.apache.kafka.streams.kstream.TimeWindows.of;
 
-import org.trellisldp.rosid.common.Constants;
-import org.trellisldp.rosid.common.DatasetSerde;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -31,7 +28,9 @@ import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.kstream.KStreamBuilder;
-//import org.apache.kafka.streams.state.Stores;
+
+import org.trellisldp.rosid.common.Constants;
+import org.trellisldp.rosid.common.DatasetSerde;
 
 /**
  * @author acoburn
@@ -108,7 +107,6 @@ final class StreamConfiguration {
 
         return new KafkaStreams(builder, new StreamsConfig(props));
     }
-
 
     private StreamConfiguration() {
         //prevent instantiation

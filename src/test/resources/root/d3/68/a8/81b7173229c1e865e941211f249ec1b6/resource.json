@@ -1,5 +1,5 @@
 {
-    "@context" : "https://www.trellisldp.org/ns/trellisresource.jsonld" ,
+    "@context" : "http://www.trellisldp.org/ns/trellisresource.jsonld" ,
     "@id" : "trellis:repository/resource" ,
     "@type" : "http://www.w3.org/ns/ldp#Container" ,
     "type" : [ "http://example.org/types/Foo", "http://example.org/types/Bar" ] ,

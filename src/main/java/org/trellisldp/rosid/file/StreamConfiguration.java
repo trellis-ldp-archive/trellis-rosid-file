@@ -18,6 +18,15 @@ import static java.lang.System.getProperty;
 import static org.apache.kafka.streams.StreamsConfig.APPLICATION_ID_CONFIG;
 import static org.apache.kafka.streams.StreamsConfig.BOOTSTRAP_SERVERS_CONFIG;
 import static org.apache.kafka.streams.kstream.TimeWindows.of;
+import static org.trellisldp.rosid.common.RosidConstants.TOPIC_CACHE;
+import static org.trellisldp.rosid.common.RosidConstants.TOPIC_CACHE_AGGREGATE;
+import static org.trellisldp.rosid.common.RosidConstants.TOPIC_EVENT;
+import static org.trellisldp.rosid.common.RosidConstants.TOPIC_INBOUND_ADD;
+import static org.trellisldp.rosid.common.RosidConstants.TOPIC_INBOUND_DELETE;
+import static org.trellisldp.rosid.common.RosidConstants.TOPIC_LDP_CONTAINMENT_ADD;
+import static org.trellisldp.rosid.common.RosidConstants.TOPIC_LDP_CONTAINMENT_DELETE;
+import static org.trellisldp.rosid.common.RosidConstants.TOPIC_LDP_MEMBERSHIP_ADD;
+import static org.trellisldp.rosid.common.RosidConstants.TOPIC_LDP_MEMBERSHIP_DELETE;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -29,7 +38,6 @@ import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.kstream.KStreamBuilder;
 
-import org.trellisldp.rosid.common.Constants;
 import org.trellisldp.rosid.common.DatasetSerde;
 
 /**
@@ -74,36 +82,36 @@ final class StreamConfiguration {
                 //.inMemory().maxEntries(CACHE_SIZE).build());
         //}
 
-        builder.stream(kserde, vserde, Constants.TOPIC_INBOUND_ADD)
+        builder.stream(kserde, vserde, TOPIC_INBOUND_ADD)
             .foreach((k, v) -> StreamProcessing.addInboundQuads(storage, k, v));
 
-        builder.stream(kserde, vserde, Constants.TOPIC_INBOUND_DELETE)
+        builder.stream(kserde, vserde, TOPIC_INBOUND_DELETE)
             .foreach((k, v) -> StreamProcessing.deleteInboundQuads(storage, k, v));
 
-        builder.stream(kserde, vserde, Constants.TOPIC_LDP_MEMBERSHIP_ADD)
+        builder.stream(kserde, vserde, TOPIC_LDP_MEMBERSHIP_ADD)
             .map((k, v) -> StreamProcessing.addMembershipQuads(storage, k, v))
-            .to(Constants.TOPIC_CACHE_AGGREGATE);
+            .to(TOPIC_CACHE_AGGREGATE);
 
-        builder.stream(kserde, vserde, Constants.TOPIC_LDP_MEMBERSHIP_DELETE)
+        builder.stream(kserde, vserde, TOPIC_LDP_MEMBERSHIP_DELETE)
             .map((k, v) -> StreamProcessing.deleteMembershipQuads(storage, k, v))
-            .to(Constants.TOPIC_CACHE_AGGREGATE);
+            .to(TOPIC_CACHE_AGGREGATE);
 
-        builder.stream(kserde, vserde, Constants.TOPIC_LDP_CONTAINMENT_ADD)
+        builder.stream(kserde, vserde, TOPIC_LDP_CONTAINMENT_ADD)
             .map((k, v) -> StreamProcessing.addContainmentQuads(storage, k, v))
-            .to(Constants.TOPIC_CACHE_AGGREGATE);
+            .to(TOPIC_CACHE_AGGREGATE);
 
-        builder.stream(kserde, vserde, Constants.TOPIC_LDP_CONTAINMENT_DELETE)
+        builder.stream(kserde, vserde, TOPIC_LDP_CONTAINMENT_DELETE)
             .map((k, v) -> StreamProcessing.deleteContainmentQuads(storage, k, v))
-            .to(Constants.TOPIC_CACHE_AGGREGATE);
+            .to(TOPIC_CACHE_AGGREGATE);
 
-        builder.stream(kserde, vserde, Constants.TOPIC_CACHE_AGGREGATE).groupByKey()
+        builder.stream(kserde, vserde, TOPIC_CACHE_AGGREGATE).groupByKey()
             .reduce((val1, val2) -> val1, of(WINDOW_SIZE), CACHE_NAME)
             .toStream((k, v) -> k.key())
-            .to(Constants.TOPIC_CACHE);
+            .to(TOPIC_CACHE);
 
-        builder.stream(kserde, vserde, Constants.TOPIC_CACHE)
+        builder.stream(kserde, vserde, TOPIC_CACHE)
             .map((k, v) -> StreamProcessing.writeCacheQuads(storage, k, v))
-            .to(Constants.TOPIC_EVENT);
+            .to(TOPIC_EVENT);
 
         return new KafkaStreams(builder, new StreamsConfig(props));
     }

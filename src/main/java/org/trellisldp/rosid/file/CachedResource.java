@@ -151,6 +151,7 @@ class CachedResource extends AbstractFileResource {
         }
 
         // Write the JSON file
+        LOGGER.debug("Writing JSON cache for {}", identifier.getIRIString());
         final Optional<ResourceData> data = VersionedResource.read(directory, identifier, time);
         try {
             if (data.isPresent()) {
@@ -165,6 +166,7 @@ class CachedResource extends AbstractFileResource {
         }
 
         // Write the quads
+        LOGGER.debug("Writing NQuads cache for {}", identifier.getIRIString());
         try (final BufferedWriter writer = newBufferedWriter(new File(directory, RESOURCE_QUADS).toPath(),
                     UTF_8, CREATE, WRITE, TRUNCATE_EXISTING)) {
             final File file = new File(directory, RESOURCE_JOURNAL);
@@ -179,6 +181,7 @@ class CachedResource extends AbstractFileResource {
         }
 
         // Write the mementos
+        LOGGER.debug("Writing the Mementos for {}", identifier.getIRIString());
         try (final BufferedWriter writer = newBufferedWriter(new File(directory, MEMENTO_CACHE).toPath(),
                     UTF_8, CREATE, WRITE, TRUNCATE_EXISTING)) {
             final File file = new File(directory, RESOURCE_JOURNAL);

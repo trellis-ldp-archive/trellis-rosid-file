@@ -18,12 +18,13 @@ import static java.time.Instant.now;
 import static java.util.Objects.isNull;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
-import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Stream.empty;
 import static java.util.stream.Stream.of;
 import static org.slf4j.LoggerFactory.getLogger;
 import static org.trellisldp.rosid.file.Constants.RESOURCE_CACHE;
 import static org.trellisldp.rosid.file.Constants.RESOURCE_JOURNAL;
+import static org.trellisldp.rosid.file.FileUtils.getPropertySection;
+import static org.trellisldp.rosid.file.FileUtils.getStorageConfig;
 import static org.trellisldp.rosid.file.FileUtils.resourceDirectory;
 
 import java.io.File;
@@ -39,7 +40,6 @@ import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Quad;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.kafka.clients.producer.Producer;
-import org.apache.kafka.streams.KafkaStreams;
 import org.slf4j.Logger;
 import org.trellisldp.api.Resource;
 import org.trellisldp.rosid.common.AbstractResourceService;
@@ -64,8 +64,6 @@ public class FileResourceService extends AbstractResourceService {
 
     private final Map<String, String> resourceConfig;
 
-    private final KafkaStreams kstreams;
-
     /**
      * Create a File-based repository service
      * @param service the event service
@@ -78,10 +76,6 @@ public class FileResourceService extends AbstractResourceService {
         this.resourceConfig = getStorageConfig(getPropertySection(configuration, STORAGE_PREFIX), ".resources");
 
         init();
-
-        this.kstreams = StreamConfiguration.configure(configuration.getProperty(KAFKA_PREFIX + "bootstrap.servers"),
-                this.resourceConfig);
-        this.kstreams.start();
     }
 
     /**
@@ -90,20 +84,15 @@ public class FileResourceService extends AbstractResourceService {
      * @param configuration the configuration
      * @param curator the curator framework
      * @param producer the kafka producer
-     * @param streams the kafka streams
      * @throws IOException if the directory is not writable
      */
     protected FileResourceService(final EventService service, final Properties configuration,
-            final CuratorFramework curator, final Producer<String, Dataset> producer, final KafkaStreams streams)
-            throws IOException {
+            final CuratorFramework curator, final Producer<String, Dataset> producer) throws IOException {
         super(service, producer, curator);
         requireNonNull(configuration, "configuration may not be null!");
         this.resourceConfig = getStorageConfig(getPropertySection(configuration, STORAGE_PREFIX), ".resources");
 
         init();
-
-        this.kstreams = streams;
-        this.kstreams.start();
     }
 
     @Override
@@ -127,13 +116,8 @@ public class FileResourceService extends AbstractResourceService {
             return false;
         }
         dir.mkdirs();
-        return RDFPatch.write(new File(dir, RESOURCE_JOURNAL), remove, add, time);
-    }
-
-    @Override
-    public void close() {
-        super.close();
-        kstreams.close();
+        return RDFPatch.write(new File(dir, RESOURCE_JOURNAL), remove, add, time) &&
+            CachedResource.write(dir, identifier);
     }
 
     private void init() throws IOException {
@@ -169,20 +153,6 @@ public class FileResourceService extends AbstractResourceService {
                 CachedResource.write(root, identifier);
             }
         }
-    }
-
-    private static Map<String, String> getStorageConfig(final Properties props, final String suffix) {
-        // trellis.storage.repo1.resources
-        // trellis.storage.repo1.blobs
-        return props.stringPropertyNames().stream().filter(key -> key.endsWith(suffix))
-            .collect(toMap(key -> key.split("\\.")[0], props::getProperty));
-    }
-
-    private static Properties getPropertySection(final Properties configuration, final String prefix) {
-        final Properties props = new Properties();
-        configuration.stringPropertyNames().stream().filter(key -> key.startsWith(prefix))
-            .forEach(key -> props.setProperty(key.substring(prefix.length()), configuration.getProperty(key)));
-        return props;
     }
 
 }

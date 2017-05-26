@@ -40,7 +40,6 @@ import org.apache.curator.test.TestingServer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.MockProducer;
-import org.apache.kafka.streams.KafkaStreams;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -76,9 +75,6 @@ public class FileResourceServiceTest extends BaseRdfTest {
     @Mock
     private EventService mockEventService, mockEventService2;
 
-    @Mock
-    private KafkaStreams mockStreams;
-
     @BeforeClass
     public static void initialize() throws Exception {
         zkServer = new TestingServer(true);
@@ -89,7 +85,7 @@ public class FileResourceServiceTest extends BaseRdfTest {
         config = new Properties();
         config.setProperty("trellis.storage.repository.resources", getClass().getResource("/root").toURI().toString());
         curator = newClient(zkServer.getConnectString(), new RetryNTimes(10, 1000));
-        service = new FileResourceService(mockEventService, config, curator, mockProducer, mockStreams);
+        service = new FileResourceService(mockEventService, config, curator, mockProducer);
     }
 
     @Test
@@ -101,7 +97,7 @@ public class FileResourceServiceTest extends BaseRdfTest {
         final File root = new File(URI.create(configuration.getProperty("trellis.storage.repository.resources")));
         assertFalse(root.exists());
         final ResourceService altService = new FileResourceService(mockEventService, configuration, curator,
-                mockProducer, mockStreams);
+                mockProducer);
         assertFalse(altService.get(identifier, time).isPresent());
         assertTrue(root.exists());
         assertFalse(altService.get(identifier, time).isPresent());
@@ -116,7 +112,7 @@ public class FileResourceServiceTest extends BaseRdfTest {
         assertTrue(root.mkdir());
         assertTrue(root.setReadOnly());
         final ResourceService altService = new FileResourceService(mockEventService, configuration, curator,
-                mockProducer, mockStreams);
+                mockProducer);
     }
 
     @Test

@@ -35,7 +35,7 @@ ext {
     commonsIoVersion = '2.5'
     commonsRdfVersion = '0.3.0-incubating'
     jacksonVersion = '2.8.5'
-    kafkaVersion = '0.10.2.0'
+    beamVersion = '2.0.0'
     slf4jVersion = '1.7.21'
 
     /* Testing */
@@ -57,11 +57,10 @@ dependencies {
     compile group: 'org.trellisldp', name: 'trellis-spi', version: trellisSpiVersion
     compile group: 'org.trellisldp', name: 'trellis-vocabulary', version: trellisVocabularyVersion
     compile group: 'org.trellisldp', name: 'trellis-rosid-common', version: trellisRosidCommonVersion
-    compile group: 'org.apache.kafka', name: 'kafka-streams', version: kafkaVersion
+    compile group: 'org.apache.beam', name: 'beam-runners-direct-java', version: beamVersion
+    compile group: 'org.apache.beam', name: 'beam-sdks-java-core', version: beamVersion
+    compile group: 'org.apache.beam', name: 'beam-sdks-java-io-kafka', version: beamVersion
     compile group: 'org.slf4j', name: 'slf4j-api', version: slf4jVersion
-    compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: jacksonVersion
-    compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: jacksonVersion
-    compile group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jsr310', version: jacksonVersion
     compile group: 'commons-codec', name: 'commons-codec', version: commonsCodecVersion
     compile group: 'commons-io', name: 'commons-io', version: commonsIoVersion
     compile group: 'org.apache.commons', name: 'commons-rdf-api', version: commonsRdfVersion

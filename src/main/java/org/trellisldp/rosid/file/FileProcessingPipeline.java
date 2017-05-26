@@ -64,7 +64,7 @@ public class FileProcessingPipeline {
      */
     public FileProcessingPipeline(final Properties configuration) {
         this.config = getStorageConfig(getPropertySection(configuration, STORAGE_PREFIX), ".resources");
-        this.bootstrapServers = configuration.getProperty(KAFKA_PREFIX + "bootstrap.servers");
+        this.bootstrapServers = configuration.getProperty(KAFKA_PREFIX + "bootstrapServers");
         this.cacheSeconds = parseLong(configuration.getProperty("trellis.cache.seconds", "5"));
     }
 
@@ -81,19 +81,19 @@ public class FileProcessingPipeline {
                     .withKeyDeserializer(StringDeserializer.class)
                     .withValueDeserializer(StringDeserializer.class)
                     .withTopic(TOPIC_INBOUND_ADD).withoutMetadata())
-            .apply(ParDo.of(new BeamProcessor(config, Fedora.PreferInboundReferences, true)));
+            .apply(ParDo.of(new BeamProcessor(config, Fedora.PreferInboundReferences.getIRIString(), true)));
 
         p.apply(KafkaIO.<String, String>read().withBootstrapServers(bootstrapServers)
                     .withKeyDeserializer(StringDeserializer.class)
                     .withValueDeserializer(StringDeserializer.class)
                     .withTopic(TOPIC_INBOUND_DELETE).withoutMetadata())
-            .apply(ParDo.of(new BeamProcessor(config, Fedora.PreferInboundReferences, false)));
+            .apply(ParDo.of(new BeamProcessor(config, Fedora.PreferInboundReferences.getIRIString(), false)));
 
         p.apply(KafkaIO.<String, String>read().withBootstrapServers(bootstrapServers)
                     .withKeyDeserializer(StringDeserializer.class)
                     .withValueDeserializer(StringDeserializer.class)
                     .withTopic(TOPIC_LDP_MEMBERSHIP_ADD).withoutMetadata())
-            .apply(ParDo.of(new BeamProcessor(config, LDP.PreferMembership, true)))
+            .apply(ParDo.of(new BeamProcessor(config, LDP.PreferMembership.getIRIString(), true)))
             .apply(KafkaIO.<String, String>write().withBootstrapServers(bootstrapServers)
                     .withKeySerializer(StringSerializer.class)
                     .withValueSerializer(StringSerializer.class)
@@ -103,7 +103,7 @@ public class FileProcessingPipeline {
                     .withKeyDeserializer(StringDeserializer.class)
                     .withValueDeserializer(StringDeserializer.class)
                     .withTopic(TOPIC_LDP_MEMBERSHIP_DELETE).withoutMetadata())
-            .apply(ParDo.of(new BeamProcessor(config, LDP.PreferMembership, false)))
+            .apply(ParDo.of(new BeamProcessor(config, LDP.PreferMembership.getIRIString(), false)))
             .apply(KafkaIO.<String, String>write().withBootstrapServers(bootstrapServers)
                     .withKeySerializer(StringSerializer.class)
                     .withValueSerializer(StringSerializer.class)
@@ -113,7 +113,7 @@ public class FileProcessingPipeline {
                     .withKeyDeserializer(StringDeserializer.class)
                     .withValueDeserializer(StringDeserializer.class)
                     .withTopic(TOPIC_LDP_CONTAINMENT_ADD).withoutMetadata())
-            .apply(ParDo.of(new BeamProcessor(config, LDP.PreferContainment, true)))
+            .apply(ParDo.of(new BeamProcessor(config, LDP.PreferContainment.getIRIString(), true)))
             .apply(KafkaIO.<String, String>write().withBootstrapServers(bootstrapServers)
                     .withKeySerializer(StringSerializer.class)
                     .withValueSerializer(StringSerializer.class)
@@ -123,7 +123,7 @@ public class FileProcessingPipeline {
                     .withKeyDeserializer(StringDeserializer.class)
                     .withValueDeserializer(StringDeserializer.class)
                     .withTopic(TOPIC_LDP_CONTAINMENT_DELETE).withoutMetadata())
-            .apply(ParDo.of(new BeamProcessor(config, LDP.PreferContainment, false)))
+            .apply(ParDo.of(new BeamProcessor(config, LDP.PreferContainment.getIRIString(), false)))
             .apply(KafkaIO.<String, String>write().withBootstrapServers(bootstrapServers)
                     .withKeySerializer(StringSerializer.class)
                     .withValueSerializer(StringSerializer.class)

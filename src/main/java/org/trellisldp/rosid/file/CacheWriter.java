@@ -14,6 +14,7 @@
 package org.trellisldp.rosid.file;
 
 import static java.util.Objects.isNull;
+import static org.slf4j.LoggerFactory.getLogger;
 import static org.trellisldp.rosid.file.Constants.RESOURCE_JOURNAL;
 import static org.trellisldp.rosid.file.FileUtils.resourceDirectory;
 
@@ -22,11 +23,14 @@ import java.util.Map;
 
 import org.apache.beam.sdk.io.kafka.KafkaRecord;
 import org.apache.beam.sdk.transforms.DoFn;
+import org.slf4j.Logger;
 
 /**
  * @author acoburn
  */
 public class CacheWriter extends DoFn<KafkaRecord<String, String>, KafkaRecord<String, String>> {
+
+    private static final Logger LOGGER = getLogger(CacheWriter.class);
 
     private final Map<String, String> config;
 
@@ -50,10 +54,10 @@ public class CacheWriter extends DoFn<KafkaRecord<String, String>, KafkaRecord<S
         if (!isNull(dir)) {
             final File file = new File(dir, RESOURCE_JOURNAL);
             if (!CachedResource.write(file, key)) {
-                // LOG any errors
+                LOGGER.error("Error writing cached resource for {}", key);
             }
         } else {
-            // LOG error writing to cache
+            LOGGER.error("Error accessing cached resource location for {}", key);
         }
     }
 }

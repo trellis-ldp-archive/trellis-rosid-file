@@ -31,7 +31,6 @@ import java.util.Map;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.values.KV;
 import org.apache.commons.rdf.api.Dataset;
-import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.jena.JenaRDF;
 import org.apache.jena.sparql.core.DatasetGraph;
 import org.slf4j.Logger;
@@ -53,7 +52,7 @@ class BeamProcessor extends DoFn<KV<String, String>, KV<String, String>> {
 
     private final Map<String, String> config;
     private final Boolean add;
-    private final IRI graph;
+    private final String graph;
 
     /**
      * A beam processor that handles raw NQUAD graphs
@@ -61,7 +60,7 @@ class BeamProcessor extends DoFn<KV<String, String>, KV<String, String>> {
      * @param graph the relevant graph to use
      * @param add if true, quads will be added; otherwise they will be deleted
      */
-    public BeamProcessor(final Map<String, String> config, final IRI graph, final Boolean add) {
+    public BeamProcessor(final Map<String, String> config, final String graph, final Boolean add) {
         super();
         this.config = config;
         this.graph = graph;
@@ -75,15 +74,16 @@ class BeamProcessor extends DoFn<KV<String, String>, KV<String, String>> {
     @ProcessElement
     public void processElement(final ProcessContext c) {
         final KV<String, String> element = c.element();
-
         final File dir = resourceDirectory(config, element.getKey());
         if (!isNull(dir)) {
             final File file = new File(dir, RESOURCE_JOURNAL);
             final Dataset dataset = deserialize(element.getValue());
             if (RDFPatch.write(file,
-                        add ? empty() : dataset.stream(of(graph), null, null, null),
-                        add ? dataset.stream(of(graph), null, null, null) : empty(), now())) {
+                        add ? empty() : dataset.stream(of(rdf.createIRI(graph)), null, null, null),
+                        add ? dataset.stream(of(rdf.createIRI(graph)), null, null, null) : empty(), now())) {
                 c.output(c.element());
+            } else if (add) {
+                LOGGER.error("Error adding inbound ref quads to {}", element.getKey());
             } else {
                 LOGGER.error("Error removing inbound ref quads from {}", element.getKey());
             }

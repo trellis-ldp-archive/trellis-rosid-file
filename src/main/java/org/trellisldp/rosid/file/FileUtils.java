@@ -45,7 +45,7 @@ import org.apache.jena.riot.ReaderRIOT;
 /**
  * @author acoburn
  */
-final class FileUtils {
+public final class FileUtils {
 
     // The length of the CRC directory partition
     public final static int LENGTH = 2;

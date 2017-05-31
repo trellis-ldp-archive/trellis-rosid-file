@@ -66,7 +66,7 @@ import org.trellisldp.rosid.common.ResourceData;
  *
  * @author acoburn
  */
-class CachedResource extends AbstractFileResource {
+public class CachedResource extends AbstractFileResource {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
 

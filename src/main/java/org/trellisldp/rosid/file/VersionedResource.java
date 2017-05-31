@@ -49,7 +49,7 @@ import org.trellisldp.vocabulary.Trellis;
  *
  * @author acoburn
  */
-class VersionedResource extends AbstractFileResource {
+public class VersionedResource extends AbstractFileResource {
 
     private static final Logger LOGGER = getLogger(VersionedResource.class);
 
@@ -73,6 +73,19 @@ class VersionedResource extends AbstractFileResource {
         specialUserProperties.contains(quad.getPredicate()));
 
     private final Instant time;
+
+    /**
+     * Write a stream of added/deleted quads to a resource
+     * @param directory the directory
+     * @param delete the quads to delete
+     * @param add the quads to add
+     * @param time the time
+     * @return true if the operation succeeded; false otherwise
+     */
+    public static Boolean write(final File directory, final Stream<? extends Quad> delete,
+            final Stream<? extends Quad> add, final Instant time) {
+        return RDFPatch.write(new File(directory, RESOURCE_JOURNAL), delete, add, time);
+    }
 
     /**
      * Find the resource at a particular point in time

@@ -35,7 +35,6 @@ ext {
     commonsIoVersion = '2.5'
     commonsRdfVersion = '0.3.0-incubating'
     jacksonVersion = '2.8.5'
-    beamVersion = '2.0.0'
     slf4jVersion = '1.7.21'
 
     /* Testing */
@@ -57,15 +56,12 @@ dependencies {
     compile group: 'org.trellisldp', name: 'trellis-spi', version: trellisSpiVersion
     compile group: 'org.trellisldp', name: 'trellis-vocabulary', version: trellisVocabularyVersion
     compile group: 'org.trellisldp', name: 'trellis-rosid-common', version: trellisRosidCommonVersion
-    compile group: 'org.apache.beam', name: 'beam-sdks-java-core', version: beamVersion
-    compile group: 'org.apache.beam', name: 'beam-sdks-java-io-kafka', version: beamVersion
     compile group: 'org.slf4j', name: 'slf4j-api', version: slf4jVersion
     compile group: 'commons-codec', name: 'commons-codec', version: commonsCodecVersion
     compile group: 'commons-io', name: 'commons-io', version: commonsIoVersion
     compile group: 'org.apache.commons', name: 'commons-rdf-api', version: commonsRdfVersion
     compile group: 'org.apache.commons', name: 'commons-rdf-jena', version: commonsRdfVersion
 
-    testCompile group: 'org.apache.beam', name: 'beam-runners-direct-java', version: beamVersion
     testCompile group: 'org.apache.curator', name: 'curator-test', version: curatorVersion
     testCompile group: 'junit', name: 'junit', version: junitVersion
     testCompile group: 'org.mockito', name: 'mockito-core', version: mockitoVersion

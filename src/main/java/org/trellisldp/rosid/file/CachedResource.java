@@ -81,6 +81,7 @@ public class CachedResource extends AbstractFileResource {
      * Create a File-based resource reader
      * @param directory the data storage directory
      * @param identifier the resource to retrieve
+     * @param data the resource data
      */
     protected CachedResource(final File directory, final IRI identifier, final ResourceData data) {
         super(directory, identifier, data);

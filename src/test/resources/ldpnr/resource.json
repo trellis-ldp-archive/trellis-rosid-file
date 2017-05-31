@@ -2,7 +2,7 @@
     "@context" : "http://www.trellisldp.org/ns/trellisresource.jsonld" ,
     "@id" : "trellis:repository/ldpnr" ,
     "@type" : "http://www.w3.org/ns/ldp#NonRDFSource" ,
-    "datastream" : {
+    "binary" : {
         "@id" : "s3://bucket/some-resource" ,
         "format" : "image/jpeg" ,
         "size" : 123456,

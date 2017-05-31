@@ -48,7 +48,7 @@ public class LdpNonRdfTest extends BaseRdfTest {
 
     private File file;
     private IRI identifier = rdf.createIRI("trellis:repository/ldpnr");
-    private IRI datastream = rdf.createIRI("s3://bucket/some-resource");
+    private IRI binary = rdf.createIRI("s3://bucket/some-resource");
 
     @Before
     public void setUp() throws Exception {
@@ -66,9 +66,9 @@ public class LdpNonRdfTest extends BaseRdfTest {
         assertEquals(empty(), res.getMemberRelation());
         assertEquals(empty(), res.getMemberOfRelation());
         assertEquals(empty(), res.getInsertedContentRelation());
-        assertTrue(res.getDatastream().isPresent());
-        res.getDatastream().ifPresent(ds -> {
-            assertEquals(datastream, ds.getIdentifier());
+        assertTrue(res.getBlob().isPresent());
+        res.getBlob().ifPresent(ds -> {
+            assertEquals(binary, ds.getIdentifier());
             assertEquals(parse("2017-02-15T10:05:00Z"), ds.getModified());
             assertEquals(of(123456L), ds.getSize());
             assertEquals(of("image/jpeg"), ds.getMimeType());
@@ -119,9 +119,9 @@ public class LdpNonRdfTest extends BaseRdfTest {
         assertEquals(empty(), res.getMemberRelation());
         assertEquals(empty(), res.getMemberOfRelation());
         assertEquals(empty(), res.getInsertedContentRelation());
-        assertTrue(res.getDatastream().isPresent());
-        res.getDatastream().ifPresent(ds -> {
-            assertEquals(datastream, ds.getIdentifier());
+        assertTrue(res.getBlob().isPresent());
+        res.getBlob().ifPresent(ds -> {
+            assertEquals(binary, ds.getIdentifier());
             assertEquals(parse("2017-02-15T10:05:00Z"), ds.getModified());
             assertEquals(of(123456L), ds.getSize());
             assertEquals(of("image/jpeg"), ds.getMimeType());
@@ -174,9 +174,9 @@ public class LdpNonRdfTest extends BaseRdfTest {
         assertEquals(empty(), res.getMemberRelation());
         assertEquals(empty(), res.getMemberOfRelation());
         assertEquals(empty(), res.getInsertedContentRelation());
-        assertTrue(res.getDatastream().isPresent());
-        res.getDatastream().ifPresent(ds -> {
-            assertEquals(datastream, ds.getIdentifier());
+        assertTrue(res.getBlob().isPresent());
+        res.getBlob().ifPresent(ds -> {
+            assertEquals(binary, ds.getIdentifier());
             assertEquals(parse("2017-02-15T10:05:00Z"), ds.getModified());
             assertEquals(of(123456L), ds.getSize());
             assertEquals(of("image/jpeg"), ds.getMimeType());
@@ -222,9 +222,9 @@ public class LdpNonRdfTest extends BaseRdfTest {
         assertEquals(empty(), res.getMemberRelation());
         assertEquals(empty(), res.getMemberOfRelation());
         assertEquals(empty(), res.getInsertedContentRelation());
-        assertTrue(res.getDatastream().isPresent());
-        res.getDatastream().ifPresent(ds -> {
-            assertEquals(datastream, ds.getIdentifier());
+        assertTrue(res.getBlob().isPresent());
+        res.getBlob().ifPresent(ds -> {
+            assertEquals(binary, ds.getIdentifier());
             assertEquals(parse("2017-02-15T10:05:00Z"), ds.getModified());
             assertEquals(of(123456L), ds.getSize());
             assertEquals(of("image/jpeg"), ds.getMimeType());

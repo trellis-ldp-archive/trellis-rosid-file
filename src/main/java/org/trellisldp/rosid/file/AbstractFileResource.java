@@ -27,7 +27,7 @@ import java.util.stream.Stream;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Quad;
 import org.apache.commons.rdf.api.RDF;
-import org.trellisldp.api.Datastream;
+import org.trellisldp.api.Blob;
 import org.trellisldp.api.Resource;
 import org.trellisldp.rosid.common.ResourceData;
 import org.trellisldp.vocabulary.LDP;
@@ -115,9 +115,9 @@ abstract class AbstractFileResource implements Resource {
     }
 
     @Override
-    public Optional<Datastream> getDatastream() {
-        return ofNullable(data.datastream).map(ds ->
-            new Datastream(rdf.createIRI(ds.id), ds.modified, ds.format, ds.size));
+    public Optional<Blob> getBlob() {
+        return ofNullable(data.binary).map(binary ->
+            new Blob(rdf.createIRI(binary.id), binary.modified, binary.format, binary.size));
     }
 
     @Override

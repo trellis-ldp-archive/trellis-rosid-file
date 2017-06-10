@@ -65,7 +65,7 @@ public class LdpBasicContainerTest extends BaseRdfTest {
         assertEquals(empty(), res.getMemberRelation());
         assertEquals(empty(), res.getMemberOfRelation());
         assertEquals(empty(), res.getInsertedContentRelation());
-        assertEquals(empty(), res.getBlob());
+        assertEquals(empty(), res.getBinary());
         assertTrue(res.isMemento());
         assertFalse(res.isPage());
         assertEquals(empty(), res.getNext());
@@ -119,7 +119,7 @@ public class LdpBasicContainerTest extends BaseRdfTest {
         assertEquals(empty(), res.getMemberRelation());
         assertEquals(empty(), res.getMemberOfRelation());
         assertEquals(empty(), res.getInsertedContentRelation());
-        assertEquals(empty(), res.getBlob());
+        assertEquals(empty(), res.getBinary());
         assertTrue(res.isMemento());
         assertFalse(res.isPage());
         assertEquals(empty(), res.getNext());
@@ -171,7 +171,7 @@ public class LdpBasicContainerTest extends BaseRdfTest {
         assertEquals(empty(), res.getMemberRelation());
         assertEquals(empty(), res.getMemberOfRelation());
         assertEquals(empty(), res.getInsertedContentRelation());
-        assertEquals(empty(), res.getBlob());
+        assertEquals(empty(), res.getBinary());
         assertTrue(res.isMemento());
         assertFalse(res.isPage());
         assertEquals(empty(), res.getNext());
@@ -217,7 +217,7 @@ public class LdpBasicContainerTest extends BaseRdfTest {
         assertEquals(empty(), res.getMemberRelation());
         assertEquals(empty(), res.getMemberOfRelation());
         assertEquals(empty(), res.getInsertedContentRelation());
-        assertEquals(empty(), res.getBlob());
+        assertEquals(empty(), res.getBinary());
         assertFalse(res.isMemento());
         assertFalse(res.isPage());
         assertEquals(empty(), res.getNext());

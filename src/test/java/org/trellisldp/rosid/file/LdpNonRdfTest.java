@@ -66,8 +66,8 @@ public class LdpNonRdfTest extends BaseRdfTest {
         assertEquals(empty(), res.getMemberRelation());
         assertEquals(empty(), res.getMemberOfRelation());
         assertEquals(empty(), res.getInsertedContentRelation());
-        assertTrue(res.getBlob().isPresent());
-        res.getBlob().ifPresent(ds -> {
+        assertTrue(res.getBinary().isPresent());
+        res.getBinary().ifPresent(ds -> {
             assertEquals(binary, ds.getIdentifier());
             assertEquals(parse("2017-02-15T10:05:00Z"), ds.getModified());
             assertEquals(of(123456L), ds.getSize());
@@ -119,8 +119,8 @@ public class LdpNonRdfTest extends BaseRdfTest {
         assertEquals(empty(), res.getMemberRelation());
         assertEquals(empty(), res.getMemberOfRelation());
         assertEquals(empty(), res.getInsertedContentRelation());
-        assertTrue(res.getBlob().isPresent());
-        res.getBlob().ifPresent(ds -> {
+        assertTrue(res.getBinary().isPresent());
+        res.getBinary().ifPresent(ds -> {
             assertEquals(binary, ds.getIdentifier());
             assertEquals(parse("2017-02-15T10:05:00Z"), ds.getModified());
             assertEquals(of(123456L), ds.getSize());
@@ -174,8 +174,8 @@ public class LdpNonRdfTest extends BaseRdfTest {
         assertEquals(empty(), res.getMemberRelation());
         assertEquals(empty(), res.getMemberOfRelation());
         assertEquals(empty(), res.getInsertedContentRelation());
-        assertTrue(res.getBlob().isPresent());
-        res.getBlob().ifPresent(ds -> {
+        assertTrue(res.getBinary().isPresent());
+        res.getBinary().ifPresent(ds -> {
             assertEquals(binary, ds.getIdentifier());
             assertEquals(parse("2017-02-15T10:05:00Z"), ds.getModified());
             assertEquals(of(123456L), ds.getSize());
@@ -222,8 +222,8 @@ public class LdpNonRdfTest extends BaseRdfTest {
         assertEquals(empty(), res.getMemberRelation());
         assertEquals(empty(), res.getMemberOfRelation());
         assertEquals(empty(), res.getInsertedContentRelation());
-        assertTrue(res.getBlob().isPresent());
-        res.getBlob().ifPresent(ds -> {
+        assertTrue(res.getBinary().isPresent());
+        res.getBinary().ifPresent(ds -> {
             assertEquals(binary, ds.getIdentifier());
             assertEquals(parse("2017-02-15T10:05:00Z"), ds.getModified());
             assertEquals(of(123456L), ds.getSize());

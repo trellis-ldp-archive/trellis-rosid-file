@@ -130,7 +130,7 @@ public class FileResourceServiceTest extends BaseRdfTest {
         assertEquals(empty(), res.getMemberRelation());
         assertEquals(empty(), res.getMemberOfRelation());
         assertEquals(empty(), res.getInsertedContentRelation());
-        assertEquals(empty(), res.getBlob());
+        assertEquals(empty(), res.getBinary());
         assertTrue(res.isMemento());
         assertFalse(res.isPage());
         assertEquals(empty(), res.getNext());
@@ -184,7 +184,7 @@ public class FileResourceServiceTest extends BaseRdfTest {
         assertEquals(empty(), res.getMemberRelation());
         assertEquals(empty(), res.getMemberOfRelation());
         assertEquals(empty(), res.getInsertedContentRelation());
-        assertEquals(empty(), res.getBlob());
+        assertEquals(empty(), res.getBinary());
         assertTrue(res.isMemento());
         assertFalse(res.isPage());
         assertEquals(empty(), res.getNext());
@@ -236,7 +236,7 @@ public class FileResourceServiceTest extends BaseRdfTest {
         assertEquals(empty(), res.getMemberRelation());
         assertEquals(empty(), res.getMemberOfRelation());
         assertEquals(empty(), res.getInsertedContentRelation());
-        assertEquals(empty(), res.getBlob());
+        assertEquals(empty(), res.getBinary());
         assertTrue(res.isMemento());
         assertFalse(res.isPage());
         assertEquals(empty(), res.getNext());
@@ -282,7 +282,7 @@ public class FileResourceServiceTest extends BaseRdfTest {
         assertEquals(empty(), res.getMemberRelation());
         assertEquals(empty(), res.getMemberOfRelation());
         assertEquals(empty(), res.getInsertedContentRelation());
-        assertEquals(empty(), res.getBlob());
+        assertEquals(empty(), res.getBinary());
         assertEquals(empty(), res.getAnnotationService());
         assertFalse(res.isMemento());
         assertFalse(res.isPage());
@@ -338,7 +338,7 @@ public class FileResourceServiceTest extends BaseRdfTest {
         assertEquals(empty(), res.getMemberRelation());
         assertEquals(empty(), res.getMemberOfRelation());
         assertEquals(empty(), res.getInsertedContentRelation());
-        assertEquals(empty(), res.getBlob());
+        assertEquals(empty(), res.getBinary());
         assertEquals(empty(), res.getAnnotationService());
         assertTrue(res.isMemento());
         assertFalse(res.isPage());

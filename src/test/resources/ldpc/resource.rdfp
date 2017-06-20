@@ -1,8 +1,8 @@
 BEGIN # 2016-12-10T03:27:00Z
-A <trellis:repository/resource> <http://purl.org/dc/terms/hasPart> <trellis:repository/ldpc> <http://fedora.info/definitions/repository#PreferInboundReferences> .
+A <trellis:repository/resource> <http://purl.org/dc/terms/hasPart> <trellis:repository/ldpc> <http://fedora.info/definitions/fcrepo#PreferInboundReferences> .
 END # 2016-12-10T03:27:00Z
 BEGIN # 2017-01-02T14:57:00Z
-A <trellis:repository/other/resource> <http://purl.org/dc/terms/relation> <trellis:repository/ldpc> <http://fedora.info/definitions/repository#PreferInboundReferences> .
+A <trellis:repository/other/resource> <http://purl.org/dc/terms/relation> <trellis:repository/ldpc> <http://fedora.info/definitions/fcrepo#PreferInboundReferences> .
 END # 2017-01-02T14:57:00Z
 BEGIN # 2017-02-15T10:05:00Z
 A <trellis:repository/ldpc> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/ns/ldp#Container> <http://www.trellisldp.org/ns/trellis#PreferServerManaged> .
@@ -24,5 +24,5 @@ BEGIN # 2017-02-16T11:15:03Z
 A <trellis:repository/ldpc> <http://www.w3.org/ns/ldp#contains> <trellis:repository/ldpc/3> <http://www.w3.org/ns/ldp#PreferContainment> .
 END # 2017-02-16T11:15:03Z
 BEGIN # 2017-03-01T15:15:00Z
-A <trellis:repository/other/item> <http://purl.org/dc/terms/hasPart> <trellis:repository/ldpc> <http://fedora.info/definitions/repository#PreferInboundReferences> .
+A <trellis:repository/other/item> <http://purl.org/dc/terms/hasPart> <trellis:repository/ldpc> <http://fedora.info/definitions/fcrepo#PreferInboundReferences> .
 END # 2017-03-01T15:15:00Z

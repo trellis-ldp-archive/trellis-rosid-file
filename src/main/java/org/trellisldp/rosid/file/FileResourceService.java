@@ -39,6 +39,7 @@ import org.apache.commons.rdf.api.Dataset;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Quad;
 import org.apache.curator.framework.CuratorFramework;
+import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.producer.Producer;
 import org.slf4j.Logger;
 import org.trellisldp.api.Resource;
@@ -83,12 +84,14 @@ public class FileResourceService extends AbstractResourceService {
      * @param service the event service
      * @param configuration the configuration
      * @param curator the curator framework
+     * @param consumer the kafka consumer
      * @param producer the kafka producer
      * @throws IOException if the directory is not writable
      */
     protected FileResourceService(final EventService service, final Properties configuration,
-            final CuratorFramework curator, final Producer<String, Dataset> producer) throws IOException {
-        super(service, producer, curator);
+            final CuratorFramework curator, final Consumer<String, Dataset> consumer,
+            final Producer<String, Dataset> producer) throws IOException {
+        super(service, producer, consumer, curator);
         requireNonNull(configuration, "configuration may not be null!");
         this.resourceConfig = getStorageConfig(getPropertySection(configuration, STORAGE_PREFIX), ".resources");
 
@@ -153,6 +156,13 @@ public class FileResourceService extends AbstractResourceService {
                 CachedResource.write(root, identifier);
             }
         }
+        // TODO start up an impl of the AbstractConsumerRunner to read from the change stream
+        // those will be put onto the event service
     }
 
+    @Override
+    public void close() {
+        super.close();
+        // TODO also close the impl of the AbstractConsumerRunner
+    }
 }

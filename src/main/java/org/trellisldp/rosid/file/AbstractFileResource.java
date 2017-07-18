@@ -17,7 +17,7 @@ import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Stream.empty;
 import static java.util.stream.Stream.of;
-import static org.trellisldp.rosid.common.RDFUtils.getInstance;
+import static org.trellisldp.spi.RDFUtils.getInstance;
 
 import java.io.File;
 import java.time.Instant;

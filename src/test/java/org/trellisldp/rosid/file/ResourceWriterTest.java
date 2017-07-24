@@ -56,9 +56,17 @@ public class ResourceWriterTest extends BaseRdfTest {
     }
 
     @Test
+    public void testCacheWriter0() throws IOException {
+        final Instant time = parse("2017-03-15T01:23:45Z");
+        assertFalse(CachedResource.write(null, identifier, time));
+        assertFalse(CachedResource.write(null, identifier.getIRIString(), time));
+        assertFalse(CachedResource.write(null, identifier.getIRIString()));
+    }
+
+    @Test
     public void testCacheWriter1() throws IOException {
         final Instant time = parse("2017-03-15T01:23:45Z");
-        CachedResource.write(directory2, identifier, time);
+        assertTrue(CachedResource.write(directory2, identifier, time));
         final Optional<Resource> resource = CachedResource.find(directory2, identifier);
         assertTrue(resource.isPresent());
         resource.ifPresent(res -> {
@@ -116,7 +124,7 @@ public class ResourceWriterTest extends BaseRdfTest {
 
     @Test
     public void testCacheWriter2() throws IOException {
-        CachedResource.write(directory4, identifier);
+        CachedResource.write(directory4, identifier.getIRIString());
         final Optional<Resource> resource = CachedResource.find(directory4, identifier);
         assertTrue(resource.isPresent());
         resource.ifPresent(res -> {

@@ -41,7 +41,13 @@ public class CachedResourceTest {
     }
 
     @Test
-    public void testNonExistent() {
+    public void testNonExistent1() {
+        final Optional<Resource> resource = CachedResource.find(null, identifier);
+        assertFalse(resource.isPresent());
+    }
+
+    @Test
+    public void testNonExistent2() {
         final Optional<Resource> resource = CachedResource.find(file, identifier);
         assertFalse(resource.isPresent());
     }

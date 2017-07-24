@@ -14,6 +14,7 @@
 package org.trellisldp.rosid.file;
 
 import static org.trellisldp.vocabulary.RDF.type;
+import static java.time.Instant.now;
 import static java.time.Instant.parse;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
@@ -28,6 +29,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.Properties;
 
 import org.apache.commons.rdf.api.Dataset;
@@ -50,6 +52,7 @@ import org.trellisldp.rosid.common.DatasetSerialization;
 import org.trellisldp.vocabulary.DC;
 import org.trellisldp.vocabulary.LDP;
 import org.trellisldp.vocabulary.RDFS;
+import org.trellisldp.vocabulary.Trellis;
 
 /**
  * @author acoburn
@@ -60,6 +63,7 @@ public class FileResourceServiceTest extends BaseRdfTest {
 
     private final IRI identifier = rdf.createIRI("trellis:repository/resource");
     private final IRI other = rdf.createIRI("trellis:repository/other");
+    private final IRI testResource = rdf.createIRI("trellis:repository/testResource");
     private final Producer<String, Dataset> mockProducer = new MockProducer<>(true,
             new StringSerializer(), new DatasetSerialization());
 
@@ -104,6 +108,33 @@ public class FileResourceServiceTest extends BaseRdfTest {
         assertTrue(root.mkdir());
         assertTrue(root.setReadOnly());
         final ResourceService altService = new FileResourceService(configuration, curator, mockProducer);
+    }
+
+    @Test
+    public void testWriteResource() {
+        final Dataset data = rdf.createDataset();
+        data.add(rdf.createQuad(Trellis.PreferUserManaged, testResource, DC.title, rdf.createLiteral("A title")));
+        data.add(rdf.createQuad(Trellis.PreferServerManaged, testResource, type, LDP.RDFSource));
+        assertFalse(service.get(testResource).isPresent());
+        assertFalse(service.get(testResource, now()).isPresent());
+
+        assertTrue(service.put(testResource, data));
+        final Optional<Resource> res = service.get(testResource, now());
+        assertTrue(res.isPresent());
+        res.ifPresent(r -> {
+            assertEquals(LDP.RDFSource, r.getInteractionModel());
+            assertEquals(testResource, r.getIdentifier());
+            assertTrue(r.stream().anyMatch(q -> q.getPredicate().equals(DC.title)));
+            assertTrue(r.getModified().isBefore(now()));
+        });
+        final Optional<Resource> res2 = service.get(testResource);
+        assertTrue(res2.isPresent());
+        res2.ifPresent(r -> {
+            assertEquals(LDP.RDFSource, r.getInteractionModel());
+            assertEquals(testResource, r.getIdentifier());
+            assertTrue(r.stream().anyMatch(q -> q.getPredicate().equals(DC.title)));
+            assertTrue(r.getModified().isBefore(now()));
+        });
     }
 
     @Test

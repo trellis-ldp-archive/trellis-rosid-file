@@ -16,6 +16,11 @@ package org.trellisldp.rosid.file;
 import static java.io.File.separator;
 import static java.lang.String.join;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.commons.rdf.api.RDF;
 import org.apache.commons.rdf.jena.JenaRDF;
@@ -42,5 +47,19 @@ public class FileUtilsTest {
                 FileUtils.partition("trellis:repository/other"));
         assertEquals(join(separator, "2a", "79", "8c", "70a37cae7da1c312e0d052297e9921aa"),
                 FileUtils.partition(rdf.createIRI("trellis:repository/other")));
+    }
+
+    @Test
+    public void testNullResourceDirectory() {
+        final Map<String, String> config = new HashMap<>();
+        assertNull(FileUtils.resourceDirectory(config, "trellis:repo/file"));
+    }
+
+    @Test
+    public void testResourceDirectory() throws Exception {
+        final Map<String, String> config = new HashMap<>();
+        final String path = getClass().getResource("/res3").toURI().toString();
+        config.put("repo", path.substring("file:".length()));
+        assertTrue(FileUtils.resourceDirectory(config, "trellis:repo/testing").exists());
     }
 }

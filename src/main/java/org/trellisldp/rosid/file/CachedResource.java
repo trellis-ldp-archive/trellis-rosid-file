@@ -114,7 +114,7 @@ public class CachedResource extends AbstractFileResource {
      * @return true if the write operation succeeds
      */
     public static Boolean write(final File directory, final String identifier) {
-        return nonNull(directory) && write(directory, rdf.createIRI(identifier));
+        return write(directory, rdf.createIRI(identifier));
     }
 
     /**
@@ -124,7 +124,7 @@ public class CachedResource extends AbstractFileResource {
      * @return true if the write operation succeeds
      */
     public static Boolean write(final File directory, final IRI identifier) {
-        return nonNull(directory) && write(directory, identifier, now());
+        return write(directory, identifier, now());
     }
 
     /**
@@ -135,7 +135,7 @@ public class CachedResource extends AbstractFileResource {
      * @return true if the write operation succeeds
      */
     public static Boolean write(final File directory, final String identifier, final Instant time) {
-        return nonNull(directory) && write(directory, rdf.createIRI(identifier), time);
+        return write(directory, rdf.createIRI(identifier), time);
     }
 
     /**

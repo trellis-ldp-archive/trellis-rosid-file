@@ -39,12 +39,10 @@ import org.apache.commons.rdf.api.Dataset;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Quad;
 import org.apache.curator.framework.CuratorFramework;
-import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.producer.Producer;
 import org.slf4j.Logger;
 import org.trellisldp.api.Resource;
 import org.trellisldp.rosid.common.AbstractResourceService;
-import org.trellisldp.spi.EventService;
 import org.trellisldp.vocabulary.AS;
 import org.trellisldp.vocabulary.LDP;
 import org.trellisldp.vocabulary.PROV;
@@ -65,17 +63,14 @@ public class FileResourceService extends AbstractResourceService {
 
     /**
      * Create a File-based repository service
-     * @param service the event service
      * @param configuration the configuration
      * @param curator the curator framework
-     * @param consumer the kafka consumer
      * @param producer the kafka producer
      * @throws IOException if the directory is not writable
      */
-    public FileResourceService(final EventService service, final Properties configuration,
-            final CuratorFramework curator, final Consumer<String, Dataset> consumer,
+    public FileResourceService(final Properties configuration, final CuratorFramework curator,
             final Producer<String, Dataset> producer) throws IOException {
-        super(service, producer, consumer, curator);
+        super(producer, curator);
         requireNonNull(configuration, "configuration may not be null!");
         this.resourceConfig = getStorageConfig(getPropertySection(configuration, STORAGE_PREFIX), ".resources");
 

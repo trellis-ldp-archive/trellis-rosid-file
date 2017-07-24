@@ -69,20 +69,6 @@ public class FileResourceService extends AbstractResourceService {
      * Create a File-based repository service
      * @param service the event service
      * @param configuration the configuration
-     * @throws IOException if the directory is not writable
-     */
-    public FileResourceService(final EventService service, final Properties configuration) throws IOException {
-        super(service, getPropertySection(configuration, KAFKA_PREFIX), getPropertySection(configuration, ZK_PREFIX));
-        requireNonNull(configuration, "configuration may not be null!");
-        this.resourceConfig = getStorageConfig(getPropertySection(configuration, STORAGE_PREFIX), ".resources");
-
-        init();
-    }
-
-    /**
-     * Create a File-based repository service
-     * @param service the event service
-     * @param configuration the configuration
      * @param curator the curator framework
      * @param consumer the kafka consumer
      * @param producer the kafka producer
@@ -158,11 +144,5 @@ public class FileResourceService extends AbstractResourceService {
         }
         // TODO start up an impl of the AbstractConsumerRunner to read from the change stream
         // those will be put onto the event service
-    }
-
-    @Override
-    public void close() {
-        super.close();
-        // TODO also close the impl of the AbstractConsumerRunner
     }
 }

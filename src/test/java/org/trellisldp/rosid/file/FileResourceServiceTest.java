@@ -89,6 +89,7 @@ public class FileResourceServiceTest extends BaseRdfTest {
         config = new Properties();
         config.setProperty("trellis.storage.repository.resources", getClass().getResource("/root").toURI().toString());
         curator = newClient(zkServer.getConnectString(), new RetryNTimes(10, 1000));
+        curator.start();
         service = new FileResourceService(mockEventService, config, curator, mockConsumer, mockProducer);
     }
 

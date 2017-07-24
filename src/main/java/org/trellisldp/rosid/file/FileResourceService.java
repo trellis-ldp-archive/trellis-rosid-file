@@ -60,8 +60,6 @@ public class FileResourceService extends AbstractResourceService {
     private static final Logger LOGGER = getLogger(FileResourceService.class);
 
     private static final String STORAGE_PREFIX = "trellis.storage.";
-    private static final String ZK_PREFIX = "zk.";
-    private static final String KAFKA_PREFIX = "kafka.";
 
     private final Map<String, String> resourceConfig;
 
@@ -74,7 +72,7 @@ public class FileResourceService extends AbstractResourceService {
      * @param producer the kafka producer
      * @throws IOException if the directory is not writable
      */
-    protected FileResourceService(final EventService service, final Properties configuration,
+    public FileResourceService(final EventService service, final Properties configuration,
             final CuratorFramework curator, final Consumer<String, Dataset> consumer,
             final Producer<String, Dataset> producer) throws IOException {
         super(service, producer, consumer, curator);
@@ -142,7 +140,5 @@ public class FileResourceService extends AbstractResourceService {
                 CachedResource.write(root, identifier);
             }
         }
-        // TODO start up an impl of the AbstractConsumerRunner to read from the change stream
-        // those will be put onto the event service
     }
 }

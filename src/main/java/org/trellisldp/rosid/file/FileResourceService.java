@@ -43,6 +43,7 @@ import org.apache.kafka.clients.producer.Producer;
 import org.slf4j.Logger;
 import org.trellisldp.api.Resource;
 import org.trellisldp.rosid.common.AbstractResourceService;
+import org.trellisldp.spi.EventService;
 import org.trellisldp.vocabulary.AS;
 import org.trellisldp.vocabulary.LDP;
 import org.trellisldp.vocabulary.PROV;
@@ -66,11 +67,12 @@ public class FileResourceService extends AbstractResourceService {
      * @param configuration the configuration
      * @param curator the curator framework
      * @param producer the kafka producer
+     * @param notifications the notification service
      * @throws IOException if the directory is not writable
      */
     public FileResourceService(final Properties configuration, final CuratorFramework curator,
-            final Producer<String, Dataset> producer) throws IOException {
-        super(producer, curator);
+            final Producer<String, Dataset> producer, final EventService notifications) throws IOException {
+        super(producer, curator, notifications);
         requireNonNull(configuration, "configuration may not be null!");
         this.resourceConfig = getStorageConfig(getPropertySection(configuration, STORAGE_PREFIX), ".resources");
 

@@ -45,8 +45,12 @@ import org.apache.kafka.clients.producer.MockProducer;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
 import org.trellisldp.api.Resource;
 import org.trellisldp.api.VersionRange;
+import org.trellisldp.spi.EventService;
 import org.trellisldp.spi.ResourceService;
 import org.trellisldp.rosid.common.DatasetSerialization;
 import org.trellisldp.vocabulary.DC;
@@ -57,6 +61,7 @@ import org.trellisldp.vocabulary.Trellis;
 /**
  * @author acoburn
  */
+@RunWith(MockitoJUnitRunner.class)
 public class FileResourceServiceTest extends BaseRdfTest {
 
     private static TestingServer zkServer;
@@ -71,6 +76,9 @@ public class FileResourceServiceTest extends BaseRdfTest {
     private ResourceService service;
     private Properties config;
 
+    @Mock
+    private EventService mockEventService;
+
     @BeforeClass
     public static void initialize() throws Exception {
         zkServer = new TestingServer(true);
@@ -82,7 +90,7 @@ public class FileResourceServiceTest extends BaseRdfTest {
         config.setProperty("trellis.storage.repository.resources", getClass().getResource("/root").toURI().toString());
         curator = newClient(zkServer.getConnectString(), new RetryNTimes(10, 1000));
         curator.start();
-        service = new FileResourceService(config, curator, mockProducer);
+        service = new FileResourceService(config, curator, mockProducer, mockEventService);
     }
 
     @Test
@@ -93,7 +101,8 @@ public class FileResourceServiceTest extends BaseRdfTest {
                 config.getProperty("trellis.storage.repository.resources") + "/root2/a");
         final File root = new File(URI.create(configuration.getProperty("trellis.storage.repository.resources")));
         assertFalse(root.exists());
-        final ResourceService altService = new FileResourceService(configuration, curator, mockProducer);
+        final ResourceService altService = new FileResourceService(configuration, curator, mockProducer,
+                mockEventService);
         assertFalse(altService.get(identifier, time).isPresent());
         assertTrue(root.exists());
         assertFalse(altService.get(identifier, time).isPresent());
@@ -107,7 +116,8 @@ public class FileResourceServiceTest extends BaseRdfTest {
         final File root = new File(URI.create(configuration.getProperty("trellis.storage.repository.resources")));
         assertTrue(root.mkdir());
         assertTrue(root.setReadOnly());
-        final ResourceService altService = new FileResourceService(configuration, curator, mockProducer);
+        final ResourceService altService = new FileResourceService(configuration, curator, mockProducer,
+                mockEventService);
     }
 
     @Test

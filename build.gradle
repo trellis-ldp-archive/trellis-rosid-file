@@ -36,6 +36,7 @@ ext {
     commonsRdfVersion = '0.3.0-incubating'
     jacksonVersion = '2.8.5'
     slf4jVersion = '1.7.21'
+    jenaVersion = '3.4.0'
 
     /* Testing */
     curatorVersion = '3.3.0'
@@ -61,6 +62,7 @@ dependencies {
     compile group: 'commons-io', name: 'commons-io', version: commonsIoVersion
     compile group: 'org.apache.commons', name: 'commons-rdf-api', version: commonsRdfVersion
     compile group: 'org.apache.commons', name: 'commons-rdf-jena', version: commonsRdfVersion
+    compile group: 'org.apache.jena', name: 'jena-osgi', version: jenaVersion
 
     testCompile group: 'org.apache.curator', name: 'curator-test', version: curatorVersion
     testCompile group: 'junit', name: 'junit', version: junitVersion

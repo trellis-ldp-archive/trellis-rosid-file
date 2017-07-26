@@ -16,19 +16,19 @@ package org.trellisldp.rosid.file;
 import static java.io.File.separator;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.requireNonNull;
+import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.IntStream.range;
 import static org.apache.commons.codec.digest.DigestUtils.md5Hex;
 import static org.apache.commons.rdf.jena.JenaRDF.asQuad;
 import static org.apache.jena.riot.Lang.NQUADS;
-import static org.apache.jena.riot.system.StreamRDFLib.sinkQuads;
+import static org.apache.jena.sparql.core.DatasetGraphFactory.create;
+import static org.apache.jena.riot.RDFParser.fromString;
 
 import java.io.File;
-import java.io.StringReader;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
@@ -38,9 +38,7 @@ import java.util.zip.CRC32;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Quad;
 import org.apache.commons.rdf.api.RDF;
-import org.apache.jena.atlas.lib.SinkToCollection;
-import org.apache.jena.riot.RDFParserRegistry;
-import org.apache.jena.riot.ReaderRIOT;
+import org.apache.jena.sparql.core.DatasetGraph;
 
 /**
  * @author acoburn
@@ -50,8 +48,6 @@ public final class FileUtils {
     // The length of the CRC directory partition
     public final static int LENGTH = 2;
     public final static int MAX = 3;
-
-    private static final ReaderRIOT READER = RDFParserRegistry.getFactory(NQUADS).create(NQUADS);
 
     /**
      * Partition an identifier into a directory structure
@@ -89,9 +85,13 @@ public final class FileUtils {
      * @return the Quad
      */
     public static Optional<Quad> stringToQuad(final RDF rdf, final String line) {
-        final List<org.apache.jena.sparql.core.Quad> c = new ArrayList<>();
-        READER.read(new StringReader(line), null, NQUADS.getContentType(), sinkQuads(new SinkToCollection<>(c)), null);
-        return of(c).filter(x -> !x.isEmpty()).map(x -> asQuad(rdf, x.get(0)));
+        final DatasetGraph dataset = create();
+        fromString(line).lang(NQUADS).parse(dataset);
+        final Iterator<org.apache.jena.sparql.core.Quad> i = dataset.find();
+        if (i.hasNext()) {
+            return of(i.next()).map(x -> asQuad(rdf, x));
+        }
+        return empty();
     }
 
     /**

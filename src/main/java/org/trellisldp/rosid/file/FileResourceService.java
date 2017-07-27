@@ -35,7 +35,6 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.stream.Stream;
 
-import org.apache.commons.rdf.api.Dataset;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Quad;
 import org.apache.curator.framework.CuratorFramework;
@@ -71,7 +70,7 @@ public class FileResourceService extends AbstractResourceService {
      * @throws IOException if the directory is not writable
      */
     public FileResourceService(final Properties configuration, final CuratorFramework curator,
-            final Producer<String, Dataset> producer, final EventService notifications) throws IOException {
+            final Producer<String, String> producer, final EventService notifications) throws IOException {
         super(producer, curator, notifications);
         requireNonNull(configuration, "configuration may not be null!");
         this.resourceConfig = getStorageConfig(getPropertySection(configuration, STORAGE_PREFIX), ".resources");

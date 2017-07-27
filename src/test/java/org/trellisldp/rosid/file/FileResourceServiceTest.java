@@ -52,7 +52,6 @@ import org.trellisldp.api.Resource;
 import org.trellisldp.api.VersionRange;
 import org.trellisldp.spi.EventService;
 import org.trellisldp.spi.ResourceService;
-import org.trellisldp.rosid.common.DatasetSerialization;
 import org.trellisldp.vocabulary.DC;
 import org.trellisldp.vocabulary.LDP;
 import org.trellisldp.vocabulary.RDFS;
@@ -69,8 +68,8 @@ public class FileResourceServiceTest extends BaseRdfTest {
     private final IRI identifier = rdf.createIRI("trellis:repository/resource");
     private final IRI other = rdf.createIRI("trellis:repository/other");
     private final IRI testResource = rdf.createIRI("trellis:repository/testResource");
-    private final Producer<String, Dataset> mockProducer = new MockProducer<>(true,
-            new StringSerializer(), new DatasetSerialization());
+    private final Producer<String, String> mockProducer = new MockProducer<>(true,
+            new StringSerializer(), new StringSerializer());
 
     private CuratorFramework curator;
     private ResourceService service;

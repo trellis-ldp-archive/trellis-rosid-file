@@ -23,8 +23,8 @@ import static java.util.stream.IntStream.range;
 import static org.apache.commons.codec.digest.DigestUtils.md5Hex;
 import static org.apache.commons.rdf.jena.JenaRDF.asQuad;
 import static org.apache.jena.riot.Lang.NQUADS;
-import static org.apache.jena.sparql.core.DatasetGraphFactory.create;
 import static org.apache.jena.riot.RDFParser.fromString;
+import static org.apache.jena.sparql.core.DatasetGraphFactory.create;
 
 import java.io.File;
 import java.net.URI;

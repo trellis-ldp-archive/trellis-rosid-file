@@ -89,7 +89,7 @@ public class FileResourceServiceTest extends BaseRdfTest {
         config.setProperty("trellis.storage.repository.resources", getClass().getResource("/root").toURI().toString());
         curator = newClient(zkServer.getConnectString(), new RetryNTimes(10, 1000));
         curator.start();
-        service = new FileResourceService(config, curator, mockProducer, mockEventService);
+        service = new FileResourceService(config, curator, mockProducer, mockEventService, false);
     }
 
     @Test
@@ -101,7 +101,7 @@ public class FileResourceServiceTest extends BaseRdfTest {
         final File root = new File(URI.create(configuration.getProperty("trellis.storage.repository.resources")));
         assertFalse(root.exists());
         final ResourceService altService = new FileResourceService(configuration, curator, mockProducer,
-                mockEventService);
+                mockEventService, false);
         assertFalse(altService.get(identifier, time).isPresent());
         assertTrue(root.exists());
         assertFalse(altService.get(identifier, time).isPresent());
@@ -116,7 +116,7 @@ public class FileResourceServiceTest extends BaseRdfTest {
         assertTrue(root.mkdir());
         assertTrue(root.setReadOnly());
         final ResourceService altService = new FileResourceService(configuration, curator, mockProducer,
-                mockEventService);
+                mockEventService, false);
     }
 
     @Test

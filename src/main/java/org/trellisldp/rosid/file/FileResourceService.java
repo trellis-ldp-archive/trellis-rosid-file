@@ -67,11 +67,13 @@ public class FileResourceService extends AbstractResourceService {
      * @param curator the curator framework
      * @param producer the kafka producer
      * @param notifications the notification service
+     * @param async generate cached resources asynchronously if true, synchonously if false
      * @throws IOException if the directory is not writable
      */
     public FileResourceService(final Properties configuration, final CuratorFramework curator,
-            final Producer<String, String> producer, final EventService notifications) throws IOException {
-        super(producer, curator, notifications);
+            final Producer<String, String> producer, final EventService notifications, final Boolean async)
+            throws IOException {
+        super(producer, curator, notifications, async);
         requireNonNull(configuration, "configuration may not be null!");
         this.resourceConfig = getStorageConfig(getPropertySection(configuration, STORAGE_PREFIX), ".resources");
 
@@ -100,7 +102,7 @@ public class FileResourceService extends AbstractResourceService {
         }
         dir.mkdirs();
         return RDFPatch.write(new File(dir, RESOURCE_JOURNAL), remove, add, time) &&
-            CachedResource.write(dir, identifier);
+            (async || CachedResource.write(dir, identifier));
     }
 
     private void init() throws IOException {

@@ -33,6 +33,7 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import org.apache.commons.rdf.api.IRI;
@@ -67,13 +68,14 @@ public class FileResourceService extends AbstractResourceService {
      * @param curator the curator framework
      * @param producer the kafka producer
      * @param notifications the notification service
+     * @param idSupplier an identifier supplier for new resources
      * @param async generate cached resources asynchronously if true, synchonously if false
      * @throws IOException if the directory is not writable
      */
     public FileResourceService(final Properties configuration, final CuratorFramework curator,
-            final Producer<String, String> producer, final EventService notifications, final Boolean async)
-            throws IOException {
-        super(producer, curator, notifications, async);
+            final Producer<String, String> producer, final EventService notifications,
+            final Supplier<String> idSupplier, final Boolean async) throws IOException {
+        super(producer, curator, notifications, idSupplier, async);
         requireNonNull(configuration, "configuration may not be null!");
         this.resourceConfig = getStorageConfig(getPropertySection(configuration, STORAGE_PREFIX), ".resources");
 

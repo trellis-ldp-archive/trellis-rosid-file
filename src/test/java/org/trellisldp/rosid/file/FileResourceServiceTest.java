@@ -31,6 +31,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.function.Supplier;
 
 import org.apache.commons.rdf.api.Dataset;
 import org.apache.commons.rdf.api.IRI;
@@ -78,6 +79,9 @@ public class FileResourceServiceTest extends BaseRdfTest {
     @Mock
     private EventService mockEventService;
 
+    @Mock
+    private Supplier<String> mockIdSupplier;
+
     @BeforeClass
     public static void initialize() throws Exception {
         zkServer = new TestingServer(true);
@@ -89,7 +93,7 @@ public class FileResourceServiceTest extends BaseRdfTest {
         config.setProperty("trellis.storage.repository.resources", getClass().getResource("/root").toURI().toString());
         curator = newClient(zkServer.getConnectString(), new RetryNTimes(10, 1000));
         curator.start();
-        service = new FileResourceService(config, curator, mockProducer, mockEventService, false);
+        service = new FileResourceService(config, curator, mockProducer, mockEventService, mockIdSupplier, false);
     }
 
     @Test
@@ -101,7 +105,7 @@ public class FileResourceServiceTest extends BaseRdfTest {
         final File root = new File(URI.create(configuration.getProperty("trellis.storage.repository.resources")));
         assertFalse(root.exists());
         final ResourceService altService = new FileResourceService(configuration, curator, mockProducer,
-                mockEventService, false);
+                mockEventService, mockIdSupplier, false);
         assertFalse(altService.get(identifier, time).isPresent());
         assertTrue(root.exists());
         assertFalse(altService.get(identifier, time).isPresent());
@@ -116,7 +120,7 @@ public class FileResourceServiceTest extends BaseRdfTest {
         assertTrue(root.mkdir());
         assertTrue(root.setReadOnly());
         final ResourceService altService = new FileResourceService(configuration, curator, mockProducer,
-                mockEventService, false);
+                mockEventService, mockIdSupplier, false);
     }
 
     @Test

@@ -28,9 +28,10 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
-import java.util.Properties;
 import java.util.function.Supplier;
 
 import org.apache.commons.rdf.api.Dataset;
@@ -74,7 +75,7 @@ public class FileResourceServiceTest extends BaseRdfTest {
 
     private CuratorFramework curator;
     private ResourceService service;
-    private Properties config;
+    private Map<String, String> partitions = new HashMap<>();
 
     @Mock
     private EventService mockEventService;
@@ -89,22 +90,21 @@ public class FileResourceServiceTest extends BaseRdfTest {
 
     @Before
     public void setUp() throws Exception {
-        config = new Properties();
-        config.setProperty("trellis.storage.repository.resources", getClass().getResource("/root").toURI().toString());
+        partitions.clear();
+        partitions.put("repository", getClass().getResource("/root").toURI().toString());
         curator = newClient(zkServer.getConnectString(), new RetryNTimes(10, 1000));
         curator.start();
-        service = new FileResourceService(config, curator, mockProducer, mockEventService, mockIdSupplier, false);
+        service = new FileResourceService(partitions, curator, mockProducer, mockEventService, mockIdSupplier, false);
     }
 
     @Test
     public void testNewRoot() throws IOException {
         final Instant time = parse("2017-02-16T11:15:03Z");
-        final Properties configuration = new Properties();
-        configuration.setProperty("trellis.storage.repository.resources",
-                config.getProperty("trellis.storage.repository.resources") + "/root2/a");
-        final File root = new File(URI.create(configuration.getProperty("trellis.storage.repository.resources")));
+        final Map<String, String> config = new HashMap<>();
+        config.put("repository", partitions.get("repository") + "/root2/a");
+        final File root = new File(URI.create(config.get("repository")));
         assertFalse(root.exists());
-        final ResourceService altService = new FileResourceService(configuration, curator, mockProducer,
+        final ResourceService altService = new FileResourceService(config, curator, mockProducer,
                 mockEventService, mockIdSupplier, false);
         assertFalse(altService.get(identifier, time).isPresent());
         assertTrue(root.exists());
@@ -113,13 +113,12 @@ public class FileResourceServiceTest extends BaseRdfTest {
 
     @Test(expected = IOException.class)
     public void testUnwritableRoot() throws IOException {
-        final Properties configuration = new Properties();
-        configuration.setProperty("trellis.storage.repository.resources",
-                config.getProperty("trellis.storage.repository.resources") + "/root3");
-        final File root = new File(URI.create(configuration.getProperty("trellis.storage.repository.resources")));
+        final Map<String, String> config = new HashMap<>();
+        config.put("repository", partitions.get("repository") + "/root3");
+        final File root = new File(URI.create(config.get("repository")));
         assertTrue(root.mkdir());
         assertTrue(root.setReadOnly());
-        final ResourceService altService = new FileResourceService(configuration, curator, mockProducer,
+        final ResourceService altService = new FileResourceService(config, curator, mockProducer,
                 mockEventService, mockIdSupplier, false);
     }
 

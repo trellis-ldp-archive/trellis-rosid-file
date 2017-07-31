@@ -23,8 +23,6 @@ import static java.util.stream.Stream.of;
 import static org.slf4j.LoggerFactory.getLogger;
 import static org.trellisldp.rosid.file.Constants.RESOURCE_CACHE;
 import static org.trellisldp.rosid.file.Constants.RESOURCE_JOURNAL;
-import static org.trellisldp.rosid.file.FileUtils.getPropertySection;
-import static org.trellisldp.rosid.file.FileUtils.getStorageConfig;
 import static org.trellisldp.rosid.file.FileUtils.resourceDirectory;
 
 import java.io.File;
@@ -32,7 +30,6 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Properties;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -58,13 +55,11 @@ public class FileResourceService extends AbstractResourceService {
 
     private static final Logger LOGGER = getLogger(FileResourceService.class);
 
-    private static final String STORAGE_PREFIX = "trellis.storage.";
-
-    private final Map<String, String> resourceConfig;
+    private final Map<String, String> partitions;
 
     /**
      * Create a File-based repository service
-     * @param configuration the configuration
+     * @param partitions the partition configuration
      * @param curator the curator framework
      * @param producer the kafka producer
      * @param notifications the notification service
@@ -72,33 +67,33 @@ public class FileResourceService extends AbstractResourceService {
      * @param async generate cached resources asynchronously if true, synchonously if false
      * @throws IOException if the directory is not writable
      */
-    public FileResourceService(final Properties configuration, final CuratorFramework curator,
+    public FileResourceService(final Map<String, String> partitions, final CuratorFramework curator,
             final Producer<String, String> producer, final EventService notifications,
             final Supplier<String> idSupplier, final Boolean async) throws IOException {
         super(producer, curator, notifications, idSupplier, async);
-        requireNonNull(configuration, "configuration may not be null!");
-        this.resourceConfig = getStorageConfig(getPropertySection(configuration, STORAGE_PREFIX), ".resources");
+        requireNonNull(partitions, "partition configuration may not be null!");
+        this.partitions = partitions;
 
         init();
     }
 
     @Override
     public Optional<Resource> get(final IRI identifier) {
-        return ofNullable(resourceDirectory(resourceConfig, identifier)).filter(File::exists)
+        return ofNullable(resourceDirectory(partitions, identifier)).filter(File::exists)
             .flatMap(dir -> new File(dir, RESOURCE_CACHE).exists() ?
                     CachedResource.find(dir, identifier) : VersionedResource.find(dir, identifier, now()));
     }
 
     @Override
     public Optional<Resource> get(final IRI identifier, final Instant time) {
-        return ofNullable(resourceDirectory(resourceConfig, identifier)).filter(File::exists)
+        return ofNullable(resourceDirectory(partitions, identifier)).filter(File::exists)
             .flatMap(dir -> VersionedResource.find(dir, identifier, time));
     }
 
     @Override
     protected Boolean write(final IRI identifier, final Stream<? extends Quad> remove,
             final Stream<? extends Quad> add, final Instant time) {
-        final File dir = resourceDirectory(resourceConfig, identifier);
+        final File dir = resourceDirectory(partitions, identifier);
         if (isNull(dir)) {
             return false;
         }
@@ -108,7 +103,7 @@ public class FileResourceService extends AbstractResourceService {
     }
 
     private void init() throws IOException {
-        for (final Map.Entry<String, String> storage : resourceConfig.entrySet()) {
+        for (final Map.Entry<String, String> storage : partitions.entrySet()) {
             final File data = storage.getValue().startsWith("file:") ?
                  new File(create(storage.getValue())) : new File(storage.getValue());
             LOGGER.info("Using resource data directory for '{}': {}", storage.getKey(), data.getAbsolutePath());
@@ -119,7 +114,7 @@ public class FileResourceService extends AbstractResourceService {
                 throw new IOException("Cannot write to " + data.getAbsolutePath());
             }
             final IRI identifier = rdf.createIRI("trellis:" + storage.getKey());
-            final File root = resourceDirectory(resourceConfig, identifier);
+            final File root = resourceDirectory(partitions, identifier);
             final File rootData = new File(root, RESOURCE_JOURNAL);
 
             if (!root.exists() || !rootData.exists()) {

@@ -18,7 +18,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
-import static java.util.stream.Collectors.toMap;
 import static java.util.stream.IntStream.range;
 import static org.apache.commons.codec.digest.DigestUtils.md5Hex;
 import static org.apache.commons.rdf.jena.JenaRDF.asQuad;
@@ -31,7 +30,6 @@ import java.net.URI;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Properties;
 import java.util.StringJoiner;
 import java.util.zip.CRC32;
 
@@ -124,32 +122,6 @@ public final class FileUtils {
             return directory;
         }
         return null;
-    }
-
-    /**
-     * Get the storage-related configuration values as a map
-     * @param props the property values
-     * @param suffix the suffix
-     * @return the configuration values
-     */
-    public static Map<String, String> getStorageConfig(final Properties props, final String suffix) {
-        // trellis.storage.repo1.resources
-        // trellis.storage.repo1.blobs
-        return props.stringPropertyNames().stream().filter(key -> key.endsWith(suffix))
-            .collect(toMap(key -> key.split("\\.")[0], props::getProperty));
-    }
-
-    /**
-     * Get a slice of the property configuration
-     * @param configuration the configuration
-     * @param prefix the prefix
-     * @return a subset of the properties
-     */
-    public static Properties getPropertySection(final Properties configuration, final String prefix) {
-        final Properties props = new Properties();
-        configuration.stringPropertyNames().stream().filter(key -> key.startsWith(prefix))
-            .forEach(key -> props.setProperty(key.substring(prefix.length()), configuration.getProperty(key)));
-        return props;
     }
 
     private FileUtils() {

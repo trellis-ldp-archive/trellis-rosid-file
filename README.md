@@ -1,6 +1,8 @@
 # trellis-rosid-file
 
 [![Build Status](https://travis-ci.org/trellis-ldp/trellis-rosid-file.png?branch=master)](https://travis-ci.org/trellis-ldp/trellis-rosid-file)
+[![Coverage Status](https://coveralls.io/repos/github/trellis-ldp/trellis-rosid-file/badge.svg?branch=master)](https://coveralls.io/github/trellis-ldp/trellis-rosid-file?branch=master)
+
 
 A file-based implementation of the Trellis API, based on Kafka and a distributed data store.
 

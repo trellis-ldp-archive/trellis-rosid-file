@@ -23,6 +23,7 @@ import static org.apache.curator.framework.CuratorFrameworkFactory.newClient;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
 import java.io.File;
 import java.io.IOException;
@@ -117,7 +118,7 @@ public class FileResourceServiceTest extends BaseRdfTest {
         config.put("repository", partitions.get("repository") + "/root3");
         final File root = new File(URI.create(config.get("repository")));
         assertTrue(root.mkdir());
-        root.setReadOnly();
+        assumeTrue(root.setReadOnly());
         final ResourceService altService = new FileResourceService(config, curator, mockProducer,
                 mockEventService, mockIdSupplier, false);
     }

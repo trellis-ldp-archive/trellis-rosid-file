@@ -117,7 +117,7 @@ public class FileResourceServiceTest extends BaseRdfTest {
         config.put("repository", partitions.get("repository") + "/root3");
         final File root = new File(URI.create(config.get("repository")));
         assertTrue(root.mkdir());
-        assertTrue(root.setReadOnly());
+        root.setReadOnly();
         final ResourceService altService = new FileResourceService(config, curator, mockProducer,
                 mockEventService, mockIdSupplier, false);
     }

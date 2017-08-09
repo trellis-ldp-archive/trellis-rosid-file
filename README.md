@@ -1,6 +1,7 @@
 # trellis-rosid-file
 
 [![Build Status](https://travis-ci.org/trellis-ldp/trellis-rosid-file.png?branch=master)](https://travis-ci.org/trellis-ldp/trellis-rosid-file)
+[![Build status](https://ci.appveyor.com/api/projects/status/w04a5ssibajvcuui?svg=true)](https://ci.appveyor.com/project/acoburn/trellis-rosid-file)
 [![Coverage Status](https://coveralls.io/repos/github/trellis-ldp/trellis-rosid-file/badge.svg?branch=master)](https://coveralls.io/github/trellis-ldp/trellis-rosid-file?branch=master)
 
 

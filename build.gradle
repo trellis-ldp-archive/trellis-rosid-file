@@ -41,7 +41,7 @@ ext {
     jenaVersion = '3.4.0'
 
     /* Testing */
-    curatorVersion = '3.3.0'
+    curatorVersion = '4.0.0'
     junitVersion = '4.12'
     mockitoVersion = '2.8.47'
     logbackVersion = '1.2.3'

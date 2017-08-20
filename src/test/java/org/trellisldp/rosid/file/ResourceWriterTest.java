@@ -79,8 +79,6 @@ public class ResourceWriterTest extends BaseRdfTest {
             assertEquals(empty(), res.getInsertedContentRelation());
             assertEquals(empty(), res.getBinary());
             assertFalse(res.isMemento());
-            assertFalse(res.isPage());
-            assertEquals(empty(), res.getNext());
             assertEquals(of(rdf.createIRI("http://example.org/receiver/inbox")), res.getInbox());
             assertEquals(empty(), res.getAcl());
             assertEquals(parse("2017-03-03T02:34:12Z"), res.getModified());
@@ -137,8 +135,6 @@ public class ResourceWriterTest extends BaseRdfTest {
             assertEquals(empty(), res.getInsertedContentRelation());
             assertEquals(empty(), res.getBinary());
             assertFalse(res.isMemento());
-            assertFalse(res.isPage());
-            assertEquals(empty(), res.getNext());
             assertEquals(empty(), res.getInbox());
             assertEquals(empty(), res.getAcl());
             assertEquals(parse("2017-02-15T10:05:00Z"), res.getModified());

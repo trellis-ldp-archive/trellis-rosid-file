@@ -67,8 +67,6 @@ public class LdpBasicContainerTest extends BaseRdfTest {
         assertEquals(empty(), res.getInsertedContentRelation());
         assertEquals(empty(), res.getBinary());
         assertTrue(res.isMemento());
-        assertFalse(res.isPage());
-        assertEquals(empty(), res.getNext());
         assertEquals(of(rdf.createIRI("http://example.org/receiver/inbox")), res.getInbox());
         assertEquals(empty(), res.getAcl());
         assertEquals(parse("2017-02-16T11:15:03Z"), res.getModified());
@@ -121,8 +119,6 @@ public class LdpBasicContainerTest extends BaseRdfTest {
         assertEquals(empty(), res.getInsertedContentRelation());
         assertEquals(empty(), res.getBinary());
         assertTrue(res.isMemento());
-        assertFalse(res.isPage());
-        assertEquals(empty(), res.getNext());
         assertEquals(of(rdf.createIRI("http://example.org/receiver/inbox")), res.getInbox());
         assertEquals(empty(), res.getAcl());
         assertEquals(parse("2017-02-16T11:15:03Z"), res.getModified());
@@ -173,8 +169,6 @@ public class LdpBasicContainerTest extends BaseRdfTest {
         assertEquals(empty(), res.getInsertedContentRelation());
         assertEquals(empty(), res.getBinary());
         assertTrue(res.isMemento());
-        assertFalse(res.isPage());
-        assertEquals(empty(), res.getNext());
         assertEquals(empty(), res.getInbox());
         assertEquals(empty(), res.getAcl());
         assertEquals(parse("2017-02-15T10:05:00Z"), res.getModified());
@@ -219,8 +213,6 @@ public class LdpBasicContainerTest extends BaseRdfTest {
         assertEquals(empty(), res.getInsertedContentRelation());
         assertEquals(empty(), res.getBinary());
         assertFalse(res.isMemento());
-        assertFalse(res.isPage());
-        assertEquals(empty(), res.getNext());
         assertEquals(of(rdf.createIRI("http://example.org/receiver/inbox")), res.getInbox());
         assertEquals(empty(), res.getAcl());
         assertEquals(parse("2017-02-16T11:15:03Z"), res.getModified());

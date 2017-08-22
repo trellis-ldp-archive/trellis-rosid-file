@@ -38,7 +38,6 @@ import org.slf4j.Logger;
 import org.trellisldp.api.Resource;
 import org.trellisldp.api.VersionRange;
 import org.trellisldp.rosid.common.ResourceData;
-import org.trellisldp.vocabulary.ACL;
 import org.trellisldp.vocabulary.LDP;
 import org.trellisldp.vocabulary.OA;
 import org.trellisldp.vocabulary.RDF;
@@ -55,7 +54,6 @@ public class VersionedResource extends AbstractFileResource {
 
     /* User-controllable properties that become part of the core resource data */
     private static final Set<IRI> specialUserProperties = unmodifiableSet(new HashSet<IRI>() { {
-        add(ACL.accessControl);
         add(LDP.inbox);
         add(LDP.membershipResource);
         add(LDP.hasMemberRelation);

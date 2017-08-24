@@ -16,7 +16,6 @@ package org.trellisldp.rosid.file;
 import static java.net.URI.create;
 import static java.time.Instant.now;
 import static java.util.Objects.isNull;
-import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Stream.empty;
 import static java.util.stream.Stream.of;
@@ -55,8 +54,6 @@ public class FileResourceService extends AbstractResourceService {
 
     private static final Logger LOGGER = getLogger(FileResourceService.class);
 
-    private final Map<String, String> partitions;
-
     /**
      * Create a File-based repository service
      * @param partitions the partition configuration
@@ -70,9 +67,7 @@ public class FileResourceService extends AbstractResourceService {
     public FileResourceService(final Map<String, String> partitions, final CuratorFramework curator,
             final Producer<String, String> producer, final EventService notifications,
             final Supplier<String> idSupplier, final Boolean async) throws IOException {
-        super(producer, curator, notifications, idSupplier, async);
-        requireNonNull(partitions, "partition configuration may not be null!");
-        this.partitions = partitions;
+        super(partitions, producer, curator, notifications, idSupplier, async);
 
         init();
     }

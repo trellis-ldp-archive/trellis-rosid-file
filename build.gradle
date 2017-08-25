@@ -8,7 +8,7 @@ plugins {
 
 apply plugin: 'maven'
 apply plugin: 'osgi'
-apply plugin: 'java'
+apply plugin: 'java-library'
 apply plugin: 'maven-publish'
 apply plugin: 'signing'
 apply plugin: 'checkstyle'
@@ -55,16 +55,17 @@ configurations {
 }
 
 dependencies {
-    compile group: 'org.trellisldp', name: 'trellis-api', version: trellisApiVersion
-    compile group: 'org.trellisldp', name: 'trellis-spi', version: trellisSpiVersion
-    compile group: 'org.trellisldp', name: 'trellis-vocabulary', version: trellisVocabularyVersion
-    compile group: 'org.trellisldp', name: 'trellis-rosid-common', version: trellisRosidCommonVersion
-    compile group: 'org.slf4j', name: 'slf4j-api', version: slf4jVersion
-    compile group: 'commons-codec', name: 'commons-codec', version: commonsCodecVersion
-    compile group: 'commons-io', name: 'commons-io', version: commonsIoVersion
-    compile group: 'org.apache.commons', name: 'commons-rdf-api', version: commonsRdfVersion
-    compile group: 'org.apache.commons', name: 'commons-rdf-jena', version: commonsRdfVersion
-    compile group: 'org.apache.jena', name: 'jena-osgi', version: jenaVersion
+    api group: 'org.trellisldp', name: 'trellis-api', version: trellisApiVersion
+    api group: 'org.trellisldp', name: 'trellis-spi', version: trellisSpiVersion
+    api group: 'org.trellisldp', name: 'trellis-rosid-common', version: trellisRosidCommonVersion
+    api group: 'org.apache.commons', name: 'commons-rdf-api', version: commonsRdfVersion
+
+    implementation group: 'org.trellisldp', name: 'trellis-vocabulary', version: trellisVocabularyVersion
+    implementation group: 'org.slf4j', name: 'slf4j-api', version: slf4jVersion
+    implementation group: 'commons-codec', name: 'commons-codec', version: commonsCodecVersion
+    implementation group: 'commons-io', name: 'commons-io', version: commonsIoVersion
+    implementation group: 'org.apache.commons', name: 'commons-rdf-jena', version: commonsRdfVersion
+    implementation group: 'org.apache.jena', name: 'jena-osgi', version: jenaVersion
 
     testCompile group: 'org.apache.curator', name: 'curator-test', version: curatorVersion
     testCompile group: 'junit', name: 'junit', version: junitVersion

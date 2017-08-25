@@ -55,22 +55,22 @@ configurations {
 }
 
 dependencies {
-    api group: 'org.trellisldp', name: 'trellis-api', version: trellisApiVersion
-    api group: 'org.trellisldp', name: 'trellis-spi', version: trellisSpiVersion
-    api group: 'org.trellisldp', name: 'trellis-rosid-common', version: trellisRosidCommonVersion
     api group: 'org.apache.commons', name: 'commons-rdf-api', version: commonsRdfVersion
+    api group: 'org.trellisldp', name: 'trellis-api', version: trellisApiVersion
+    api group: 'org.trellisldp', name: 'trellis-rosid-common', version: trellisRosidCommonVersion
+    api group: 'org.trellisldp', name: 'trellis-spi', version: trellisSpiVersion
 
-    implementation group: 'org.trellisldp', name: 'trellis-vocabulary', version: trellisVocabularyVersion
-    implementation group: 'org.slf4j', name: 'slf4j-api', version: slf4jVersion
     implementation group: 'commons-codec', name: 'commons-codec', version: commonsCodecVersion
     implementation group: 'commons-io', name: 'commons-io', version: commonsIoVersion
     implementation group: 'org.apache.commons', name: 'commons-rdf-jena', version: commonsRdfVersion
     implementation group: 'org.apache.jena', name: 'jena-osgi', version: jenaVersion
+    implementation group: 'org.slf4j', name: 'slf4j-api', version: slf4jVersion
+    implementation group: 'org.trellisldp', name: 'trellis-vocabulary', version: trellisVocabularyVersion
 
-    testCompile group: 'org.apache.curator', name: 'curator-test', version: curatorVersion
-    testCompile group: 'junit', name: 'junit', version: junitVersion
-    testCompile group: 'org.mockito', name: 'mockito-core', version: mockitoVersion
-    testCompile group: 'ch.qos.logback', name: 'logback-classic', version: logbackVersion
+    testImplementation group: 'ch.qos.logback', name: 'logback-classic', version: logbackVersion
+    testImplementation group: 'junit', name: 'junit', version: junitVersion
+    testImplementation group: 'org.apache.curator', name: 'curator-test', version: curatorVersion
+    testImplementation group: 'org.mockito', name: 'mockito-core', version: mockitoVersion
 
     buildToolsConfig 'org.trellisldp:trellis-build-tools:0.1.1'
 }

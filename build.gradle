@@ -23,6 +23,7 @@ group = 'org.trellisldp'
 description = 'File-based Trellis Implementation'
 
 ext {
+    moduleName = "org.trellisldp.rosid.file"
     vendor = 'Trellis LDP'
     homepage = 'http://www.trellisldp.org'
     docURL = 'http://www.trellisldp.org/apidocs'
@@ -72,7 +73,7 @@ dependencies {
     testImplementation group: 'org.apache.curator', name: 'curator-test', version: curatorVersion
     testImplementation group: 'org.mockito', name: 'mockito-core', version: mockitoVersion
 
-    buildToolsConfig 'org.trellisldp:trellis-build-tools:0.1.1'
+    buildToolsConfig 'org.trellisldp:trellis-build-tools:0.2.0'
 }
 
 repositories {
@@ -110,9 +111,9 @@ jar {
         vendor project.vendor
         license project.license
 
-        instruction 'Automatic-Module-Name', 'org.trellisldp.rosid.file'
+        instruction 'Automatic-Module-Name', moduleName
         instruction 'Import-Package', '*'
-        instruction 'Export-Package', "org.trellisldp.rosid.file;version=${projectOsgiVersion}"
+        instruction 'Export-Package', "${moduleName};version=${projectOsgiVersion}"
     }
 }
 
@@ -239,6 +240,7 @@ task processBuildTools(type: Copy) {
 checkstyle {
     configFile = rootProject.file('build/checkstyle/checkstyle.xml')
     configProperties.checkstyleConfigDir = rootProject.file('build/checkstyle/')
+    toolVersion = "8.1"
 }
 
 sonarqube {

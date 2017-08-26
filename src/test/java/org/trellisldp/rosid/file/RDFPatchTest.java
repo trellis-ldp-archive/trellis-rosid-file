@@ -157,6 +157,7 @@ public class RDFPatchTest {
         final File file = new File(getClass().getResource("/readonly/resource.rdfp").toURI());
         assumeTrue(file.setWritable(false));
         assertFalse(RDFPatch.write(file, empty(), empty(), now()));
+        file.setWritable(true);
     }
 
     @Test(expected = NoSuchElementException.class)

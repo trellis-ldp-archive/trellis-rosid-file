@@ -97,19 +97,25 @@ public class CachedResourceTest {
     public void testWriteError() {
         assumeTrue(readonly.setWritable(false));
         assertFalse(CachedResource.write(readonly, identifier, now()));
+        readonly.setWritable(true);
     }
 
     @Test
     public void testWriteErrorResource() {
-        assumeTrue(readonly2.setWritable(true));
-        assumeTrue(new File(readonly2, RESOURCE_CACHE).setWritable(false));
+        final File resource = new File(readonly2, RESOURCE_CACHE);
+        assumeTrue(resource.setWritable(false));
+        assumeTrue(readonly2.setWritable(false));
         assertFalse(CachedResource.write(readonly2, identifier, now()));
+        readonly2.setWritable(true);
+        resource.setWritable(true);
     }
 
     @Test
     public void testWriteError2() {
+        final File resource = new File(readonly2, MEMENTO_CACHE);
         assumeTrue(readonly2.setWritable(true));
-        assumeTrue(new File(readonly2, MEMENTO_CACHE).setWritable(false));
+        assumeTrue(resource.setWritable(false));
         assertFalse(CachedResource.write(readonly2, identifier, now()));
+        resource.setWritable(true);
     }
 }

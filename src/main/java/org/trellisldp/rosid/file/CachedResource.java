@@ -24,7 +24,6 @@ import static java.nio.file.StandardOpenOption.WRITE;
 import static java.time.Instant.now;
 import static java.time.Instant.parse;
 import static java.util.Objects.isNull;
-import static java.util.Objects.nonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.Spliterator.IMMUTABLE;
 import static java.util.Spliterator.NONNULL;
@@ -44,11 +43,9 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Iterator;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -163,6 +160,7 @@ public class CachedResource extends AbstractFileResource {
         } catch (final IOException ex) {
             LOGGER.error("Error writing resource metadata cache for {}: {}",
                     identifier.getIRIString(), ex.getMessage());
+            return false;
         }
 
         // Write the quads
@@ -204,30 +202,29 @@ public class CachedResource extends AbstractFileResource {
 
     @Override
     public Stream<VersionRange> getMementos() {
-        return StreamSupport.stream(spliteratorUnknownSize(new MementoReader(new File(directory, MEMENTO_CACHE)),
-                    IMMUTABLE | NONNULL | ORDERED), false);
+        final MementoReader reader = new MementoReader(new File(directory, MEMENTO_CACHE));
+        return StreamSupport.stream(spliteratorUnknownSize(reader, IMMUTABLE | NONNULL | ORDERED), false)
+            .onClose(reader::close);
     }
 
     @Override
     public Stream<Quad> stream() {
-        return Optional.of(new File(directory, RESOURCE_QUADS)).filter(File::exists).map(File::toPath)
-            .map(uncheckedLines).orElse(empty())
-            .map(line -> stringToQuad(rdf, line)).filter(Optional::isPresent).map(Optional::get);
-    }
-
-    private Function<Path, Stream<String>> uncheckedLines = path -> {
-        try {
-            return lines(path);
-        } catch (final IOException ex) {
-            LOGGER.warn("Could not read file at {}: {}", path.toString(), ex.getMessage());
+        final File file = new File(directory, RESOURCE_QUADS);
+        if (file.exists()) {
+            try {
+                return lines(file.toPath()).map(line -> stringToQuad(rdf, line)).filter(Optional::isPresent)
+                    .map(Optional::get);
+            } catch (final IOException ex) {
+                LOGGER.warn("Could not read file at {}: {}", file, ex.getMessage());
+            }
         }
         return empty();
-    };
+    }
 
     /**
      * A class for reading a file of change times
      */
-    private static class MementoReader implements Iterator<VersionRange>, AutoCloseable {
+    static class MementoReader implements Iterator<VersionRange>, AutoCloseable {
         private final Iterator<String> lineIter;
         private Stream<String> dateLines;
         private Instant from = null;
@@ -256,14 +253,10 @@ public class CachedResource extends AbstractFileResource {
 
         @Override
         public VersionRange next() {
-            final String line = lineIter.next();
-            if (nonNull(line)) {
-                final Instant until = parse(line);
-                final VersionRange range = new VersionRange(from, until);
-                from = until;
-                return range;
-            }
-            return null;
+            final Instant until = parse(lineIter.next());
+            final VersionRange range = new VersionRange(from, until);
+            from = until;
+            return range;
         }
 
         @Override

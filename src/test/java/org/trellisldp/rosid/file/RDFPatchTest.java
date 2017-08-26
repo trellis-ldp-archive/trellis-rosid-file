@@ -21,7 +21,9 @@ import static java.util.stream.Stream.of;
 import static java.time.Instant.parse;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
 import org.trellisldp.api.VersionRange;
 import org.trellisldp.vocabulary.DC;
@@ -31,9 +33,11 @@ import org.trellisldp.vocabulary.Trellis;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import org.apache.commons.rdf.api.Graph;
 import org.apache.commons.rdf.api.IRI;
@@ -146,5 +150,51 @@ public class RDFPatchTest {
         assertEquals(1L, versions.size());
         assertEquals(time, versions.get(0).getFrom());
         assertEquals(later, versions.get(0).getUntil());
+    }
+
+    @Test
+    public void testWriteErrors() throws Exception {
+        final File file = new File(getClass().getResource("/readonly/resource.rdfp").toURI());
+        assumeTrue(file.setWritable(false));
+        assertFalse(RDFPatch.write(file, empty(), empty(), now()));
+    }
+
+    @Test(expected = NoSuchElementException.class)
+    public void testStreamReader() throws Exception {
+        final File file = new File(getClass().getResource("/journal1.txt").toURI());
+        final Instant time = parse("2017-02-11T02:51:35Z");
+        try (final RDFPatch.StreamReader reader = new RDFPatch.StreamReader(rdf, file, identifier, time)) {
+            while (reader.hasNext()) {
+                assertNotNull(reader.next());
+            }
+            reader.next();
+        }
+    }
+
+    @Test(expected = NoSuchElementException.class)
+    public void testTimeMapReader() throws Exception {
+        final File file = new File(resDir1, RESOURCE_JOURNAL);
+        try (final RDFPatch.TimeMapReader reader = new RDFPatch.TimeMapReader(file)) {
+            while (reader.hasNext()) {
+                assertNotNull(reader.next());
+            }
+            reader.next();
+        }
+    }
+
+    @Test(expected = UncheckedIOException.class)
+    public void testStreamReaderNoFile() throws Exception {
+        final String dir = new File(getClass().getResource("/journal1.txt").toURI()).getParent();
+        final File file = new File(dir, "non-existent-resource");
+        assertFalse(file.exists());
+        new RDFPatch.StreamReader(rdf, file, identifier, now());
+    }
+
+    @Test(expected = UncheckedIOException.class)
+    public void testTimeMapReaderNoFile() throws Exception {
+        final String dir = new File(getClass().getResource("/journal1.txt").toURI()).getParent();
+        final File file = new File(dir, "non-existent-resource");
+        assertFalse(file.exists());
+        new RDFPatch.TimeMapReader(file);
     }
 }

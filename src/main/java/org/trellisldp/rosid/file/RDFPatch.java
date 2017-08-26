@@ -38,6 +38,7 @@ import java.io.UncheckedIOException;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -73,8 +74,8 @@ final class RDFPatch {
      * @return a stream of RDF triples
      */
     public static Stream<Quad> asStream(final RDF rdf, final File file, final IRI identifier, final Instant time) {
-        return stream(spliteratorUnknownSize(new StreamReader(rdf, file, identifier, time),
-                    IMMUTABLE | NONNULL | ORDERED), false);
+        final StreamReader reader = new StreamReader(rdf, file, identifier, time);
+        return stream(spliteratorUnknownSize(reader, IMMUTABLE | NONNULL | ORDERED), false).onClose(reader::close);
     }
 
     /**
@@ -83,7 +84,8 @@ final class RDFPatch {
      * @return a stream of VersionRange objects
      */
     public static Stream<VersionRange> asTimeMap(final File file) {
-        return stream(spliteratorUnknownSize(new TimeMapReader(file), IMMUTABLE | NONNULL | ORDERED), false);
+        final TimeMapReader reader = new TimeMapReader(file);
+        return stream(spliteratorUnknownSize(reader, IMMUTABLE | NONNULL | ORDERED), false).onClose(reader::close);
     }
 
     /**
@@ -108,7 +110,7 @@ final class RDFPatch {
             }
             writer.write(END + time + lineSeparator());
         } catch (final IOException ex) {
-            LOGGER.error("Error writing data to resource {}: {}", file.toString(), ex.getMessage());
+            LOGGER.error("Error writing data to resource {}: {}", file, ex.getMessage());
             return false;
         }
         return true;
@@ -123,7 +125,7 @@ final class RDFPatch {
     /**
      * A class for reading an RDF Patch file into a VersionRange Iterator
      */
-    private static class TimeMapReader implements Iterator<VersionRange>, AutoCloseable {
+    static class TimeMapReader implements Iterator<VersionRange>, AutoCloseable {
         private final Stream<String> lineStream;
         private final Iterator<String> allLines;
         private Instant from = null;
@@ -153,7 +155,10 @@ final class RDFPatch {
         public VersionRange next() {
             final VersionRange range = buffer;
             tryAdvance();
-            return range;
+            if (nonNull(range)) {
+                return range;
+            }
+            throw new NoSuchElementException();
         }
 
         @Override
@@ -188,7 +193,7 @@ final class RDFPatch {
     /**
      * A class for reading an RDFPatch file into a Quad Iterator.
      */
-    private static class StreamReader implements Iterator<Quad> {
+    static class StreamReader implements Iterator<Quad>, AutoCloseable {
 
         private final Set<Quad> deleted = new HashSet<>();
         private final ReversedLinesFileReader reader;
@@ -231,7 +236,19 @@ final class RDFPatch {
         public Quad next() {
             final Quad quad = buffer;
             tryAdvance();
-            return quad;
+            if (nonNull(quad)) {
+                return quad;
+            }
+            throw new NoSuchElementException();
+        }
+
+        @Override
+        public void close() {
+            try {
+                reader.close();
+            } catch (final IOException ex) {
+                throw new UncheckedIOException(ex);
+            }
         }
 
         private void tryAdvance() {

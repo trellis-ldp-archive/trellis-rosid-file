@@ -19,6 +19,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 import static org.trellisldp.rosid.file.Constants.MEMENTO_CACHE;
+import static org.trellisldp.rosid.file.Constants.RESOURCE_CACHE;
 
 import java.io.File;
 import java.util.NoSuchElementException;
@@ -38,13 +39,13 @@ public class CachedResourceTest {
 
     private static final RDF rdf = new JenaRDF();
 
-    private File file2, file3, readonly, readonly2, ldprs;
+    private File file5, file3, readonly, readonly2, ldprs;
     private IRI identifier = rdf.createIRI("trellis:repository/resource");
 
     @Before
     public void setUp() throws Exception {
         ldprs = new File(getClass().getResource("/ldprs").toURI());
-        file2 = new File(getClass().getResource("/res2").toURI());
+        file5 = new File(getClass().getResource("/res5").toURI());
         file3 = new File(getClass().getResource("/res3").toURI());
         readonly = new File(getClass().getResource("/readonly").toURI());
         readonly2 = new File(getClass().getResource("/readonly2").toURI());
@@ -58,7 +59,7 @@ public class CachedResourceTest {
 
     @Test
     public void testNonExistent2() {
-        final Optional<Resource> resource = CachedResource.find(file2, identifier);
+        final Optional<Resource> resource = CachedResource.find(file5, identifier);
         assertTrue(resource.isPresent());
         assertFalse(resource.get().stream().findFirst().isPresent());
     }
@@ -96,6 +97,13 @@ public class CachedResourceTest {
     public void testWriteError() {
         assumeTrue(readonly.setWritable(false));
         assertFalse(CachedResource.write(readonly, identifier, now()));
+    }
+
+    @Test
+    public void testWriteErrorResource() {
+        assumeTrue(readonly2.setWritable(true));
+        assumeTrue(new File(readonly2, RESOURCE_CACHE).setWritable(false));
+        assertFalse(CachedResource.write(readonly2, identifier, now()));
     }
 
     @Test

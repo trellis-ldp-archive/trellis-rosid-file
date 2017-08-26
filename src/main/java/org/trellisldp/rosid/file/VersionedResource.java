@@ -13,6 +13,7 @@
  */
 package org.trellisldp.rosid.file;
 
+import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableSet;
 import static java.util.Optional.of;
 import static java.util.stream.Stream.empty;
@@ -53,15 +54,9 @@ public class VersionedResource extends AbstractFileResource {
     private static final Logger LOGGER = getLogger(VersionedResource.class);
 
     /* User-controllable properties that become part of the core resource data */
-    private static final Set<IRI> specialUserProperties = unmodifiableSet(new HashSet<IRI>() { {
-        add(LDP.inbox);
-        add(LDP.membershipResource);
-        add(LDP.hasMemberRelation);
-        add(LDP.isMemberOfRelation);
-        add(LDP.insertedContentRelation);
-        add(OA.annotationService);
-        add(RDF.type);
-    }});
+    private static final Set<IRI> specialUserProperties = unmodifiableSet(new HashSet<>(
+                asList(LDP.inbox, LDP.membershipResource, LDP.hasMemberRelation, LDP.isMemberOfRelation,
+                    LDP.insertedContentRelation, OA.annotationService, RDF.type)));
 
     private static final Predicate<Quad> isServerManagedTriple = quad ->
         quad.getGraphName().filter(Trellis.PreferServerManaged::equals).isPresent();

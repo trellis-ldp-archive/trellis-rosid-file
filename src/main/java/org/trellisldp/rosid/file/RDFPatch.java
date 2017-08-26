@@ -123,7 +123,8 @@ final class RDFPatch {
     /**
      * A class for reading an RDF Patch file into a VersionRange Iterator
      */
-    private static class TimeMapReader implements Iterator<VersionRange> {
+    private static class TimeMapReader implements Iterator<VersionRange>, AutoCloseable {
+        private final Stream<String> lineStream;
         private final Iterator<String> allLines;
         private Instant from = null;
         private Boolean hasUserTriples = false;
@@ -135,10 +136,11 @@ final class RDFPatch {
          */
         public TimeMapReader(final File file) {
             try {
-                allLines = lines(file.toPath()).iterator();
+                lineStream = lines(file.toPath());
             } catch (final IOException ex) {
                 throw new UncheckedIOException(ex);
             }
+            allLines = lineStream.iterator();
             tryAdvance();
         }
 
@@ -152,6 +154,11 @@ final class RDFPatch {
             final VersionRange range = buffer;
             tryAdvance();
             return range;
+        }
+
+        @Override
+        public void close() {
+            lineStream.close();
         }
 
         private void tryAdvance() {

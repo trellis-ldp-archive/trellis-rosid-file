@@ -23,7 +23,6 @@ import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
 import static java.nio.file.StandardOpenOption.WRITE;
 import static java.time.Instant.now;
 import static java.time.Instant.parse;
-import static java.util.Collections.emptyIterator;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static java.util.Optional.ofNullable;
@@ -228,8 +227,9 @@ public class CachedResource extends AbstractFileResource {
     /**
      * A class for reading a file of change times
      */
-    private static class MementoReader implements Iterator<VersionRange> {
-        private final Iterator<String> dateLines;
+    private static class MementoReader implements Iterator<VersionRange>, AutoCloseable {
+        private final Iterator<String> lineIter;
+        private Stream<String> dateLines;
         private Instant from = null;
 
         /**
@@ -237,29 +237,26 @@ public class CachedResource extends AbstractFileResource {
          * @param file the file
          */
         public MementoReader(final File file) {
-            dateLines = getLines(file.toPath());
-            if (dateLines.hasNext()) {
-                from = parse(dateLines.next());
-            }
-        }
-
-        private static Iterator<String> getLines(final Path path) {
             try {
-                return lines(path).iterator();
+                dateLines = lines(file.toPath());
             } catch (final IOException ex) {
-                LOGGER.warn("Could not read Memento cache: {}", ex.getMessage());
+                LOGGER.warn("Could not read file: {}: {}", file.toPath(), ex.getMessage());
+                dateLines = empty();
             }
-            return emptyIterator();
+            lineIter = dateLines.iterator();
+            if (lineIter.hasNext()) {
+                from = parse(lineIter.next());
+            }
         }
 
         @Override
         public boolean hasNext() {
-            return dateLines.hasNext();
+            return lineIter.hasNext();
         }
 
         @Override
         public VersionRange next() {
-            final String line = dateLines.next();
+            final String line = lineIter.next();
             if (nonNull(line)) {
                 final Instant until = parse(line);
                 final VersionRange range = new VersionRange(from, until);
@@ -267,6 +264,11 @@ public class CachedResource extends AbstractFileResource {
                 return range;
             }
             return null;
+        }
+
+        @Override
+        public void close() {
+            dateLines.close();
         }
     }
 }

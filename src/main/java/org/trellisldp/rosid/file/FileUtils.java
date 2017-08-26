@@ -44,8 +44,8 @@ import org.apache.jena.sparql.core.DatasetGraph;
 public final class FileUtils {
 
     // The length of the CRC directory partition
-    public final static int LENGTH = 2;
-    public final static int MAX = 3;
+    public static final int LENGTH = 2;
+    public static final int MAX = 3;
 
     /**
      * Partition an identifier into a directory structure

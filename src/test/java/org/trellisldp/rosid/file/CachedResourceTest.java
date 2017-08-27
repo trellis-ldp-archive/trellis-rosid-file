@@ -20,8 +20,10 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 import static org.trellisldp.rosid.file.Constants.MEMENTO_CACHE;
 import static org.trellisldp.rosid.file.Constants.RESOURCE_CACHE;
+import static org.trellisldp.rosid.file.Constants.RESOURCE_QUADS;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
@@ -41,6 +43,7 @@ public class CachedResourceTest {
 
     private File file5, file3, readonly, readonly2, ldprs;
     private IRI identifier = rdf.createIRI("trellis:repository/resource");
+    private IRI ldprsIri = rdf.createIRI("trellis:repository/ldprs");
 
     @Before
     public void setUp() throws Exception {
@@ -101,13 +104,28 @@ public class CachedResourceTest {
     }
 
     @Test
-    public void testWriteErrorResource() {
-        final File resource = new File(readonly2, RESOURCE_CACHE);
-        assumeTrue(resource.setWritable(false));
-        assumeTrue(readonly2.setWritable(false));
-        assertFalse(CachedResource.write(readonly2, identifier, now()));
+    public void testWriteErrorResource() throws IOException {
+        final File cache = new File(readonly2, RESOURCE_CACHE);
+        final File mementos = new File(readonly2, MEMENTO_CACHE);
+        final File quads = new File(readonly2, RESOURCE_QUADS);
+
         readonly2.setWritable(true);
-        resource.setWritable(true);
+        cache.createNewFile();
+        mementos.createNewFile();
+        quads.createNewFile();
+
+        assumeTrue(mementos.setWritable(false));
+        assertFalse(CachedResource.write(readonly2, ldprsIri, now()));
+
+        assumeTrue(quads.setWritable(false));
+        assertFalse(CachedResource.write(readonly2, ldprsIri, now()));
+
+        assumeTrue(cache.setWritable(false));
+        assertFalse(CachedResource.write(readonly2, ldprsIri, now()));
+
+        quads.setWritable(true);
+        mementos.setWritable(true);
+        cache.setWritable(true);
     }
 
     @Test

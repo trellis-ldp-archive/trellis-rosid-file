@@ -40,6 +40,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -251,44 +252,60 @@ final class RDFPatch {
             }
         }
 
+        private Boolean isRDFPatchLine(final String line) {
+            return line.startsWith("A ") || line.startsWith("D ");
+        }
+
+        private Boolean quadHasModificationTriples(final Quad quad) {
+            return !quad.getGraphName().filter(Fedora.PreferInboundReferences::equals).isPresent();
+        }
+
+        private Boolean shouldProceed(final String line, final Quad buffer) {
+            return nonNull(line) && isNull(buffer);
+        }
+
+        private Consumer<Quad> quadHandler(final String prefix) {
+            return quad -> {
+                if (prefix.equals("D")) {
+                    deleted.add(quad);
+                } else if (prefix.equals("A") && !deleted.contains(quad)) {
+                    buffer = quad;
+                }
+
+                // Inbound refs don't cause the modification date to change
+                if (quadHasModificationTriples(quad)) {
+                    hasModificationTriples = true;
+                }
+            };
+        }
+
+        private void checkIfMovedIntoTarget(final String line) {
+            final Instant moment = parse(line.split(COMMENT_DELIM, 2)[1]);
+            if (!time.isBefore(moment)) {
+                buffer = rdf.createQuad(Trellis.PreferServerManaged, identifier, DC.modified,
+                        rdf.createLiteral(moment.toString(), XSD.dateTime));
+                hasModified = true;
+            }
+        }
+
         private void tryAdvance() {
             buffer = null;
-            while (nonNull(line) && isNull(buffer)) {
+            while (shouldProceed(line, buffer)) {
                 // Determine if the reader is within the target region
                 if (inRegion) {
                     // If the reader is in the target region, output any valid "A" quads and record any "D" quads
-                    if ((line.startsWith("A ") || line.startsWith("D "))) {
+                    if (isRDFPatchLine(line)) {
                         final String[] parts = line.split(" ", 2);
-                        stringToQuad(rdf, parts[1]).ifPresent(quad -> {
-                            if (parts[0].equals("D")) {
-                                deleted.add(quad);
-                            } else if (parts[0].equals("A") && !deleted.contains(quad)) {
-                                buffer = quad;
-                            }
-
-                            // Inbound refs don't cause the modification date to change
-                            if (!quad.getGraphName().filter(Fedora.PreferInboundReferences::equals).isPresent()) {
-                                hasModificationTriples = true;
-                            }
-                        });
+                        stringToQuad(rdf, parts[1]).ifPresent(quadHandler(parts[0]));
 
                     // If the reader is in the target region and the modified triple hasn't yet been emitted
                     } else if (line.startsWith(BEGIN) && hasModificationTriples && !hasModified) {
-                        final Instant moment = parse(line.split(COMMENT_DELIM, 2)[1]);
-                        if (!time.isBefore(moment)) {
-                            buffer = rdf.createQuad(Trellis.PreferServerManaged, identifier, DC.modified,
-                                    rdf.createLiteral(moment.toString(), XSD.dateTime));
-                            hasModified = true;
-                        }
+                        checkIfMovedIntoTarget(line);
                     }
 
-                } else if (line.startsWith(END)) {
-
-                    // Check if the reader has entered the target region
-                    final Instant moment = parse(line.split(COMMENT_DELIM, 2)[1]);
-                    if (!time.isBefore(moment)) {
-                        inRegion = true;
-                    }
+                // Check if the reader has entered the target region
+                } else if (line.startsWith(END) && !time.isBefore(parse(line.split(COMMENT_DELIM, 2)[1]))) {
+                    inRegion = true;
                 }
 
                 // Advance the reader

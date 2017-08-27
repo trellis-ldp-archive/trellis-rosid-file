@@ -26,26 +26,26 @@ import org.apache.commons.rdf.jena.JenaRDF;
 /**
  * @author acoburn
  */
-class BaseRdfTest {
+class TestUtils {
 
-    protected static final RDF rdf = new JenaRDF();
+    public static final RDF rdf = new JenaRDF();
 
-    protected static final Predicate<Quad> isUserManaged = quad ->
+    public static final Predicate<Quad> isUserManaged = quad ->
         quad.getGraphName().filter(Trellis.PreferUserManaged::equals).isPresent();
 
-    protected static final Predicate<Quad> isServerManaged = quad ->
+    public static final Predicate<Quad> isServerManaged = quad ->
         quad.getGraphName().filter(Trellis.PreferServerManaged::equals).isPresent();
 
-    protected static final Predicate<Quad> isContainment = quad ->
+    public static final Predicate<Quad> isContainment = quad ->
         quad.getGraphName().filter(LDP.PreferContainment::equals).isPresent();
 
-    protected static final Predicate<Quad> isMembership = quad ->
+    public static final Predicate<Quad> isMembership = quad ->
         quad.getGraphName().filter(LDP.PreferMembership::equals).isPresent();
 
-    protected static final Predicate<Quad> isInbound = quad ->
+    public static final Predicate<Quad> isInbound = quad ->
         quad.getGraphName().filter(Fedora.PreferInboundReferences::equals).isPresent();
 
-    protected BaseRdfTest() {
-
+    private TestUtils() {
+        // Prevent instantiation
     }
 }

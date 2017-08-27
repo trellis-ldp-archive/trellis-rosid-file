@@ -39,6 +39,7 @@ import org.slf4j.Logger;
 import org.trellisldp.api.Resource;
 import org.trellisldp.api.VersionRange;
 import org.trellisldp.rosid.common.ResourceData;
+import org.trellisldp.spi.RuntimeRepositoryException;
 import org.trellisldp.vocabulary.LDP;
 import org.trellisldp.vocabulary.OA;
 import org.trellisldp.vocabulary.RDF;
@@ -122,9 +123,12 @@ public class VersionedResource extends AbstractFileResource {
      */
     public static Optional<ResourceData> read(final File directory, final IRI identifier, final Instant time) {
         return of(new File(directory, RESOURCE_JOURNAL)).filter(File::exists).flatMap(file -> {
-            final Dataset dataset = rdf.createDataset();
-            asStream(rdf, file, identifier, time).filter(isResourceTriple).forEach(dataset::add);
-            return from(identifier, dataset);
+            try (final Dataset dataset = rdf.createDataset()) {
+                asStream(rdf, file, identifier, time).filter(isResourceTriple).forEach(dataset::add);
+                return from(identifier, dataset);
+            } catch (final Exception ex) {
+                throw new RuntimeRepositoryException("Error processing dataset", ex);
+            }
         });
     }
 

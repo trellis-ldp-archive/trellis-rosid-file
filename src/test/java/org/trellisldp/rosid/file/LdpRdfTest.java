@@ -13,7 +13,6 @@
  */
 package org.trellisldp.rosid.file;
 
-import static org.trellisldp.vocabulary.RDF.type;
 import static java.time.Instant.parse;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
@@ -21,6 +20,8 @@ import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.trellisldp.rosid.file.TestUtils.rdf;
+import static org.trellisldp.vocabulary.RDF.type;
 
 import java.io.File;
 import java.time.Instant;
@@ -41,7 +42,7 @@ import org.junit.Test;
 /**
  * @author acoburn
  */
-public class LdpRdfTest extends BaseRdfTest {
+public class LdpRdfTest {
 
     private File file;
     private IRI identifier = rdf.createIRI("trellis:repository/ldprs");
@@ -69,14 +70,14 @@ public class LdpRdfTest extends BaseRdfTest {
         assertEquals(2L, res.getTypes().count());
         assertTrue(res.getTypes().anyMatch(rdf.createIRI("http://example.org/types/Foo")::equals));
         assertTrue(res.getTypes().anyMatch(rdf.createIRI("http://example.org/types/Bar")::equals));
-        assertEquals(0L, res.stream().filter(isContainment.or(isMembership)).count());
+        assertEquals(0L, res.stream().filter(TestUtils.isContainment.or(TestUtils.isMembership)).count());
 
         final List<VersionRange> mementos = res.getMementos().collect(toList());
         assertEquals(1L, mementos.size());
         assertEquals(parse("2017-02-15T10:05:00Z"), mementos.get(0).getFrom());
         assertEquals(parse("2017-02-15T11:15:00Z"), mementos.get(0).getUntil());
 
-        final List<Triple> triples = res.stream().filter(isUserManaged).map(Quad::asTriple).collect(toList());
+        final List<Triple> triples = res.stream().filter(TestUtils.isUserManaged).map(Quad::asTriple).collect(toList());
         assertEquals(5L, triples.size());
         assertTrue(triples.contains(rdf.createTriple(identifier, LDP.inbox,
                         rdf.createIRI("http://example.org/receiver/inbox"))));
@@ -89,13 +90,14 @@ public class LdpRdfTest extends BaseRdfTest {
         assertTrue(triples.contains(rdf.createTriple(rdf.createIRI("http://example.org/some/other/resource"),
                     RDFS.label, rdf.createLiteral("Some other resource", "eng"))));
 
-        final List<Triple> server = res.stream().filter(isServerManaged).map(Quad::asTriple).collect(toList());
+        final List<Triple> server = res.stream().filter(TestUtils.isServerManaged).map(Quad::asTriple)
+            .collect(toList());
         assertEquals(2L, server.size());
         assertTrue(server.contains(rdf.createTriple(identifier, DC.modified,
                         rdf.createLiteral("2017-02-15T11:15:00Z", XSD.dateTime))));
         assertTrue(server.contains(rdf.createTriple(identifier, type, LDP.RDFSource)));
 
-        final List<Triple> inbound = res.stream().filter(isInbound).map(Quad::asTriple).collect(toList());
+        final List<Triple> inbound = res.stream().filter(TestUtils.isInbound).map(Quad::asTriple).collect(toList());
         assertEquals(2L, inbound.size());
         assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/resource"),
                         DC.hasPart, identifier)));
@@ -121,9 +123,9 @@ public class LdpRdfTest extends BaseRdfTest {
         assertEquals(2L, res.getTypes().count());
         assertTrue(res.getTypes().anyMatch(rdf.createIRI("http://example.org/types/Foo")::equals));
         assertTrue(res.getTypes().anyMatch(rdf.createIRI("http://example.org/types/Bar")::equals));
-        assertEquals(0L, res.stream().filter(isContainment.or(isMembership)).count());
+        assertEquals(0L, res.stream().filter(TestUtils.isContainment.or(TestUtils.isMembership)).count());
 
-        final List<Triple> triples = res.stream().filter(isUserManaged).map(Quad::asTriple).collect(toList());
+        final List<Triple> triples = res.stream().filter(TestUtils.isUserManaged).map(Quad::asTriple).collect(toList());
         assertEquals(5L, triples.size());
         assertTrue(triples.contains(rdf.createTriple(identifier, LDP.inbox,
                         rdf.createIRI("http://example.org/receiver/inbox"))));
@@ -136,7 +138,7 @@ public class LdpRdfTest extends BaseRdfTest {
         assertTrue(triples.contains(rdf.createTriple(rdf.createIRI("http://example.org/some/other/resource"),
                     RDFS.label, rdf.createLiteral("Some other resource", "eng"))));
 
-        final List<Triple> inbound = res.stream().filter(isInbound).map(Quad::asTriple).collect(toList());
+        final List<Triple> inbound = res.stream().filter(TestUtils.isInbound).map(Quad::asTriple).collect(toList());
         assertEquals(3L, inbound.size());
         assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/resource"),
                         DC.hasPart, identifier)));
@@ -167,12 +169,12 @@ public class LdpRdfTest extends BaseRdfTest {
         assertEquals(empty(), res.getInbox());
         assertEquals(parse("2017-02-15T10:05:00Z"), res.getModified());
         assertEquals(0L, res.getTypes().count());
-        assertEquals(0L, res.stream().filter(isContainment.or(isMembership)).count());
+        assertEquals(0L, res.stream().filter(TestUtils.isContainment.or(TestUtils.isMembership)).count());
 
-        final List<Triple> triples = res.stream().filter(isUserManaged).map(Quad::asTriple).collect(toList());
+        final List<Triple> triples = res.stream().filter(TestUtils.isUserManaged).map(Quad::asTriple).collect(toList());
         assertEquals(0L, triples.size());
 
-        final List<Triple> inbound = res.stream().filter(isInbound).map(Quad::asTriple).collect(toList());
+        final List<Triple> inbound = res.stream().filter(TestUtils.isInbound).map(Quad::asTriple).collect(toList());
         assertEquals(2L, inbound.size());
         assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/resource"),
                         DC.hasPart, identifier)));
@@ -208,9 +210,9 @@ public class LdpRdfTest extends BaseRdfTest {
         assertEquals(2L, res.getTypes().count());
         assertTrue(res.getTypes().anyMatch(rdf.createIRI("http://example.org/types/Foo")::equals));
         assertTrue(res.getTypes().anyMatch(rdf.createIRI("http://example.org/types/Bar")::equals));
-        assertEquals(0L, res.stream().filter(isContainment.or(isMembership)).count());
+        assertEquals(0L, res.stream().filter(TestUtils.isContainment.or(TestUtils.isMembership)).count());
 
-        final List<Triple> triples = res.stream().filter(isUserManaged).map(Quad::asTriple).collect(toList());
+        final List<Triple> triples = res.stream().filter(TestUtils.isUserManaged).map(Quad::asTriple).collect(toList());
         assertEquals(5L, triples.size());
         assertTrue(triples.contains(rdf.createTriple(identifier, LDP.inbox,
                         rdf.createIRI("http://example.org/receiver/inbox"))));
@@ -223,7 +225,7 @@ public class LdpRdfTest extends BaseRdfTest {
         assertTrue(triples.contains(rdf.createTriple(rdf.createIRI("http://example.org/some/other/resource"),
                     RDFS.label, rdf.createLiteral("Some other resource", "eng"))));
 
-        final List<Triple> inbound = res.stream().filter(isInbound).map(Quad::asTriple).collect(toList());
+        final List<Triple> inbound = res.stream().filter(TestUtils.isInbound).map(Quad::asTriple).collect(toList());
         assertEquals(3L, inbound.size());
         assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/resource"),
                         DC.hasPart, identifier)));

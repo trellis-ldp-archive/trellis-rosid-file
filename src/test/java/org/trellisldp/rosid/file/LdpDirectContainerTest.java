@@ -157,8 +157,8 @@ public class LdpDirectContainerTest {
         assertEquals(2L, mementos.size());
         assertEquals(parse("2017-02-15T10:05:00Z"), mementos.get(0).getFrom());
         assertEquals(parse("2017-02-15T11:15:00Z"), mementos.get(0).getUntil());
-        System.out.println(mementos.get(1).getFrom());
-        System.out.println(mementos.get(1).getUntil());
+        assertEquals(parse("2017-02-15T11:15:00Z"), mementos.get(1).getFrom());
+        assertEquals(parse("2017-03-01T15:15:00Z"), mementos.get(1).getUntil());
     }
 
     @Test

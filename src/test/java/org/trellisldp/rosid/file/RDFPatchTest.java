@@ -146,7 +146,7 @@ public class RDFPatchTest {
         RDFPatch.write(file, empty(), of(rdf.createQuad(LDP.PreferContainment, identifier, LDP.contains,
                     rdf.createIRI("trellis:repository/resource/1"))), later.plusSeconds(10L));
 
-        final List<VersionRange> versions = RDFPatch.asTimeMap(file).collect(toList());
+        final List<VersionRange> versions = RDFPatch.asTimeMap(file);
         assertEquals(1L, versions.size());
         assertEquals(time, versions.get(0).getFrom());
         assertEquals(later, versions.get(0).getUntil());

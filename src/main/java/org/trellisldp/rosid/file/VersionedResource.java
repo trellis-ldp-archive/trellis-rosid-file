@@ -26,6 +26,7 @@ import static org.trellisldp.rosid.file.RDFPatch.asTimeMap;
 import java.io.File;
 import java.time.Instant;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -152,7 +153,7 @@ public class VersionedResource extends AbstractFileResource {
     }
 
     @Override
-    public Stream<VersionRange> getMementos() {
+    public List<VersionRange> getMementos() {
         return asTimeMap(new File(directory, RESOURCE_JOURNAL));
     }
 

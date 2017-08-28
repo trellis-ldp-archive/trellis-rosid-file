@@ -21,6 +21,7 @@ import static java.nio.file.Files.newBufferedWriter;
 import static java.nio.file.StandardOpenOption.APPEND;
 import static java.nio.file.StandardOpenOption.CREATE;
 import static java.time.Instant.parse;
+import static java.util.Collections.unmodifiableList;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static java.util.Spliterator.IMMUTABLE;
@@ -36,8 +37,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -82,11 +85,14 @@ final class RDFPatch {
     /**
      * Retrieve time values for the history of the resource
      * @param file the file
-     * @return a stream of VersionRange objects
+     * @return a list of VersionRange objects
      */
-    public static Stream<VersionRange> asTimeMap(final File file) {
-        final TimeMapReader reader = new TimeMapReader(file);
-        return stream(spliteratorUnknownSize(reader, IMMUTABLE | NONNULL | ORDERED), false).onClose(reader::close);
+    public static List<VersionRange> asTimeMap(final File file) {
+        final List<VersionRange> ranges = new ArrayList<>();
+        try (final TimeMapReader reader = new TimeMapReader(file)) {
+            reader.forEachRemaining(ranges::add);
+        }
+        return unmodifiableList(ranges);
     }
 
     /**

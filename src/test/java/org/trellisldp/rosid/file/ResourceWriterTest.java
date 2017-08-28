@@ -73,7 +73,6 @@ public class ResourceWriterTest {
         resource.ifPresent(res -> {
             assertEquals(identifier, res.getIdentifier());
             assertEquals(LDP.RDFSource, res.getInteractionModel());
-            assertEquals(empty(), res.getContains().findFirst());
             assertEquals(empty(), res.getMembershipResource());
             assertEquals(empty(), res.getMemberRelation());
             assertEquals(empty(), res.getMemberOfRelation());
@@ -82,9 +81,9 @@ public class ResourceWriterTest {
             assertFalse(res.isMemento());
             assertEquals(of(rdf.createIRI("http://example.org/receiver/inbox")), res.getInbox());
             assertEquals(parse("2017-03-03T02:34:12Z"), res.getModified());
-            assertEquals(2L, res.getTypes().count());
-            assertTrue(res.getTypes().anyMatch(rdf.createIRI("http://example.org/types/Foo")::equals));
-            assertTrue(res.getTypes().anyMatch(rdf.createIRI("http://example.org/types/Bar")::equals));
+            assertEquals(2L, res.getTypes().size());
+            assertTrue(res.getTypes().contains(rdf.createIRI("http://example.org/types/Foo")));
+            assertTrue(res.getTypes().contains(rdf.createIRI("http://example.org/types/Bar")));
             assertEquals(0L, res.stream().filter(TestUtils.isContainment.or(TestUtils.isMembership)).count());
 
             final List<Triple> triples = res.stream().filter(TestUtils.isUserManaged).map(Quad::asTriple)
@@ -110,7 +109,7 @@ public class ResourceWriterTest {
             assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/other/item"),
                             DC.hasPart, identifier)));
 
-            final List<VersionRange> mementos = res.getMementos().collect(toList());
+            final List<VersionRange> mementos = res.getMementos();
             assertEquals(3L, mementos.size());
             assertEquals(parse("2017-02-15T10:05:00Z"), mementos.get(0).getFrom());
             assertEquals(parse("2017-02-15T11:15:00Z"), mementos.get(0).getUntil());
@@ -129,7 +128,6 @@ public class ResourceWriterTest {
         resource.ifPresent(res -> {
             assertEquals(identifier, res.getIdentifier());
             assertEquals(LDP.RDFSource, res.getInteractionModel());
-            assertEquals(empty(), res.getContains().findFirst());
             assertEquals(empty(), res.getMembershipResource());
             assertEquals(empty(), res.getMemberRelation());
             assertEquals(empty(), res.getMemberOfRelation());
@@ -138,7 +136,7 @@ public class ResourceWriterTest {
             assertFalse(res.isMemento());
             assertEquals(empty(), res.getInbox());
             assertEquals(parse("2017-02-15T10:05:00Z"), res.getModified());
-            assertEquals(0L, res.getTypes().count());
+            assertEquals(0L, res.getTypes().size());
             assertEquals(0L, res.stream().filter(TestUtils.isContainment.or(TestUtils.isMembership)).count());
 
             final List<Triple> triples = res.stream().filter(TestUtils.isUserManaged).map(Quad::asTriple)
@@ -150,7 +148,7 @@ public class ResourceWriterTest {
             assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/other/item"),
                             DC.hasPart, identifier)));
 
-            final List<VersionRange> mementos = res.getMementos().collect(toList());
+            final List<VersionRange> mementos = res.getMementos();
             assertEquals(0L, mementos.size());
         });
     }

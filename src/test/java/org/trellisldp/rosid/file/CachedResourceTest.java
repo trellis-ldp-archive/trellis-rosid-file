@@ -14,6 +14,7 @@
 package org.trellisldp.rosid.file;
 
 import static java.time.Instant.now;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -136,4 +137,20 @@ public class CachedResourceTest {
         assertFalse(CachedResource.write(readonly2, identifier, now()));
         resource.setWritable(true);
     }
+
+    @Test
+    public void testReadError() {
+        final Optional<Resource> res = CachedResource.find(readonly2, rdf.createIRI("trellis:repository/ldpnr"));
+        assertTrue(res.isPresent());
+        final File mementos = new File(readonly2, MEMENTO_CACHE);
+        assumeTrue(mementos.setReadable(false));
+        assertTrue(res.get().getMementos().isEmpty());
+        mementos.setReadable(true);
+
+        final File quads = new File(readonly2, RESOURCE_QUADS);
+        assumeTrue(quads.setReadable(false));
+        assertEquals(0L, res.get().stream().count());
+        quads.setReadable(true);
+    }
+
 }

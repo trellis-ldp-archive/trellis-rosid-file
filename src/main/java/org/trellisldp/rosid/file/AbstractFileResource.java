@@ -13,19 +13,18 @@
  */
 package org.trellisldp.rosid.file;
 
+import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
-import static java.util.stream.Stream.empty;
-import static java.util.stream.Stream.of;
+import static java.util.stream.Collectors.toSet;
 import static org.trellisldp.spi.RDFUtils.getInstance;
 
 import java.io.File;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 import org.apache.commons.rdf.api.IRI;
-import org.apache.commons.rdf.api.Quad;
 import org.apache.commons.rdf.api.RDF;
 import org.trellisldp.api.Binary;
 import org.trellisldp.api.Resource;
@@ -67,27 +66,27 @@ abstract class AbstractFileResource implements Resource {
 
     @Override
     public IRI getInteractionModel() {
-        return ofNullable(data.ldpType).map(rdf::createIRI).orElse(LDP.Resource);
+        return ofNullable(data.getLdpType()).map(rdf::createIRI).orElse(LDP.Resource);
     }
 
     @Override
     public Optional<IRI> getMembershipResource() {
-        return ofNullable(data.membershipResource).map(rdf::createIRI);
+        return ofNullable(data.getMembershipResource()).map(rdf::createIRI);
     }
 
     @Override
     public Optional<IRI> getMemberRelation() {
-        return ofNullable(data.hasMemberRelation).map(rdf::createIRI);
+        return ofNullable(data.getHasMemberRelation()).map(rdf::createIRI);
     }
 
     @Override
     public Optional<IRI> getMemberOfRelation() {
-        return ofNullable(data.isMemberOfRelation).map(rdf::createIRI);
+        return ofNullable(data.getIsMemberOfRelation()).map(rdf::createIRI);
     }
 
     @Override
     public Optional<IRI> getInsertedContentRelation() {
-        final Optional<IRI> relation = ofNullable(data.insertedContentRelation).map(rdf::createIRI);
+        final Optional<IRI> relation = ofNullable(data.getInsertedContentRelation()).map(rdf::createIRI);
         if (!relation.isPresent() && LDP.DirectContainer.equals(getInteractionModel())) {
             return Optional.of(LDP.MemberSubject);
         }
@@ -96,38 +95,27 @@ abstract class AbstractFileResource implements Resource {
 
     @Override
     public Optional<IRI> getInbox() {
-        return ofNullable(data.inbox).map(rdf::createIRI);
+        return ofNullable(data.getInbox()).map(rdf::createIRI);
     }
 
     @Override
     public Optional<IRI> getAnnotationService() {
-        return ofNullable(data.annotationService).map(rdf::createIRI);
+        return ofNullable(data.getAnnotationService()).map(rdf::createIRI);
     }
 
     @Override
-    public Stream<IRI> getTypes() {
-        return ofNullable(data.userTypes).map(types -> types.stream().map(rdf::createIRI)).orElse(empty());
+    public Collection<IRI> getTypes() {
+        return ofNullable(data.getUserTypes()).orElse(emptyList()).stream().map(rdf::createIRI).collect(toSet());
     }
 
     @Override
     public Optional<Binary> getBinary() {
-        return ofNullable(data.binary).map(binary ->
-            new Binary(rdf.createIRI(binary.id), binary.modified, binary.format, binary.size));
+        return ofNullable(data.getBinary()).map(binary ->
+            new Binary(rdf.createIRI(binary.getId()), binary.getModified(), binary.getFormat(), binary.getSize()));
     }
 
     @Override
     public Instant getModified() {
-        return data.modified;
-    }
-
-    @Override
-    public Stream<IRI> getContains() {
-        return stream().filter(quad -> quad.getGraphName().filter(LDP.PreferContainment::equals).isPresent())
-            .map(Quad::getObject).flatMap(obj -> {
-                if (obj instanceof IRI) {
-                    return of((IRI) obj);
-                }
-                return empty();
-            });
+        return data.getModified();
     }
 }

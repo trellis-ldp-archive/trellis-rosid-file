@@ -23,12 +23,9 @@ import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
 import static java.nio.file.StandardOpenOption.WRITE;
 import static java.time.Instant.now;
 import static java.time.Instant.parse;
+import static java.util.Collections.unmodifiableList;
 import static java.util.Objects.isNull;
 import static java.util.Optional.ofNullable;
-import static java.util.Spliterator.IMMUTABLE;
-import static java.util.Spliterator.NONNULL;
-import static java.util.Spliterator.ORDERED;
-import static java.util.Spliterators.spliteratorUnknownSize;
 import static java.util.stream.Stream.empty;
 import static org.slf4j.LoggerFactory.getLogger;
 import static org.trellisldp.rosid.file.Constants.MEMENTO_CACHE;
@@ -44,10 +41,11 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Quad;
@@ -201,10 +199,12 @@ public class CachedResource extends AbstractFileResource {
     }
 
     @Override
-    public Stream<VersionRange> getMementos() {
-        final MementoReader reader = new MementoReader(new File(directory, MEMENTO_CACHE));
-        return StreamSupport.stream(spliteratorUnknownSize(reader, IMMUTABLE | NONNULL | ORDERED), false)
-            .onClose(reader::close);
+    public List<VersionRange> getMementos() {
+        final List<VersionRange> mementos = new ArrayList<>();
+        try (final MementoReader reader = new MementoReader(new File(directory, MEMENTO_CACHE))) {
+            reader.forEachRemaining(mementos::add);
+        }
+        return unmodifiableList(mementos);
     }
 
     @Override

@@ -65,6 +65,11 @@ abstract class AbstractFileResource implements Resource {
     }
 
     @Override
+    public Boolean hasAcl() {
+        return ofNullable(data.getHasAcl()).orElse(false);
+    }
+
+    @Override
     public IRI getInteractionModel() {
         return ofNullable(data.getLdpType()).map(rdf::createIRI).orElse(LDP.Resource);
     }

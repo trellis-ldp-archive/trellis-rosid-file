@@ -56,6 +56,7 @@ public class LdpBasicContainerTest {
         final Instant time = parse("2017-02-16T11:15:03Z");
         final Resource res = VersionedResource.find(file, identifier, time).get();
         assertEquals(identifier, res.getIdentifier());
+        assertFalse(res.hasAcl());
         assertEquals(LDP.BasicContainer, res.getInteractionModel());
         final List<IRI> contained = res.stream(LDP.PreferContainment).map(Triple::getObject).map(x -> (IRI)x)
             .collect(toList());

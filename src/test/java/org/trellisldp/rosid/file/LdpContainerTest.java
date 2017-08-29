@@ -56,6 +56,7 @@ public class LdpContainerTest {
         final Instant time = parse("2017-02-16T11:15:03Z");
         final Resource res = VersionedResource.find(file, identifier, time).get();
         assertEquals(identifier, res.getIdentifier());
+        assertFalse(res.hasAcl());
         assertEquals(LDP.Container, res.getInteractionModel());
         final List<IRI> contained = res.stream(LDP.PreferContainment).map(Triple::getObject).map(x -> (IRI) x)
             .collect(toList());
@@ -108,6 +109,7 @@ public class LdpContainerTest {
         final Instant time = parse("2017-03-15T11:15:00Z");
         final Resource res = VersionedResource.find(file, identifier, time).get();
         assertEquals(identifier, res.getIdentifier());
+        assertFalse(res.hasAcl());
         assertEquals(LDP.Container, res.getInteractionModel());
         final List<IRI> contained = res.stream(LDP.PreferContainment).map(Triple::getObject).map(x -> (IRI) x)
             .collect(toList());
@@ -162,6 +164,7 @@ public class LdpContainerTest {
         final Instant time = parse("2017-02-15T11:00:00Z");
         final Resource res = VersionedResource.find(file, identifier, time).get();
         assertEquals(identifier, res.getIdentifier());
+        assertFalse(res.hasAcl());
         assertEquals(LDP.Container, res.getInteractionModel());
         assertEquals(empty(), res.getMembershipResource());
         assertEquals(empty(), res.getMemberRelation());
@@ -200,6 +203,7 @@ public class LdpContainerTest {
     public void testCachedResource() {
         final Resource res = CachedResource.find(file, identifier).get();
         assertEquals(identifier, res.getIdentifier());
+        assertFalse(res.hasAcl());
         assertEquals(LDP.Container, res.getInteractionModel());
         final List<IRI> contained = res.stream(LDP.PreferContainment).map(Triple::getObject).map(x -> (IRI) x)
             .collect(toList());

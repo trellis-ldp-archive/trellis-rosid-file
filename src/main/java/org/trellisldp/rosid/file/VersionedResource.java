@@ -60,10 +60,14 @@ public class VersionedResource extends AbstractFileResource {
                 asList(LDP.inbox, LDP.membershipResource, LDP.hasMemberRelation, LDP.isMemberOfRelation,
                     LDP.insertedContentRelation, OA.annotationService, RDF.type)));
 
+    private static final Predicate<Quad> isAclTriple = quad ->
+        quad.getGraphName().filter(Trellis.PreferAccessControl::equals).isPresent() &&
+        RDF.type.equals(quad.getPredicate());
+
     private static final Predicate<Quad> isServerManagedTriple = quad ->
         quad.getGraphName().filter(Trellis.PreferServerManaged::equals).isPresent();
 
-    private static final Predicate<Quad> isResourceTriple = isServerManagedTriple.or(quad ->
+    private static final Predicate<Quad> isResourceTriple = isServerManagedTriple.or(isAclTriple).or(quad ->
         quad.getGraphName().filter(Trellis.PreferUserManaged::equals).isPresent() &&
         specialUserProperties.contains(quad.getPredicate()));
 

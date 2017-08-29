@@ -57,6 +57,7 @@ public class LdpRdfTest {
         final Instant time = parse("2017-02-15T11:15:00Z");
         final Resource res = VersionedResource.find(file, identifier, time).get();
         assertEquals(identifier, res.getIdentifier());
+        assertTrue(res.hasAcl());
         assertEquals(LDP.RDFSource, res.getInteractionModel());
         assertEquals(empty(), res.getMembershipResource());
         assertEquals(empty(), res.getMemberRelation());
@@ -109,6 +110,7 @@ public class LdpRdfTest {
         final Instant time = parse("2017-03-15T11:15:00Z");
         final Resource res = VersionedResource.find(file, identifier, time).get();
         assertEquals(identifier, res.getIdentifier());
+        assertTrue(res.hasAcl());
         assertEquals(LDP.RDFSource, res.getInteractionModel());
         assertEquals(empty(), res.getMembershipResource());
         assertEquals(empty(), res.getMemberRelation());
@@ -163,6 +165,7 @@ public class LdpRdfTest {
         assertEquals(empty(), res.getInsertedContentRelation());
         assertEquals(empty(), res.getBinary());
         assertTrue(res.isMemento());
+        assertFalse(res.hasAcl());
         assertEquals(empty(), res.getInbox());
         assertEquals(parse("2017-02-15T10:05:00Z"), res.getModified());
         assertEquals(0L, res.getTypes().size());
@@ -200,6 +203,7 @@ public class LdpRdfTest {
         assertEquals(empty(), res.getMemberOfRelation());
         assertEquals(empty(), res.getInsertedContentRelation());
         assertEquals(empty(), res.getBinary());
+        assertTrue(res.hasAcl());
         assertFalse(res.isMemento());
         assertEquals(of(rdf.createIRI("http://example.org/receiver/inbox")), res.getInbox());
         assertEquals(parse("2017-02-15T11:15:00Z"), res.getModified());

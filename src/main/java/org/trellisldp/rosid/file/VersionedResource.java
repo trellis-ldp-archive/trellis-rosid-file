@@ -16,7 +16,6 @@ package org.trellisldp.rosid.file;
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableSet;
 import static java.util.Optional.of;
-import static java.util.stream.Stream.empty;
 import static org.slf4j.LoggerFactory.getLogger;
 import static org.trellisldp.rosid.common.ResourceData.from;
 import static org.trellisldp.rosid.file.Constants.RESOURCE_JOURNAL;
@@ -164,6 +163,6 @@ public class VersionedResource extends AbstractFileResource {
     @Override
     public Stream<Quad> stream() {
         return of(new File(directory, RESOURCE_JOURNAL)).filter(File::exists)
-            .map(file -> asStream(rdf, file, identifier, time)).orElse(empty());
+            .map(file -> asStream(rdf, file, identifier, time)).orElseGet(Stream::empty);
     }
 }

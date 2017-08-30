@@ -14,6 +14,7 @@
 package org.trellisldp.rosid.file;
 
 import static java.util.Objects.requireNonNull;
+import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toSet;
 import static org.trellisldp.spi.RDFUtils.getInstance;
@@ -93,7 +94,7 @@ abstract class AbstractFileResource implements Resource {
     public Optional<IRI> getInsertedContentRelation() {
         final Optional<IRI> relation = ofNullable(data.getInsertedContentRelation()).map(rdf::createIRI);
         if (!relation.isPresent() && LDP.DirectContainer.equals(getInteractionModel())) {
-            return Optional.of(LDP.MemberSubject);
+            return of(LDP.MemberSubject);
         }
         return relation;
     }

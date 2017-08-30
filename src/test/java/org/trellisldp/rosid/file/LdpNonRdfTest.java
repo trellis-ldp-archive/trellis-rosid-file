@@ -14,7 +14,6 @@
 package org.trellisldp.rosid.file;
 
 import static java.time.Instant.parse;
-import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.assertEquals;
@@ -62,10 +61,10 @@ public class LdpNonRdfTest {
         final Resource res = VersionedResource.find(file, identifier, time).get();
         assertEquals(identifier, res.getIdentifier());
         assertEquals(LDP.NonRDFSource, res.getInteractionModel());
-        assertEquals(empty(), res.getMembershipResource());
-        assertEquals(empty(), res.getMemberRelation());
-        assertEquals(empty(), res.getMemberOfRelation());
-        assertEquals(empty(), res.getInsertedContentRelation());
+        assertFalse(res.getMembershipResource().isPresent());
+        assertFalse(res.getMemberRelation().isPresent());
+        assertFalse(res.getMemberOfRelation().isPresent());
+        assertFalse(res.getInsertedContentRelation().isPresent());
         assertTrue(res.getBinary().isPresent());
         res.getBinary().ifPresent(ds -> {
             assertEquals(binary, ds.getIdentifier());
@@ -111,10 +110,10 @@ public class LdpNonRdfTest {
         final Resource res = VersionedResource.find(file, identifier, time).get();
         assertEquals(identifier, res.getIdentifier());
         assertEquals(LDP.NonRDFSource, res.getInteractionModel());
-        assertEquals(empty(), res.getMembershipResource());
-        assertEquals(empty(), res.getMemberRelation());
-        assertEquals(empty(), res.getMemberOfRelation());
-        assertEquals(empty(), res.getInsertedContentRelation());
+        assertFalse(res.getMembershipResource().isPresent());
+        assertFalse(res.getMemberRelation().isPresent());
+        assertFalse(res.getMemberOfRelation().isPresent());
+        assertFalse(res.getInsertedContentRelation().isPresent());
         assertTrue(res.getBinary().isPresent());
         res.getBinary().ifPresent(ds -> {
             assertEquals(binary, ds.getIdentifier());
@@ -162,10 +161,10 @@ public class LdpNonRdfTest {
         final Resource res = VersionedResource.find(file, identifier, time).get();
         assertEquals(identifier, res.getIdentifier());
         assertEquals(LDP.NonRDFSource, res.getInteractionModel());
-        assertEquals(empty(), res.getMembershipResource());
-        assertEquals(empty(), res.getMemberRelation());
-        assertEquals(empty(), res.getMemberOfRelation());
-        assertEquals(empty(), res.getInsertedContentRelation());
+        assertFalse(res.getMembershipResource().isPresent());
+        assertFalse(res.getMemberRelation().isPresent());
+        assertFalse(res.getMemberOfRelation().isPresent());
+        assertFalse(res.getInsertedContentRelation().isPresent());
         assertTrue(res.getBinary().isPresent());
         res.getBinary().ifPresent(ds -> {
             assertEquals(binary, ds.getIdentifier());
@@ -174,7 +173,7 @@ public class LdpNonRdfTest {
             assertEquals(of("image/jpeg"), ds.getMimeType());
         });
         assertTrue(res.isMemento());
-        assertEquals(empty(), res.getInbox());
+        assertFalse(res.getInbox().isPresent());
         assertEquals(parse("2017-02-15T10:05:00Z"), res.getModified());
         assertEquals(0L, res.getTypes().size());
         assertEquals(0L, res.stream().filter(TestUtils.isContainment.or(TestUtils.isMembership)).count());
@@ -206,10 +205,10 @@ public class LdpNonRdfTest {
         final Resource res = CachedResource.find(file, identifier).get();
         assertEquals(identifier, res.getIdentifier());
         assertEquals(LDP.NonRDFSource, res.getInteractionModel());
-        assertEquals(empty(), res.getMembershipResource());
-        assertEquals(empty(), res.getMemberRelation());
-        assertEquals(empty(), res.getMemberOfRelation());
-        assertEquals(empty(), res.getInsertedContentRelation());
+        assertFalse(res.getMembershipResource().isPresent());
+        assertFalse(res.getMemberRelation().isPresent());
+        assertFalse(res.getMemberOfRelation().isPresent());
+        assertFalse(res.getInsertedContentRelation().isPresent());
         assertTrue(res.getBinary().isPresent());
         res.getBinary().ifPresent(ds -> {
             assertEquals(binary, ds.getIdentifier());

@@ -14,7 +14,6 @@
 package org.trellisldp.rosid.file;
 
 import static java.time.Instant.parse;
-import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.assertEquals;
@@ -73,11 +72,11 @@ public class ResourceWriterTest {
         resource.ifPresent(res -> {
             assertEquals(identifier, res.getIdentifier());
             assertEquals(LDP.RDFSource, res.getInteractionModel());
-            assertEquals(empty(), res.getMembershipResource());
-            assertEquals(empty(), res.getMemberRelation());
-            assertEquals(empty(), res.getMemberOfRelation());
-            assertEquals(empty(), res.getInsertedContentRelation());
-            assertEquals(empty(), res.getBinary());
+            assertFalse(res.getMembershipResource().isPresent());
+            assertFalse(res.getMemberRelation().isPresent());
+            assertFalse(res.getMemberOfRelation().isPresent());
+            assertFalse(res.getInsertedContentRelation().isPresent());
+            assertFalse(res.getBinary().isPresent());
             assertFalse(res.isMemento());
             assertEquals(of(rdf.createIRI("http://example.org/receiver/inbox")), res.getInbox());
             assertEquals(parse("2017-03-03T02:34:12Z"), res.getModified());
@@ -128,13 +127,13 @@ public class ResourceWriterTest {
         resource.ifPresent(res -> {
             assertEquals(identifier, res.getIdentifier());
             assertEquals(LDP.RDFSource, res.getInteractionModel());
-            assertEquals(empty(), res.getMembershipResource());
-            assertEquals(empty(), res.getMemberRelation());
-            assertEquals(empty(), res.getMemberOfRelation());
-            assertEquals(empty(), res.getInsertedContentRelation());
-            assertEquals(empty(), res.getBinary());
+            assertFalse(res.getMembershipResource().isPresent());
+            assertFalse(res.getMemberRelation().isPresent());
+            assertFalse(res.getMemberOfRelation().isPresent());
+            assertFalse(res.getInsertedContentRelation().isPresent());
+            assertFalse(res.getBinary().isPresent());
             assertFalse(res.isMemento());
-            assertEquals(empty(), res.getInbox());
+            assertFalse(res.getInbox().isPresent());
             assertEquals(parse("2017-02-15T10:05:00Z"), res.getModified());
             assertEquals(0L, res.getTypes().size());
             assertEquals(0L, res.stream().filter(TestUtils.isContainment.or(TestUtils.isMembership)).count());

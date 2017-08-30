@@ -13,7 +13,6 @@
  */
 package org.trellisldp.rosid.file;
 
-import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toSet;
@@ -22,6 +21,7 @@ import static org.trellisldp.spi.RDFUtils.getInstance;
 import java.io.File;
 import java.time.Instant;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Optional;
 
 import org.apache.commons.rdf.api.IRI;
@@ -110,7 +110,8 @@ abstract class AbstractFileResource implements Resource {
 
     @Override
     public Collection<IRI> getTypes() {
-        return ofNullable(data.getUserTypes()).orElse(emptyList()).stream().map(rdf::createIRI).collect(toSet());
+        return ofNullable(data.getUserTypes()).orElseGet(Collections::emptyList).stream().map(rdf::createIRI)
+            .collect(toSet());
     }
 
     @Override

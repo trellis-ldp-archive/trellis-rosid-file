@@ -62,8 +62,8 @@ public class LdpDirectContainerTest {
         assertTrue(contained.contains(rdf.createIRI("trellis:repository/ldpdc/1")));
         assertTrue(contained.contains(rdf.createIRI("trellis:repository/ldpdc/2")));
         assertTrue(contained.contains(rdf.createIRI("trellis:repository/ldpdc/3")));
-        assertFalse(res.getMembershipResource().isPresent());
-        assertFalse(res.getMemberRelation().isPresent());
+        assertEquals(of(rdf.createIRI("trellis:repository/container")), res.getMembershipResource());
+        assertEquals(of(DC.subject), res.getMemberRelation());
         assertFalse(res.getMemberOfRelation().isPresent());
         assertEquals(of(rdf.createIRI("ex:foo")), res.getInsertedContentRelation());
         assertFalse(res.getBinary().isPresent());
@@ -82,7 +82,7 @@ public class LdpDirectContainerTest {
         assertEquals(parse("2017-02-15T11:15:00Z"), mementos.get(0).getUntil());
 
         final List<Triple> triples = res.stream().filter(TestUtils.isUserManaged).map(Quad::asTriple).collect(toList());
-        assertEquals(6L, triples.size());
+        assertEquals(8L, triples.size());
         assertTrue(triples.contains(rdf.createTriple(identifier, LDP.inbox,
                         rdf.createIRI("http://example.org/receiver/inbox"))));
         assertTrue(triples.contains(rdf.createTriple(identifier, type,
@@ -95,6 +95,9 @@ public class LdpDirectContainerTest {
                     RDFS.label, rdf.createLiteral("Some other resource", "eng"))));
         assertTrue(triples.contains(rdf.createTriple(identifier, LDP.insertedContentRelation,
                         rdf.createIRI("ex:foo"))));
+        assertTrue(triples.contains(rdf.createTriple(identifier, LDP.membershipResource,
+                    rdf.createIRI("trellis:repository/container"))));
+        assertTrue(triples.contains(rdf.createTriple(identifier, LDP.hasMemberRelation, DC.subject)));
 
         final List<Triple> inbound = res.stream().filter(TestUtils.isInbound).map(Quad::asTriple).collect(toList());
         assertEquals(2L, inbound.size());
@@ -116,8 +119,8 @@ public class LdpDirectContainerTest {
         assertTrue(contained.contains(rdf.createIRI("trellis:repository/ldpdc/1")));
         assertTrue(contained.contains(rdf.createIRI("trellis:repository/ldpdc/2")));
         assertTrue(contained.contains(rdf.createIRI("trellis:repository/ldpdc/3")));
-        assertFalse(res.getMembershipResource().isPresent());
-        assertFalse(res.getMemberRelation().isPresent());
+        assertEquals(of(rdf.createIRI("trellis:repository/container")), res.getMembershipResource());
+        assertEquals(of(DC.subject), res.getMemberRelation());
         assertFalse(res.getMemberOfRelation().isPresent());
         assertEquals(of(LDP.MemberSubject), res.getInsertedContentRelation());
         assertFalse(res.getBinary().isPresent());
@@ -131,7 +134,7 @@ public class LdpDirectContainerTest {
         assertEquals(0L, res.stream().filter(TestUtils.isMembership).count());
 
         final List<Triple> triples = res.stream().filter(TestUtils.isUserManaged).map(Quad::asTriple).collect(toList());
-        assertEquals(5L, triples.size());
+        assertEquals(7L, triples.size());
         assertTrue(triples.contains(rdf.createTriple(identifier, LDP.inbox,
                         rdf.createIRI("http://example.org/receiver/inbox"))));
         assertTrue(triples.contains(rdf.createTriple(identifier, type,
@@ -142,6 +145,9 @@ public class LdpDirectContainerTest {
                         rdf.createLiteral("A label", "eng"))));
         assertTrue(triples.contains(rdf.createTriple(rdf.createIRI("http://example.org/some/other/resource"),
                     RDFS.label, rdf.createLiteral("Some other resource", "eng"))));
+        assertTrue(triples.contains(rdf.createTriple(identifier, LDP.membershipResource,
+                    rdf.createIRI("trellis:repository/container"))));
+        assertTrue(triples.contains(rdf.createTriple(identifier, LDP.hasMemberRelation, DC.subject)));
 
         final List<Triple> inbound = res.stream().filter(TestUtils.isInbound).map(Quad::asTriple).collect(toList());
         assertEquals(3L, inbound.size());
@@ -210,8 +216,8 @@ public class LdpDirectContainerTest {
         assertTrue(contained.contains(rdf.createIRI("trellis:repository/ldpdc/1")));
         assertTrue(contained.contains(rdf.createIRI("trellis:repository/ldpdc/2")));
         assertTrue(contained.contains(rdf.createIRI("trellis:repository/ldpdc/3")));
-        assertFalse(res.getMembershipResource().isPresent());
-        assertFalse(res.getMemberRelation().isPresent());
+        assertEquals(of(rdf.createIRI("trellis:repository/container")), res.getMembershipResource());
+        assertEquals(of(DC.subject), res.getMemberRelation());
         assertFalse(res.getMemberOfRelation().isPresent());
         assertEquals(of(LDP.MemberSubject), res.getInsertedContentRelation());
         assertFalse(res.getBinary().isPresent());
@@ -225,7 +231,7 @@ public class LdpDirectContainerTest {
         assertEquals(0L, res.stream().filter(TestUtils.isMembership).count());
 
         final List<Triple> triples = res.stream().filter(TestUtils.isUserManaged).map(Quad::asTriple).collect(toList());
-        assertEquals(5L, triples.size());
+        assertEquals(7L, triples.size());
         assertTrue(triples.contains(rdf.createTriple(identifier, LDP.inbox,
                         rdf.createIRI("http://example.org/receiver/inbox"))));
         assertTrue(triples.contains(rdf.createTriple(identifier, type,
@@ -236,6 +242,9 @@ public class LdpDirectContainerTest {
                         rdf.createLiteral("A label", "eng"))));
         assertTrue(triples.contains(rdf.createTriple(rdf.createIRI("http://example.org/some/other/resource"),
                     RDFS.label, rdf.createLiteral("Some other resource", "eng"))));
+        assertTrue(triples.contains(rdf.createTriple(identifier, LDP.membershipResource,
+                    rdf.createIRI("trellis:repository/container"))));
+        assertTrue(triples.contains(rdf.createTriple(identifier, LDP.hasMemberRelation, DC.subject)));
 
         final List<Triple> inbound = res.stream().filter(TestUtils.isInbound).map(Quad::asTriple).collect(toList());
         assertEquals(3L, inbound.size());

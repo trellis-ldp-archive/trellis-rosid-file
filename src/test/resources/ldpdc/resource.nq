@@ -9,4 +9,6 @@
 <trellis:repository/ldpdc> <http://www.w3.org/ns/ldp#contains> <trellis:repository/ldpdc/1> <http://www.w3.org/ns/ldp#PreferContainment> .
 <trellis:repository/ldpdc> <http://www.w3.org/ns/ldp#contains> <trellis:repository/ldpdc/2> <http://www.w3.org/ns/ldp#PreferContainment> .
 <trellis:repository/ldpdc> <http://www.w3.org/ns/ldp#contains> <trellis:repository/ldpdc/3> <http://www.w3.org/ns/ldp#PreferContainment> .
+<trellis:repository/ldpdc> <http://www.w3.org/ns/ldp#membershipResource> <trellis:repository/container> <http://www.trellisldp.org/ns/trellis#PreferUserManaged> .
+<trellis:repository/ldpdc> <http://www.w3.org/ns/ldp#hasMemberRelation> <http://purl.org/dc/terms/subject> <http://www.trellisldp.org/ns/trellis#PreferUserManaged> .
 

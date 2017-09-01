@@ -34,13 +34,16 @@ import java.util.stream.Stream;
 
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Quad;
+import org.apache.commons.rdf.api.Triple;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.kafka.clients.producer.Producer;
 import org.slf4j.Logger;
 import org.trellisldp.api.Resource;
 import org.trellisldp.rosid.common.AbstractResourceService;
 import org.trellisldp.spi.EventService;
+import org.trellisldp.vocabulary.ACL;
 import org.trellisldp.vocabulary.AS;
+import org.trellisldp.vocabulary.FOAF;
 import org.trellisldp.vocabulary.LDP;
 import org.trellisldp.vocabulary.PROV;
 import org.trellisldp.vocabulary.RDF;
@@ -97,6 +100,21 @@ public class FileResourceService extends AbstractResourceService {
             (async || CachedResource.write(dir, identifier));
     }
 
+    @Override
+    public Boolean compact(final IRI identifier) {
+        throw new UnsupportedOperationException("compact is not implemented");
+    }
+
+    @Override
+    public Boolean purge(final IRI identifier) {
+        throw new UnsupportedOperationException("purge is not implemented");
+    }
+
+    @Override
+    public Stream<Triple> list(final IRI identifier) {
+        throw new UnsupportedOperationException("list is not implemented");
+    }
+
     private void init() throws IOException {
         for (final Map.Entry<String, String> storage : partitions.entrySet()) {
             final File data = storage.getValue().startsWith("file:") ?
@@ -109,6 +127,7 @@ public class FileResourceService extends AbstractResourceService {
                 throw new IOException("Cannot write to " + data.getAbsolutePath());
             }
             final IRI identifier = rdf.createIRI("trellis:" + storage.getKey());
+            final IRI authIdentifier = rdf.createIRI("trellis:" + storage.getKey() + "#auth");
             final File root = resourceDirectory(partitions, identifier);
             final File rootData = new File(root, RESOURCE_JOURNAL);
 
@@ -119,6 +138,12 @@ public class FileResourceService extends AbstractResourceService {
                 final IRI skolem = (IRI) skolemize(rdf.createBlankNode());
                 final Stream<Quad> quads = of(
                         rdf.createQuad(Trellis.PreferServerManaged, identifier, RDF.type, LDP.Container),
+                        rdf.createQuad(Trellis.PreferAccessControl, authIdentifier, RDF.type, ACL.Authorization),
+                        rdf.createQuad(Trellis.PreferAccessControl, authIdentifier, ACL.mode, ACL.Read),
+                        rdf.createQuad(Trellis.PreferAccessControl, authIdentifier, ACL.mode, ACL.Write),
+                        rdf.createQuad(Trellis.PreferAccessControl, authIdentifier, ACL.mode, ACL.Control),
+                        rdf.createQuad(Trellis.PreferAccessControl, authIdentifier, ACL.accessTo, identifier),
+                        rdf.createQuad(Trellis.PreferAccessControl, authIdentifier, ACL.agentClass, FOAF.Agent),
                         rdf.createQuad(Trellis.PreferAudit, identifier, PROV.wasGeneratedBy, skolem),
                         rdf.createQuad(Trellis.PreferAudit, skolem, RDF.type, PROV.Activity),
                         rdf.createQuad(Trellis.PreferAudit, skolem, RDF.type, AS.Create),

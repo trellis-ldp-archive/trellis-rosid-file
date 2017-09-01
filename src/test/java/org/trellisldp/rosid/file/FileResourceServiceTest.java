@@ -416,4 +416,24 @@ public class FileResourceServiceTest {
         assertEquals(parse("2017-02-15T10:05:00Z"), mementos.get(0).getFrom());
         assertEquals(parse("2017-02-15T11:15:00Z"), mementos.get(0).getUntil());
     }
+
+    @Test(expected = UnsupportedOperationException.class)
+    public void testList() {
+        service.list(identifier);
+    }
+
+    @Test(expected = UnsupportedOperationException.class)
+    public void testExport() {
+        service.export(identifier);
+    }
+
+    @Test(expected = UnsupportedOperationException.class)
+    public void testPurge() {
+        service.purge(identifier);
+    }
+
+    @Test(expected = UnsupportedOperationException.class)
+    public void testCompact() {
+        service.compact(identifier);
+    }
 }

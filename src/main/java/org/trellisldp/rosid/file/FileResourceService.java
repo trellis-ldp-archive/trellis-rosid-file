@@ -115,7 +115,6 @@ public class FileResourceService extends AbstractResourceService {
     @Override
     public Stream<Triple> list(final String partition) {
         if (partitions.containsKey(partition)) {
-            final File root = new File(partitions.get(partition));
             try {
                 return walk(new File(partitions.get(partition)).toPath(), FileUtils.MAX + 2)
                     .filter(p -> p.endsWith(RESOURCE_CACHE)).map(Path::getParent).map(Path::toFile)

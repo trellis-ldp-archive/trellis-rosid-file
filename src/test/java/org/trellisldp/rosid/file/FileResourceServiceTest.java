@@ -448,6 +448,8 @@ public class FileResourceServiceTest {
                         rdf.createLiteral("A label", "eng"))));
         assertTrue(quads.contains(rdf.createQuad(identifier, rdf.createIRI("http://example.org/some/other/resource"),
                         RDFS.label, rdf.createLiteral("Some other resource", "eng"))));
+
+        // Test server managed expport
         final List<Quad> otherQuads = service.export("repository", singleton(Trellis.PreferServerManaged))
             .collect(toList());
         assertEquals(6L, otherQuads.size());
@@ -460,6 +462,19 @@ public class FileResourceServiceTest {
         assertTrue(otherQuads.contains(rdf.createQuad(identifier, identifier, type, LDP.Container)));
         assertTrue(otherQuads.contains(rdf.createQuad(identifier, identifier, DC.modified,
                         rdf.createLiteral("2017-02-16T11:15:03Z", XSD.dateTime))));
+    }
+
+    @Test
+    public void testListNoPartition() {
+        assertEquals(0L, service.list("non-existent").count());
+    }
+
+    @Test
+    public void testListInvalidPath() throws Exception {
+        final String path = new File(getClass().getResource("/rootList").toURI()).getAbsolutePath() + "/non-existent";
+        final IRI root = rdf.createIRI("trellis:repository");
+        partitions.put("error", path);
+        assertEquals(0L, service.list("error").count());
     }
 
     @Test(expected = UnsupportedOperationException.class)

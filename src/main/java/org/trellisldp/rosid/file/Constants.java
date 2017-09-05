@@ -17,8 +17,6 @@ package org.trellisldp.rosid.file;
  * @author acoburn
  */
 final class Constants {
-    public static final String PREFIX = "trellis:repository";
-
     public static final String RESOURCE_JOURNAL = "resource.rdfp";
 
     public static final String RESOURCE_CACHE = "resource.json";

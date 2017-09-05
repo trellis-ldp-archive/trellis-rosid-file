@@ -24,6 +24,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 import static org.trellisldp.rosid.file.Constants.RESOURCE_CACHE;
 import static org.trellisldp.rosid.file.Constants.RESOURCE_JOURNAL;
 import static org.trellisldp.rosid.file.FileUtils.resourceDirectory;
+import static org.trellisldp.spi.RDFUtils.TRELLIS_PREFIX;
 
 import java.io.File;
 import java.io.IOException;
@@ -140,8 +141,8 @@ public class FileResourceService extends AbstractResourceService {
             if (!data.canWrite()) {
                 throw new IOException("Cannot write to " + data.getAbsolutePath());
             }
-            final IRI identifier = rdf.createIRI("trellis:" + storage.getKey());
-            final IRI authIdentifier = rdf.createIRI("trellis:" + storage.getKey() + "#auth");
+            final IRI identifier = rdf.createIRI(TRELLIS_PREFIX + storage.getKey());
+            final IRI authIdentifier = rdf.createIRI(TRELLIS_PREFIX + storage.getKey() + "#auth");
             final File root = resourceDirectory(partitions, identifier);
             final File rootData = new File(root, RESOURCE_JOURNAL);
 

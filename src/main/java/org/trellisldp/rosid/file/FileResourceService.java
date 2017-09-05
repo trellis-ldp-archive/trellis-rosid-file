@@ -14,6 +14,7 @@
 package org.trellisldp.rosid.file;
 
 import static java.net.URI.create;
+import static java.nio.file.Files.walk;
 import static java.time.Instant.now;
 import static java.util.Objects.isNull;
 import static java.util.Optional.ofNullable;
@@ -26,6 +27,7 @@ import static org.trellisldp.rosid.file.FileUtils.resourceDirectory;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
@@ -112,7 +114,20 @@ public class FileResourceService extends AbstractResourceService {
 
     @Override
     public Stream<Triple> list(final String partition) {
-        throw new UnsupportedOperationException("list is not implemented");
+        if (partitions.containsKey(partition)) {
+            final File root = new File(partitions.get(partition));
+            try {
+                return walk(new File(partitions.get(partition)).toPath(), FileUtils.MAX + 2)
+                    .filter(p -> p.endsWith(RESOURCE_CACHE)).map(Path::getParent).map(Path::toFile)
+                    .map(CachedResource::read)
+                    // TODO - JDK9 optional to stream
+                    .flatMap(res -> res.map(Stream::of).orElseGet(Stream::empty)).map(data ->
+                        rdf.createTriple(rdf.createIRI(data.getId()), RDF.type, rdf.createIRI(data.getLdpType())));
+            } catch (final IOException ex) {
+                LOGGER.error("Error reading partition root: {}", ex);
+            }
+        }
+        return empty();
     }
 
     private void init() throws IOException {

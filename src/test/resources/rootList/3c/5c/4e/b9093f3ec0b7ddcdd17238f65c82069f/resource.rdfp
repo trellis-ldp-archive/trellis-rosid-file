@@ -1,0 +1,4 @@
+BEGIN # 2017-09-05T13:49:58.417Z
+A <trellis:repository/testResource> <http://purl.org/dc/terms/title> "A title" <http://www.trellisldp.org/ns/trellis#PreferUserManaged> .
+A <trellis:repository/testResource> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/ns/ldp#RDFSource> <http://www.trellisldp.org/ns/trellis#PreferServerManaged> .
+END # 2017-09-05T13:49:58.417Z

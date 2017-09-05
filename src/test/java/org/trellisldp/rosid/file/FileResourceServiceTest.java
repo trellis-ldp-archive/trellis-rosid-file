@@ -15,7 +15,7 @@ package org.trellisldp.rosid.file;
 
 import static java.time.Instant.now;
 import static java.time.Instant.parse;
-import static java.util.Collections.emptyList;
+import static java.util.Collections.singleton;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.toList;
 import static org.apache.curator.framework.CuratorFrameworkFactory.newClient;
@@ -60,6 +60,7 @@ import org.trellisldp.vocabulary.DC;
 import org.trellisldp.vocabulary.LDP;
 import org.trellisldp.vocabulary.RDFS;
 import org.trellisldp.vocabulary.Trellis;
+import org.trellisldp.vocabulary.XSD;
 
 /**
  * @author acoburn
@@ -418,14 +419,47 @@ public class FileResourceServiceTest {
         assertEquals(parse("2017-02-15T11:15:00Z"), mementos.get(0).getUntil());
     }
 
-    @Test(expected = UnsupportedOperationException.class)
-    public void testList() {
-        service.list("partition");
+    @Test
+    public void testList() throws Exception {
+        final String path = new File(getClass().getResource("/rootList").toURI()).getAbsolutePath();
+        partitions.put("repository", path);
+        final List<Triple> triples = service.list("repository").collect(toList());
+        assertEquals(3L, triples.size());
+        assertTrue(triples.contains(rdf.createTriple(testResource, type, LDP.RDFSource)));
+        assertTrue(triples.contains(rdf.createTriple(identifier, type, LDP.Container)));
+        assertTrue(triples.contains(rdf.createTriple(rdf.createIRI("trellis:repository"), type, LDP.Container)));
     }
 
-    @Test(expected = UnsupportedOperationException.class)
-    public void testExport() {
-        service.export("partition", emptyList());
+    @Test
+    public void testExport() throws Exception {
+        final String path = new File(getClass().getResource("/rootList").toURI()).getAbsolutePath();
+        final IRI root = rdf.createIRI("trellis:repository");
+        partitions.put("repository", path);
+        final List<Quad> quads = service.export("repository", singleton(Trellis.PreferUserManaged)).collect(toList());
+        assertEquals(6L, quads.size());
+        assertTrue(quads.contains(rdf.createQuad(testResource, testResource, DC.title, rdf.createLiteral("A title"))));
+        assertTrue(quads.contains(rdf.createQuad(identifier, identifier, LDP.inbox,
+                        rdf.createIRI("http://example.org/receiver/inbox"))));
+        assertTrue(quads.contains(rdf.createQuad(identifier, identifier, type,
+                        rdf.createIRI("http://example.org/types/Foo"))));
+        assertTrue(quads.contains(rdf.createQuad(identifier, identifier, type,
+                        rdf.createIRI("http://example.org/types/Bar"))));
+        assertTrue(quads.contains(rdf.createQuad(identifier, identifier, RDFS.label,
+                        rdf.createLiteral("A label", "eng"))));
+        assertTrue(quads.contains(rdf.createQuad(identifier, rdf.createIRI("http://example.org/some/other/resource"),
+                        RDFS.label, rdf.createLiteral("Some other resource", "eng"))));
+        final List<Quad> otherQuads = service.export("repository", singleton(Trellis.PreferServerManaged))
+            .collect(toList());
+        assertEquals(6L, otherQuads.size());
+        assertTrue(otherQuads.contains(rdf.createQuad(testResource, testResource, type, LDP.RDFSource)));
+        assertTrue(otherQuads.contains(rdf.createQuad(testResource, testResource, DC.modified,
+                        rdf.createLiteral("2017-09-05T13:49:58.417Z", XSD.dateTime))));
+        assertTrue(otherQuads.contains(rdf.createQuad(root, root, type, LDP.Container)));
+        assertTrue(otherQuads.contains(rdf.createQuad(root, root, DC.modified,
+                        rdf.createLiteral("2017-09-05T13:49:58.012Z", XSD.dateTime))));
+        assertTrue(otherQuads.contains(rdf.createQuad(identifier, identifier, type, LDP.Container)));
+        assertTrue(otherQuads.contains(rdf.createQuad(identifier, identifier, DC.modified,
+                        rdf.createLiteral("2017-02-16T11:15:03Z", XSD.dateTime))));
     }
 
     @Test(expected = UnsupportedOperationException.class)

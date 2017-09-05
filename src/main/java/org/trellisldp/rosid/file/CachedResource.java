@@ -25,7 +25,6 @@ import static java.time.Instant.now;
 import static java.time.Instant.parse;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Objects.isNull;
-import static java.util.Optional.ofNullable;
 import static java.util.stream.Stream.empty;
 import static org.slf4j.LoggerFactory.getLogger;
 import static org.trellisldp.rosid.file.Constants.MEMENTO_CACHE;
@@ -89,16 +88,7 @@ public class CachedResource extends AbstractFileResource {
      * @return the resource
      */
     public static Optional<Resource> find(final File directory, final IRI identifier) {
-        ResourceData data = null;
-        if (isNull(directory)) {
-            return Optional.empty();
-        }
-        try {
-            data = MAPPER.readValue(new File(directory, RESOURCE_CACHE), ResourceData.class);
-        } catch (final IOException ex) {
-            LOGGER.warn("Error reading cached resource: {}", ex.getMessage());
-        }
-        return ofNullable(data).map(d -> new CachedResource(directory, identifier, d));
+        return read(directory).map(d -> new CachedResource(directory, identifier, d));
     }
 
     /**
@@ -119,6 +109,24 @@ public class CachedResource extends AbstractFileResource {
      */
     public static Boolean write(final File directory, final IRI identifier) {
         return write(directory, identifier, now());
+    }
+
+    /**
+     * Read the cached resource from a directory
+     * @param directory the directory
+     * @return the resource data, if present
+     */
+    public static Optional<ResourceData> read(final File directory) {
+        if (isNull(directory)) {
+            return Optional.empty();
+        }
+
+        try {
+            return Optional.of(MAPPER.readValue(new File(directory, RESOURCE_CACHE), ResourceData.class));
+        } catch (final IOException ex) {
+            LOGGER.warn("Error reading cached resource: {}", ex.getMessage());
+        }
+        return Optional.empty();
     }
 
     /**

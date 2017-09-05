@@ -477,9 +477,20 @@ public class FileResourceServiceTest {
         assertEquals(0L, service.list("error").count());
     }
 
-    @Test(expected = UnsupportedOperationException.class)
-    public void testPurge() {
-        service.purge(identifier);
+    @Test
+    public void testPurge() throws Exception {
+        final String path = new File(getClass().getResource("/purgeable").toURI()).getAbsolutePath();
+        partitions.put("repository", path);
+        assertTrue(service.get(identifier).isPresent());
+        final List<IRI> binaries = service.purge(identifier).collect(toList());
+        assertEquals(1L, binaries.size());
+        assertEquals(rdf.createIRI("s3://bucket/some-resource"), binaries.get(0));
+
+        assertFalse(service.get(identifier).isPresent());
+
+        assertTrue(service.get(testResource).isPresent());
+        assertEquals(0L, service.purge(testResource).count());
+        assertFalse(service.get(testResource).isPresent());
     }
 
     @Test(expected = UnsupportedOperationException.class)

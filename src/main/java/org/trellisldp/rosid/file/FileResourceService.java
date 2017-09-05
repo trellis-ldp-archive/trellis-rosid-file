@@ -14,6 +14,8 @@
 package org.trellisldp.rosid.file;
 
 import static java.net.URI.create;
+import static java.nio.file.Files.deleteIfExists;
+import static java.nio.file.Files.lines;
 import static java.nio.file.Files.walk;
 import static java.time.Instant.now;
 import static java.util.Objects.isNull;
@@ -21,15 +23,20 @@ import static java.util.Optional.ofNullable;
 import static java.util.stream.Stream.empty;
 import static java.util.stream.Stream.of;
 import static org.slf4j.LoggerFactory.getLogger;
+import static org.trellisldp.rosid.file.Constants.MEMENTO_CACHE;
 import static org.trellisldp.rosid.file.Constants.RESOURCE_CACHE;
 import static org.trellisldp.rosid.file.Constants.RESOURCE_JOURNAL;
+import static org.trellisldp.rosid.file.Constants.RESOURCE_QUADS;
 import static org.trellisldp.rosid.file.FileUtils.resourceDirectory;
 import static org.trellisldp.spi.RDFUtils.TRELLIS_PREFIX;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -46,6 +53,7 @@ import org.trellisldp.rosid.common.AbstractResourceService;
 import org.trellisldp.spi.EventService;
 import org.trellisldp.vocabulary.ACL;
 import org.trellisldp.vocabulary.AS;
+import org.trellisldp.vocabulary.DC;
 import org.trellisldp.vocabulary.FOAF;
 import org.trellisldp.vocabulary.LDP;
 import org.trellisldp.vocabulary.PROV;
@@ -104,13 +112,40 @@ public class FileResourceService extends AbstractResourceService {
     }
 
     @Override
-    public Boolean compact(final IRI identifier) {
+    public Stream<IRI> compact(final IRI identifier) {
         throw new UnsupportedOperationException("compact is not implemented");
     }
 
     @Override
-    public Boolean purge(final IRI identifier) {
-        throw new UnsupportedOperationException("purge is not implemented");
+    public Stream<IRI> purge(final IRI identifier) {
+        final List<IRI> binaries = new ArrayList<>();
+        final File directory = resourceDirectory(partitions, identifier);
+        final File history = new File(directory, RESOURCE_JOURNAL);
+        try (final Stream<String> lineStream = lines(history.toPath())) {
+            lineStream.flatMap(line -> {
+                final String[] parts = line.split(" ", 6);
+                if (parts.length == 6 && parts[0].equals("A") &&
+                        parts[1].equals(identifier.toString()) &&
+                        parts[2].equals(DC.hasPart.toString()) &&
+                        parts[4].equals(Trellis.PreferServerManaged.toString())) {
+                    return of(parts[3]);
+                }
+                return empty();
+            }).map(iri -> iri.substring(1, iri.length() - 1)).map(rdf::createIRI).forEach(binaries::add);
+        } catch (final IOException ex) {
+            LOGGER.error("Error processing journal file: {}", ex.getMessage());
+            throw new UncheckedIOException(ex);
+        }
+        try {
+            deleteIfExists(new File(directory, RESOURCE_JOURNAL).toPath());
+            deleteIfExists(new File(directory, RESOURCE_CACHE).toPath());
+            deleteIfExists(new File(directory, RESOURCE_QUADS).toPath());
+            deleteIfExists(new File(directory, MEMENTO_CACHE).toPath());
+        } catch (final IOException ex) {
+            LOGGER.error("Error deleting files: {}", ex.getMessage());
+            throw new UncheckedIOException(ex);
+        }
+        return binaries.stream();
     }
 
     @Override
@@ -124,7 +159,7 @@ public class FileResourceService extends AbstractResourceService {
                     .flatMap(res -> res.map(Stream::of).orElseGet(Stream::empty)).map(data ->
                         rdf.createTriple(rdf.createIRI(data.getId()), RDF.type, rdf.createIRI(data.getLdpType())));
             } catch (final IOException ex) {
-                LOGGER.error("Error reading partition root: {}", ex);
+                LOGGER.error("Error reading partition root: {}", ex.getMessage());
             }
         }
         return empty();

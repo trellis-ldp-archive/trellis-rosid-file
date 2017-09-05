@@ -111,7 +111,7 @@ public class FileResourceService extends AbstractResourceService {
     }
 
     @Override
-    public Stream<Triple> list(final IRI identifier) {
+    public Stream<Triple> list(final String partition) {
         throw new UnsupportedOperationException("list is not implemented");
     }
 

@@ -15,6 +15,7 @@ package org.trellisldp.rosid.file;
 
 import static java.time.Instant.now;
 import static java.time.Instant.parse;
+import static java.util.Collections.emptyList;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.toList;
 import static org.apache.curator.framework.CuratorFrameworkFactory.newClient;
@@ -419,12 +420,12 @@ public class FileResourceServiceTest {
 
     @Test(expected = UnsupportedOperationException.class)
     public void testList() {
-        service.list(identifier);
+        service.list("partition");
     }
 
     @Test(expected = UnsupportedOperationException.class)
     public void testExport() {
-        service.export(identifier);
+        service.export("partition", emptyList());
     }
 
     @Test(expected = UnsupportedOperationException.class)

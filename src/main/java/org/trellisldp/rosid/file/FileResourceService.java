@@ -15,6 +15,7 @@ package org.trellisldp.rosid.file;
 
 import static java.net.URI.create;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.nio.file.Files.deleteIfExists;
 import static java.nio.file.Files.lines;
 import static java.nio.file.Files.newBufferedWriter;
 import static java.nio.file.Files.walk;
@@ -142,9 +143,9 @@ public class FileResourceService extends AbstractResourceService {
         }
 
         try {
-            new File(directory, RESOURCE_CACHE).delete();
-            new File(directory, RESOURCE_QUADS).delete();
-            new File(directory, MEMENTO_CACHE).delete();
+            deleteIfExists(new File(directory, RESOURCE_CACHE).toPath());
+            deleteIfExists(new File(directory, RESOURCE_QUADS).toPath());
+            deleteIfExists(new File(directory, MEMENTO_CACHE).toPath());
             try (final BufferedWriter writer = newBufferedWriter(
                         new File(directory, RESOURCE_JOURNAL).toPath(), UTF_8, WRITE, TRUNCATE_EXISTING)) {
                 writer.write("");

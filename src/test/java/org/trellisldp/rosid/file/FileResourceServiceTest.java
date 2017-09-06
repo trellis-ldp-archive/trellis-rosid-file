@@ -481,6 +481,7 @@ public class FileResourceServiceTest {
     public void testPurge() throws Exception {
         final String path = new File(getClass().getResource("/purgeable").toURI()).getAbsolutePath();
         partitions.put("repository", path);
+        service = new FileResourceService(partitions, curator, mockProducer, mockEventService, mockIdSupplier, false);
         assertTrue(service.get(identifier).isPresent());
         final List<IRI> binaries = service.purge(identifier).collect(toList());
         assertEquals(1L, binaries.size());

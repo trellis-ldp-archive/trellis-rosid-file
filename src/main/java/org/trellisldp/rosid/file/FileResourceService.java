@@ -146,6 +146,7 @@ public class FileResourceService extends AbstractResourceService {
             deleteIfExists(new File(directory, RESOURCE_CACHE).toPath());
             deleteIfExists(new File(directory, RESOURCE_QUADS).toPath());
             deleteIfExists(new File(directory, MEMENTO_CACHE).toPath());
+            // Truncate history file, rather than actually deleting it
             try (final BufferedWriter writer = newBufferedWriter(
                         new File(directory, RESOURCE_JOURNAL).toPath(), UTF_8, WRITE, TRUNCATE_EXISTING)) {
                 writer.write("");

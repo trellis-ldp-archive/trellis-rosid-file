@@ -120,9 +120,8 @@ public class FileResourceService extends AbstractResourceService {
     public Stream<IRI> tryPurge(final IRI identifier) {
         final List<IRI> binaries = new ArrayList<>();
         final File directory = resourceDirectory(partitions, identifier);
-        final File history = new File(directory, RESOURCE_JOURNAL);
 
-        try (final Stream<String> lineStream = lines(history.toPath())) {
+        try (final Stream<String> lineStream = lines(new File(directory, RESOURCE_JOURNAL).toPath())) {
             lineStream.flatMap(line -> {
                 final String[] parts = line.split(" ", 6);
                 if (parts.length == 6 && parts[0].equals("A") &&
@@ -137,11 +136,12 @@ public class FileResourceService extends AbstractResourceService {
             LOGGER.error("Error processing journal file: {}", ex.getMessage());
             throw new UncheckedIOException(ex);
         }
+
         try {
-            deleteIfExists(new File(directory, RESOURCE_JOURNAL).toPath());
             deleteIfExists(new File(directory, RESOURCE_CACHE).toPath());
             deleteIfExists(new File(directory, RESOURCE_QUADS).toPath());
             deleteIfExists(new File(directory, MEMENTO_CACHE).toPath());
+            deleteIfExists(new File(directory, RESOURCE_JOURNAL).toPath());
         } catch (final IOException ex) {
             LOGGER.error("Error deleting files: {}", ex.getMessage());
             throw new UncheckedIOException(ex);

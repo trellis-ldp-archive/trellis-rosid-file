@@ -10,6 +10,7 @@ A <trellis:repository/resource> <http://purl.org/dc/terms/hasPart> <s3://bucket/
 A <s3://bucket/some-resource> <http://purl.org/dc/terms/modified> "2017-02-15T10:05:00Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> <http://www.trellisldp.org/ns/trellis#PreferServerManaged> .
 A <s3://bucket/some-resource> <http://purl.org/dc/terms/extent> "123456"^^<http://www.w3.org/2001/XMLSchema#long> <http://www.trellisldp.org/ns/trellis#PreferServerManaged> .
 A <s3://bucket/some-resource> <http://purl.org/dc/terms/format> "image/jpeg" <http://www.trellisldp.org/ns/trellis#PreferServerManaged> .
+A <trellis:repository/resource> <http://purl.org/dc/terms/hasPart> <trellid:repository/other> <http://www.trellisldp.org/ns/trellis#PreferUserManaged> .
 END # 2017-02-15T10:05:00Z
 BEGIN # 2017-02-15T11:15:00Z
 A <trellis:repository/resource> <http://www.w3.org/ns/ldp#inbox> <http://example.org/receiver/inbox> <http://www.trellisldp.org/ns/trellis#PreferUserManaged> .

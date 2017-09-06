@@ -4,7 +4,7 @@ build_script:
     - gradlew.bat assemble
 
 test_script:
-    - gradlew.bat check
+    - gradlew.bat check --info
 
 environment:
     matrix:

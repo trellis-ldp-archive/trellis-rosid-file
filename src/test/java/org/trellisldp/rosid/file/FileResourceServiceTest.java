@@ -13,9 +13,11 @@
  */
 package org.trellisldp.rosid.file;
 
+import static java.io.File.separator;
 import static java.time.Instant.now;
 import static java.time.Instant.parse;
 import static java.util.Collections.singleton;
+import static java.util.Collections.singletonMap;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.toList;
 import static org.apache.curator.framework.CuratorFrameworkFactory.newClient;
@@ -471,17 +473,20 @@ public class FileResourceServiceTest {
 
     @Test
     public void testListInvalidPath() throws Exception {
-        final String path = new File(getClass().getResource("/rootList").toURI()).getAbsolutePath() + "/non-existent";
-        final IRI root = rdf.createIRI("trellis:repository");
-        partitions.put("error", path);
+        final Map<String, String> myPartitions = singletonMap("foo",
+                new File(getClass().getResource("/rootList").toURI()).getAbsolutePath() + separator + "non-existent");
+        service = new FileResourceService(myPartitions, curator, mockProducer, mockEventService, mockIdSupplier, false);
+        assertEquals(1L, service.list("foo").count());
+        assertEquals(of(rdf.createTriple(rdf.createIRI("trellis:foo"), type, LDP.Container)),
+                service.list("foo").findFirst());
         assertEquals(0L, service.list("error").count());
     }
 
     @Test
     public void testPurge() throws Exception {
-        final String path = new File(getClass().getResource("/purgeable").toURI()).getAbsolutePath();
-        partitions.put("repository", path);
-        service = new FileResourceService(partitions, curator, mockProducer, mockEventService, mockIdSupplier, false);
+        final Map<String, String> myPartitions = singletonMap("repository",
+                new File(getClass().getResource("/purgeable").toURI()).getAbsolutePath());
+        service = new FileResourceService(myPartitions, curator, mockProducer, mockEventService, mockIdSupplier, false);
         assertTrue(service.get(identifier).isPresent());
         final List<IRI> binaries = service.purge(identifier).collect(toList());
         assertEquals(1L, binaries.size());

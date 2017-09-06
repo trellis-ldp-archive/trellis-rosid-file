@@ -14,9 +14,12 @@
 package org.trellisldp.rosid.file;
 
 import static java.net.URI.create;
-import static java.nio.file.Files.deleteIfExists;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.Files.lines;
+import static java.nio.file.Files.newBufferedWriter;
 import static java.nio.file.Files.walk;
+import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
+import static java.nio.file.StandardOpenOption.WRITE;
 import static java.time.Instant.now;
 import static java.util.Objects.isNull;
 import static java.util.Optional.ofNullable;
@@ -30,6 +33,7 @@ import static org.trellisldp.rosid.file.Constants.RESOURCE_QUADS;
 import static org.trellisldp.rosid.file.FileUtils.resourceDirectory;
 import static org.trellisldp.spi.RDFUtils.TRELLIS_PREFIX;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -138,10 +142,13 @@ public class FileResourceService extends AbstractResourceService {
         }
 
         try {
-            deleteIfExists(new File(directory, RESOURCE_CACHE).toPath());
-            deleteIfExists(new File(directory, RESOURCE_QUADS).toPath());
-            deleteIfExists(new File(directory, MEMENTO_CACHE).toPath());
-            deleteIfExists(new File(directory, RESOURCE_JOURNAL).toPath());
+            new File(directory, RESOURCE_CACHE).delete();
+            new File(directory, RESOURCE_QUADS).delete();
+            new File(directory, MEMENTO_CACHE).delete();
+            try (final BufferedWriter writer = newBufferedWriter(
+                        new File(directory, RESOURCE_JOURNAL).toPath(), UTF_8, WRITE, TRUNCATE_EXISTING)) {
+                writer.write("");
+            }
         } catch (final IOException ex) {
             LOGGER.error("Error deleting files: {}", ex.getMessage());
             throw new UncheckedIOException(ex);

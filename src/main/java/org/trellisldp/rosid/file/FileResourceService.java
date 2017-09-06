@@ -20,7 +20,6 @@ import static java.nio.file.Files.walk;
 import static java.time.Instant.now;
 import static java.util.Objects.isNull;
 import static java.util.Optional.ofNullable;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.stream.Stream.empty;
 import static java.util.stream.Stream.of;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -47,7 +46,6 @@ import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Quad;
 import org.apache.commons.rdf.api.Triple;
 import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.recipes.locks.InterProcessLock;
 import org.apache.kafka.clients.producer.Producer;
 import org.slf4j.Logger;
 import org.trellisldp.api.Resource;
@@ -119,19 +117,10 @@ public class FileResourceService extends AbstractResourceService {
     }
 
     @Override
-    public Stream<IRI> purge(final IRI identifier) {
+    public Stream<IRI> tryPurge(final IRI identifier) {
         final List<IRI> binaries = new ArrayList<>();
         final File directory = resourceDirectory(partitions, identifier);
         final File history = new File(directory, RESOURCE_JOURNAL);
-        final InterProcessLock lock = getLock(identifier);
-
-        try {
-            if (!lock.acquire(Long.parseLong(System.getProperty("zk.lock.wait.ms", "100")), MILLISECONDS)) {
-                throw new UncheckedIOException(new IOException("Could not acquire resource lock!"));
-            }
-        } catch (final Exception ex) {
-            LOGGER.error("Error acquiring resource lock: {}", ex.getMessage());
-        }
 
         try (final Stream<String> lineStream = lines(history.toPath())) {
             lineStream.flatMap(line -> {
@@ -156,13 +145,6 @@ public class FileResourceService extends AbstractResourceService {
         } catch (final IOException ex) {
             LOGGER.error("Error deleting files: {}", ex.getMessage());
             throw new UncheckedIOException(ex);
-        }
-
-        try {
-            lock.release();
-        } catch (final Exception ex) {
-            LOGGER.error("Error releasing resource lock: {}", ex.getMessage());
-            throw new UncheckedIOException(new IOException("Error releasing resource lock: " + ex.getMessage()));
         }
 
         return binaries.stream();

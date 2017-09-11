@@ -24,7 +24,6 @@ import static org.trellisldp.vocabulary.RDF.type;
 
 import org.trellisldp.api.Resource;
 import org.trellisldp.api.VersionRange;
-import org.trellisldp.vocabulary.DC;
 import org.trellisldp.vocabulary.LDP;
 import org.trellisldp.vocabulary.RDFS;
 
@@ -99,15 +98,6 @@ public class ResourceWriterTest {
             assertTrue(triples.contains(rdf.createTriple(rdf.createIRI("http://example.org/some/other/resource"),
                         RDFS.label, rdf.createLiteral("Some other resource", "eng"))));
 
-            final List<Triple> inbound = res.stream().filter(TestUtils.isInbound).map(Quad::asTriple).collect(toList());
-            assertEquals(3L, inbound.size());
-            assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/other"),
-                            DC.hasPart, identifier)));
-            assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/other/resource"),
-                            DC.relation, identifier)));
-            assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/other/item"),
-                            DC.hasPart, identifier)));
-
             final List<VersionRange> mementos = res.getMementos();
             assertEquals(3L, mementos.size());
             assertEquals(parse("2017-02-15T10:05:00Z"), mementos.get(0).getFrom());
@@ -141,11 +131,6 @@ public class ResourceWriterTest {
             final List<Triple> triples = res.stream().filter(TestUtils.isUserManaged).map(Quad::asTriple)
                 .collect(toList());
             assertEquals(0L, triples.size());
-
-            final List<Triple> inbound = res.stream().filter(TestUtils.isInbound).map(Quad::asTriple).collect(toList());
-            assertEquals(1L, inbound.size());
-            assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/other/item"),
-                            DC.hasPart, identifier)));
 
             final List<VersionRange> mementos = res.getMementos();
             assertEquals(0L, mementos.size());

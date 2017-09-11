@@ -15,7 +15,6 @@ package org.trellisldp.rosid.file;
 
 import org.trellisldp.vocabulary.LDP;
 import org.trellisldp.vocabulary.Trellis;
-import org.trellisldp.vocabulary.Fedora;
 
 import java.util.function.Predicate;
 
@@ -41,9 +40,6 @@ class TestUtils {
 
     public static final Predicate<Quad> isMembership = quad ->
         quad.getGraphName().filter(LDP.PreferMembership::equals).isPresent();
-
-    public static final Predicate<Quad> isInbound = quad ->
-        quad.getGraphName().filter(Fedora.PreferInboundReferences::equals).isPresent();
 
     private TestUtils() {
         // Prevent instantiation

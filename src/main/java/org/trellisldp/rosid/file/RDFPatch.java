@@ -54,7 +54,6 @@ import org.apache.commons.rdf.api.RDF;
 import org.slf4j.Logger;
 import org.trellisldp.api.VersionRange;
 import org.trellisldp.vocabulary.DC;
-import org.trellisldp.vocabulary.Fedora;
 import org.trellisldp.vocabulary.Trellis;
 import org.trellisldp.vocabulary.XSD;
 
@@ -210,7 +209,6 @@ final class RDFPatch {
 
         private Boolean inRegion = false;
         private Boolean hasModified = false;
-        private Boolean hasModificationTriples = false;
         private Quad buffer = null;
         private String line = null;
 
@@ -262,10 +260,6 @@ final class RDFPatch {
             return line.startsWith("A ") || line.startsWith("D ");
         }
 
-        private Boolean quadHasModificationTriples(final Quad quad) {
-            return !quad.getGraphName().filter(Fedora.PreferInboundReferences::equals).isPresent();
-        }
-
         private Boolean shouldProceed(final String line, final Quad buffer) {
             return nonNull(line) && isNull(buffer);
         }
@@ -276,11 +270,6 @@ final class RDFPatch {
                     deleted.add(quad);
                 } else if (prefix.equals("A") && !deleted.contains(quad)) {
                     buffer = quad;
-                }
-
-                // Inbound refs don't cause the modification date to change
-                if (quadHasModificationTriples(quad)) {
-                    hasModificationTriples = true;
                 }
             };
         }
@@ -305,7 +294,7 @@ final class RDFPatch {
                         stringToQuad(rdf, parts[1]).ifPresent(quadHandler(parts[0]));
 
                     // If the reader is in the target region and the modified triple hasn't yet been emitted
-                    } else if (line.startsWith(BEGIN) && hasModificationTriples && !hasModified) {
+                    } else if (line.startsWith(BEGIN) && !hasModified) {
                         checkIfMovedIntoTarget(line);
                     }
 

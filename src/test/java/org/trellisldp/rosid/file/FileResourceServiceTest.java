@@ -207,13 +207,6 @@ public class FileResourceServiceTest {
                         rdf.createLiteral("A label", "eng"))));
         assertTrue(triples.contains(rdf.createTriple(rdf.createIRI("http://example.org/some/other/resource"),
                     RDFS.label, rdf.createLiteral("Some other resource", "eng"))));
-
-        final List<Triple> inbound = res.stream().filter(TestUtils.isInbound).map(Quad::asTriple).collect(toList());
-        assertEquals(2L, inbound.size());
-        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/other"),
-                        DC.hasPart, identifier)));
-        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/other/resource"),
-                        DC.relation, identifier)));
     }
 
     @Test
@@ -256,15 +249,6 @@ public class FileResourceServiceTest {
         assertTrue(triples.contains(rdf.createTriple(rdf.createIRI("http://example.org/some/other/resource"),
                     RDFS.label, rdf.createLiteral("Some other resource", "eng"))));
 
-        final List<Triple> inbound = res.stream().filter(TestUtils.isInbound).map(Quad::asTriple).collect(toList());
-        assertEquals(3L, inbound.size());
-        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/other"),
-                        DC.hasPart, identifier)));
-        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/other/resource"),
-                        DC.relation, identifier)));
-        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/other/item"),
-                        DC.hasPart, identifier)));
-
         final List<VersionRange> mementos = res.getMementos();
         assertEquals(1L, mementos.size());
         assertEquals(parse("2017-02-15T10:05:00Z"), mementos.get(0).getFrom());
@@ -291,13 +275,6 @@ public class FileResourceServiceTest {
         final List<Triple> triples = res.stream().filter(TestUtils.isUserManaged)
             .map(Quad::asTriple).collect(toList());
         assertEquals(0L, triples.size());
-
-        final List<Triple> inbound = res.stream().filter(TestUtils.isInbound).map(Quad::asTriple).collect(toList());
-        assertEquals(2L, inbound.size());
-        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/other"),
-                        DC.hasPart, identifier)));
-        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/other/resource"),
-                        DC.relation, identifier)));
 
         final List<VersionRange> mementos = res.getMementos();
         assertEquals(1L, mementos.size());
@@ -351,15 +328,6 @@ public class FileResourceServiceTest {
         assertTrue(triples.contains(rdf.createTriple(rdf.createIRI("http://example.org/some/other/resource"),
                     RDFS.label, rdf.createLiteral("Some other resource", "eng"))));
 
-        final List<Triple> inbound = res.stream().filter(TestUtils.isInbound).map(Quad::asTriple).collect(toList());
-        assertEquals(3L, inbound.size());
-        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/other"),
-                        DC.hasPart, identifier)));
-        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/other/resource"),
-                        DC.relation, identifier)));
-        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/other/item"),
-                        DC.hasPart, identifier)));
-
         final List<VersionRange> mementos = res.getMementos();
         assertEquals(1L, mementos.size());
         assertEquals(parse("2017-02-15T10:05:00Z"), mementos.get(0).getFrom());
@@ -405,15 +373,6 @@ public class FileResourceServiceTest {
                         rdf.createLiteral("A label", "eng"))));
         assertTrue(triples.contains(rdf.createTriple(rdf.createIRI("http://example.org/some/other/resource"),
                     RDFS.label, rdf.createLiteral("Some other resource", "eng"))));
-
-        final List<Triple> inbound = res.stream().filter(TestUtils.isInbound).map(Quad::asTriple).collect(toList());
-        assertEquals(3L, inbound.size());
-        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/resource"),
-                        DC.hasPart, other)));
-        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/other/resource"),
-                        DC.relation, other)));
-        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/other/item"),
-                        DC.hasPart, other)));
 
         final List<VersionRange> mementos = res.getMementos();
         assertEquals(1L, mementos.size());

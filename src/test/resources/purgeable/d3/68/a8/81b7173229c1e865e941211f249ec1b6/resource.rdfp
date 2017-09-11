@@ -1,9 +1,3 @@
-BEGIN # 2016-12-10T03:27:00Z
-A <trellis:repository/other> <http://purl.org/dc/terms/hasPart> <trellis:repository/resource> <http://fedora.info/definitions/fcrepo#PreferInboundReferences> .
-END # 2016-12-10T03:27:00Z
-BEGIN # 2017-01-02T14:57:00Z
-A <trellis:repository/other/resource> <http://purl.org/dc/terms/relation> <trellis:repository/resource> <http://fedora.info/definitions/fcrepo#PreferInboundReferences> .
-END # 2017-01-02T14:57:00Z
 BEGIN # 2017-02-15T10:05:00Z
 A <trellis:repository/resource> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/ns/ldp#NonRDFSource> <http://www.trellisldp.org/ns/trellis#PreferServerManaged> .
 A <trellis:repository/resource> <http://purl.org/dc/terms/hasPart> <s3://bucket/some-resource> <http://www.trellisldp.org/ns/trellis#PreferServerManaged> .
@@ -19,6 +13,3 @@ A <trellis:repository/resource> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type
 A <trellis:repository/resource> <http://www.w3.org/2000/01/rdf-schema#label> "A label"@eng <http://www.trellisldp.org/ns/trellis#PreferUserManaged> .
 A <http://example.org/some/other/resource> <http://www.w3.org/2000/01/rdf-schema#label> "Some other resource"@eng <http://www.trellisldp.org/ns/trellis#PreferUserManaged> .
 END # 2017-02-15T11:15:00Z
-BEGIN # 2017-03-01T15:15:00Z
-A <trellis:repository/other/item> <http://purl.org/dc/terms/hasPart> <trellis:repository/resource> <http://fedora.info/definitions/fcrepo#PreferInboundReferences> .
-END # 2017-03-01T15:15:00Z

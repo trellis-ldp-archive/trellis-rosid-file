@@ -28,7 +28,6 @@ import java.util.List;
 
 import org.trellisldp.api.Resource;
 import org.trellisldp.api.VersionRange;
-import org.trellisldp.vocabulary.DC;
 import org.trellisldp.vocabulary.LDP;
 import org.trellisldp.vocabulary.RDFS;
 import org.apache.commons.rdf.api.IRI;
@@ -95,13 +94,6 @@ public class LdpNonRdfTest {
                         rdf.createIRI("http://example.org/types/Bar"))));
         assertTrue(triples.contains(rdf.createTriple(identifier, RDFS.label,
                         rdf.createLiteral("A label", "eng"))));
-
-        final List<Triple> inbound = res.stream().filter(TestUtils.isInbound).map(Quad::asTriple).collect(toList());
-        assertEquals(2L, inbound.size());
-        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/resource"),
-                        DC.hasPart, identifier)));
-        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/other/resource"),
-                        DC.relation, identifier)));
     }
 
     @Test
@@ -140,15 +132,6 @@ public class LdpNonRdfTest {
         assertTrue(triples.contains(rdf.createTriple(identifier, RDFS.label,
                         rdf.createLiteral("A label", "eng"))));
 
-        final List<Triple> inbound = res.stream().filter(TestUtils.isInbound).map(Quad::asTriple).collect(toList());
-        assertEquals(3L, inbound.size());
-        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/resource"),
-                        DC.hasPart, identifier)));
-        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/other/resource"),
-                        DC.relation, identifier)));
-        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/other/item"),
-                        DC.hasPart, identifier)));
-
         final List<VersionRange> mementos = res.getMementos();
         assertEquals(1L, mementos.size());
         assertEquals(parse("2017-02-15T10:05:00Z"), mementos.get(0).getFrom());
@@ -180,13 +163,6 @@ public class LdpNonRdfTest {
 
         final List<Triple> triples = res.stream().filter(TestUtils.isUserManaged).map(Quad::asTriple).collect(toList());
         assertEquals(0L, triples.size());
-
-        final List<Triple> inbound = res.stream().filter(TestUtils.isInbound).map(Quad::asTriple).collect(toList());
-        assertEquals(2L, inbound.size());
-        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/resource"),
-                        DC.hasPart, identifier)));
-        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/other/resource"),
-                        DC.relation, identifier)));
 
         final List<VersionRange> mementos = res.getMementos();
         assertEquals(1L, mementos.size());
@@ -234,15 +210,6 @@ public class LdpNonRdfTest {
                         rdf.createIRI("http://example.org/types/Bar"))));
         assertTrue(triples.contains(rdf.createTriple(identifier, RDFS.label,
                         rdf.createLiteral("A label", "eng"))));
-
-        final List<Triple> inbound = res.stream().filter(TestUtils.isInbound).map(Quad::asTriple).collect(toList());
-        assertEquals(3L, inbound.size());
-        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/resource"),
-                        DC.hasPart, identifier)));
-        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/other/resource"),
-                        DC.relation, identifier)));
-        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/other/item"),
-                        DC.hasPart, identifier)));
 
         final List<VersionRange> mementos = res.getMementos();
         assertEquals(1L, mementos.size());

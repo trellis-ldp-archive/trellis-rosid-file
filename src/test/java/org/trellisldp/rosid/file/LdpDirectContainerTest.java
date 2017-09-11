@@ -98,13 +98,6 @@ public class LdpDirectContainerTest {
         assertTrue(triples.contains(rdf.createTriple(identifier, LDP.membershipResource,
                     rdf.createIRI("trellis:repository/container"))));
         assertTrue(triples.contains(rdf.createTriple(identifier, LDP.hasMemberRelation, DC.subject)));
-
-        final List<Triple> inbound = res.stream().filter(TestUtils.isInbound).map(Quad::asTriple).collect(toList());
-        assertEquals(2L, inbound.size());
-        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/resource"),
-                        DC.hasPart, identifier)));
-        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/other/resource"),
-                        DC.relation, identifier)));
     }
 
     @Test
@@ -149,15 +142,6 @@ public class LdpDirectContainerTest {
                     rdf.createIRI("trellis:repository/container"))));
         assertTrue(triples.contains(rdf.createTriple(identifier, LDP.hasMemberRelation, DC.subject)));
 
-        final List<Triple> inbound = res.stream().filter(TestUtils.isInbound).map(Quad::asTriple).collect(toList());
-        assertEquals(3L, inbound.size());
-        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/resource"),
-                        DC.hasPart, identifier)));
-        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/other/resource"),
-                        DC.relation, identifier)));
-        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/other/item"),
-                        DC.hasPart, identifier)));
-
         final List<VersionRange> mementos = res.getMementos();
         assertEquals(2L, mementos.size());
         assertEquals(parse("2017-02-15T10:05:00Z"), mementos.get(0).getFrom());
@@ -185,13 +169,6 @@ public class LdpDirectContainerTest {
 
         final List<Triple> triples = res.stream().filter(TestUtils.isUserManaged).map(Quad::asTriple).collect(toList());
         assertEquals(0L, triples.size());
-
-        final List<Triple> inbound = res.stream().filter(TestUtils.isInbound).map(Quad::asTriple).collect(toList());
-        assertEquals(2L, inbound.size());
-        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/resource"),
-                        DC.hasPart, identifier)));
-        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/other/resource"),
-                        DC.relation, identifier)));
 
         final List<VersionRange> mementos = res.getMementos();
         assertEquals(2L, mementos.size());
@@ -245,15 +222,6 @@ public class LdpDirectContainerTest {
         assertTrue(triples.contains(rdf.createTriple(identifier, LDP.membershipResource,
                     rdf.createIRI("trellis:repository/container"))));
         assertTrue(triples.contains(rdf.createTriple(identifier, LDP.hasMemberRelation, DC.subject)));
-
-        final List<Triple> inbound = res.stream().filter(TestUtils.isInbound).map(Quad::asTriple).collect(toList());
-        assertEquals(3L, inbound.size());
-        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/resource"),
-                        DC.hasPart, identifier)));
-        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/other/resource"),
-                        DC.relation, identifier)));
-        assertTrue(inbound.contains(rdf.createTriple(rdf.createIRI("trellis:repository/other/item"),
-                        DC.hasPart, identifier)));
 
         final List<VersionRange> mementos = res.getMementos();
         assertEquals(1L, mementos.size());

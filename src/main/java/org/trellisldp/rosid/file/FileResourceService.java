@@ -106,14 +106,14 @@ public class FileResourceService extends AbstractResourceService {
 
     @Override
     protected Boolean write(final IRI identifier, final Stream<? extends Quad> remove,
-            final Stream<? extends Quad> add, final Instant time) {
+            final Stream<? extends Quad> add, final Instant time, final Boolean cacheAsync) {
         final File dir = resourceDirectory(partitions, identifier);
         if (isNull(dir)) {
             return false;
         }
         dir.mkdirs();
         return RDFPatch.write(new File(dir, RESOURCE_JOURNAL), remove, add, time) &&
-            (async || CachedResource.write(dir, identifier));
+            (async || cacheAsync || CachedResource.write(dir, identifier));
     }
 
     @Override

@@ -78,7 +78,7 @@ public class CachedResource extends AbstractFileResource {
      */
     protected CachedResource(final File directory, final IRI identifier, final ResourceData data) {
         super(directory, identifier, data);
-        LOGGER.debug("Creating a Cached Resource for {}", identifier.getIRIString());
+        LOGGER.debug("Fetching a Cached Resource for {}", identifier.getIRIString());
     }
 
     /**

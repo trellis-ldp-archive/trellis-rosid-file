@@ -21,6 +21,7 @@ import static java.nio.file.Files.newBufferedWriter;
 import static java.nio.file.StandardOpenOption.APPEND;
 import static java.nio.file.StandardOpenOption.CREATE;
 import static java.time.Instant.parse;
+import static java.time.temporal.ChronoUnit.MILLIS;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
@@ -183,7 +184,7 @@ final class RDFPatch {
                 } else if (line.startsWith(END) && hasUserTriples) {
                     final Instant time = parse(line.split(COMMENT_DELIM)[1]);
                     if (nonNull(from)) {
-                        if (time.isAfter(from)) {
+                        if (time.isAfter(from.truncatedTo(MILLIS))) {
                             buffer = new VersionRange(from, time);
                             from = time;
                         }
@@ -276,7 +277,7 @@ final class RDFPatch {
 
         private void checkIfMovedIntoTarget(final String line) {
             final Instant moment = parse(line.split(COMMENT_DELIM, 2)[1]);
-            if (!time.isBefore(moment)) {
+            if (!time.isBefore(moment.truncatedTo(MILLIS))) {
                 buffer = rdf.createQuad(Trellis.PreferServerManaged, identifier, DC.modified,
                         rdf.createLiteral(moment.toString(), XSD.dateTime));
                 hasModified = true;
@@ -299,7 +300,8 @@ final class RDFPatch {
                     }
 
                 // Check if the reader has entered the target region
-                } else if (line.startsWith(END) && !time.isBefore(parse(line.split(COMMENT_DELIM, 2)[1]))) {
+                } else if (line.startsWith(END) && !time.isBefore(parse(line.split(COMMENT_DELIM, 2)[1])
+                            .truncatedTo(MILLIS))) {
                     inRegion = true;
                 }
 

@@ -116,7 +116,7 @@ public class FileResourceService extends AbstractResourceService {
     }
 
     @Override
-    public Stream<IRI> compact(final IRI identifier) {
+    public Stream<IRI> compact(final IRI identifier, final Instant from, final Instant until) {
         throw new UnsupportedOperationException("compact is not implemented");
     }
 

@@ -460,6 +460,6 @@ public class FileResourceServiceTest {
 
     @Test(expected = UnsupportedOperationException.class)
     public void testCompact() {
-        service.compact(identifier);
+        service.compact(identifier, now(), now());
     }
 }

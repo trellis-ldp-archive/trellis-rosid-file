@@ -13,7 +13,6 @@
  */
 package org.trellisldp.rosid.file;
 
-import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
@@ -76,17 +75,16 @@ abstract class AbstractFileResource implements Resource {
 
     @Override
     public List<VersionRange> getMementos() {
-        final List<Instant> times = data.getGeneratedAtTime();
-        if (times.size() > 1) {
-            final List<VersionRange> mementos = new ArrayList<>();
-            Instant last = times.get(0);
-            for (final Instant time : times.subList(1, times.size())) {
-                mementos.add(new VersionRange(last, time));
-                last = time;
-            }
-            return mementos;
-        }
-        return emptyList();
+        return ofNullable(data.getGeneratedAtTime()).filter(list -> list.size() > 1)
+            .map(dateTimes -> {
+                final List<VersionRange> mementos = new ArrayList<>();
+                Instant last = dateTimes.get(0);
+                for (final Instant time : dateTimes.subList(1, dateTimes.size())) {
+                    mementos.add(new VersionRange(last, time));
+                    last = time;
+                }
+                return mementos;
+            }).orElseGet(Collections::emptyList);
     }
 
     @Override

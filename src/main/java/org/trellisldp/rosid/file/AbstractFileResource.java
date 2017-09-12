@@ -13,6 +13,7 @@
  */
 package org.trellisldp.rosid.file;
 
+import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
@@ -21,14 +22,17 @@ import static org.trellisldp.spi.RDFUtils.getInstance;
 
 import java.io.File;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.RDF;
 import org.trellisldp.api.Binary;
 import org.trellisldp.api.Resource;
+import org.trellisldp.api.VersionRange;
 import org.trellisldp.rosid.common.ResourceData;
 import org.trellisldp.vocabulary.LDP;
 
@@ -68,6 +72,21 @@ abstract class AbstractFileResource implements Resource {
     @Override
     public Boolean hasAcl() {
         return ofNullable(data.getHasAcl()).orElse(false);
+    }
+
+    @Override
+    public List<VersionRange> getMementos() {
+        final List<Instant> times = data.getGeneratedAtTime();
+        if (times.size() > 1) {
+            final List<VersionRange> mementos = new ArrayList<>();
+            Instant last = times.get(0);
+            for (final Instant time : times.subList(1, times.size())) {
+                mementos.add(new VersionRange(last, time));
+                last = time;
+            }
+            return mementos;
+        }
+        return emptyList();
     }
 
     @Override

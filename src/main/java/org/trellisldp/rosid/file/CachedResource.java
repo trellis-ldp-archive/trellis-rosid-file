@@ -22,7 +22,6 @@ import static java.nio.file.StandardOpenOption.CREATE;
 import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
 import static java.nio.file.StandardOpenOption.WRITE;
 import static java.time.Instant.now;
-import static java.util.Collections.unmodifiableList;
 import static java.util.Objects.isNull;
 import static java.util.stream.Stream.empty;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -38,9 +37,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -49,7 +46,6 @@ import org.apache.commons.rdf.api.Quad;
 import org.slf4j.Logger;
 
 import org.trellisldp.api.Resource;
-import org.trellisldp.api.VersionRange;
 import org.trellisldp.rosid.common.ResourceData;
 
 /**
@@ -199,43 +195,4 @@ public class CachedResource extends AbstractFileResource {
         return empty();
     }
 
-    @Override
-    public List<VersionRange> getMementos() {
-        final List<VersionRange> mementos = new ArrayList<>();
-        final MementoReader reader = new MementoReader(data.getGeneratedAtTime());
-        reader.forEachRemaining(mementos::add);
-        return unmodifiableList(mementos);
-    }
-
-    /**
-     * A class for reading a file of change times
-     */
-    static class MementoReader implements Iterator<VersionRange> {
-        private final Iterator<Instant> dateIter;
-        private Instant from = null;
-
-        /**
-         * Create a new MementoReader
-         * @param file the file
-         */
-        public MementoReader(final List<Instant> times) {
-            dateIter = times.iterator();
-            if (dateIter.hasNext()) {
-                from = dateIter.next();
-            }
-        }
-
-        @Override
-        public boolean hasNext() {
-            return dateIter.hasNext();
-        }
-
-        @Override
-        public VersionRange next() {
-            final Instant until = dateIter.next();
-            final VersionRange range = new VersionRange(from, until);
-            from = until;
-            return range;
-        }
-    }
 }

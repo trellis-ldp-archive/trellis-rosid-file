@@ -162,11 +162,6 @@ public class VersionedResource extends AbstractFileResource {
     }
 
     @Override
-    public List<VersionRange> getMementos() {
-        return asTimeMap(new File(directory, RESOURCE_JOURNAL));
-    }
-
-    @Override
     public Stream<Quad> stream() {
         return of(new File(directory, RESOURCE_JOURNAL)).filter(File::exists)
             .map(file -> asStream(rdf, file, identifier, time)).orElseGet(Stream::empty);

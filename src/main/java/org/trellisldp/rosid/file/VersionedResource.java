@@ -24,6 +24,7 @@ import static org.trellisldp.rosid.file.RDFPatch.asTimeMap;
 
 import java.io.File;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -127,9 +128,14 @@ public class VersionedResource extends AbstractFileResource {
      */
     public static Optional<ResourceData> read(final File directory, final IRI identifier, final Instant time) {
         return of(new File(directory, RESOURCE_JOURNAL)).filter(File::exists).flatMap(file -> {
+            final List<Instant> mementos = new ArrayList<>();
+            final List<VersionRange> ranges = asTimeMap(file);
+            ranges.stream().map(VersionRange::getFrom).findFirst().ifPresent(mementos::add);
+            ranges.stream().map(VersionRange::getUntil).forEach(mementos::add);
+
             try (final Dataset dataset = rdf.createDataset()) {
                 asStream(rdf, file, identifier, time).filter(isResourceTriple).forEach(dataset::add);
-                return from(identifier, dataset);
+                return from(identifier, dataset, mementos);
             } catch (final Exception ex) {
                 throw new RuntimeRepositoryException("Error processing dataset", ex);
             }

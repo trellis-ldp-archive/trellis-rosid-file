@@ -4,5 +4,6 @@
     "@type" : "http://www.w3.org/ns/ldp#RDFSource" ,
     "type" : [ "http://example.org/types/Foo", "http://example.org/types/Bar" ] ,
     "inbox" : "http://example.org/receiver/inbox" ,
+    "generatedAtTime" : [ "2017-02-15T11:15:00Z" , "2017-03-02T02:34:12Z" , "2017-03-03T02:34:12Z" ] ,
     "modified" : "2017-02-15T11:15:00Z"
 }

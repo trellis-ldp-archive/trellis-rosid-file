@@ -27,7 +27,6 @@ import static java.util.Optional.ofNullable;
 import static java.util.stream.Stream.empty;
 import static java.util.stream.Stream.of;
 import static org.slf4j.LoggerFactory.getLogger;
-import static org.trellisldp.rosid.file.Constants.MEMENTO_CACHE;
 import static org.trellisldp.rosid.file.Constants.RESOURCE_CACHE;
 import static org.trellisldp.rosid.file.Constants.RESOURCE_JOURNAL;
 import static org.trellisldp.rosid.file.Constants.RESOURCE_QUADS;
@@ -145,7 +144,6 @@ public class FileResourceService extends AbstractResourceService {
         try {
             deleteIfExists(new File(directory, RESOURCE_CACHE).toPath());
             deleteIfExists(new File(directory, RESOURCE_QUADS).toPath());
-            deleteIfExists(new File(directory, MEMENTO_CACHE).toPath());
             // Truncate history file, rather than actually deleting it
             try (final BufferedWriter writer = newBufferedWriter(
                         new File(directory, RESOURCE_JOURNAL).toPath(), UTF_8, WRITE, TRUNCATE_EXISTING)) {

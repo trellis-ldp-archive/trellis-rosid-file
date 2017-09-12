@@ -16,16 +16,13 @@ package org.trellisldp.rosid.file;
 import static java.time.Instant.now;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
-import static org.trellisldp.rosid.file.Constants.MEMENTO_CACHE;
 import static org.trellisldp.rosid.file.Constants.RESOURCE_CACHE;
 import static org.trellisldp.rosid.file.Constants.RESOURCE_QUADS;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import org.trellisldp.api.Resource;
@@ -74,17 +71,6 @@ public class CachedResourceTest {
         assertFalse(resource.isPresent());
     }
 
-    @Test(expected = NoSuchElementException.class)
-    public void testMementoReader() throws Exception {
-        try (final CachedResource.MementoReader reader = new CachedResource.MementoReader(new File(ldprs,
-                    MEMENTO_CACHE))) {
-            while (reader.hasNext()) {
-                assertNotNull(reader.next());
-            }
-            reader.next();
-        }
-    }
-
     @Test
     public void testWriteNonExistent() {
         final File fileUnknown = new File(file3, "testing");
@@ -107,16 +93,11 @@ public class CachedResourceTest {
     @Test
     public void testWriteErrorResource() throws IOException {
         final File cache = new File(readonly2, RESOURCE_CACHE);
-        final File mementos = new File(readonly2, MEMENTO_CACHE);
         final File quads = new File(readonly2, RESOURCE_QUADS);
 
         readonly2.setWritable(true);
         cache.createNewFile();
-        mementos.createNewFile();
         quads.createNewFile();
-
-        assumeTrue(mementos.setWritable(false));
-        assertFalse(CachedResource.write(readonly2, ldprsIri, now()));
 
         assumeTrue(quads.setWritable(false));
         assertFalse(CachedResource.write(readonly2, ldprsIri, now()));
@@ -125,13 +106,12 @@ public class CachedResourceTest {
         assertFalse(CachedResource.write(readonly2, ldprsIri, now()));
 
         quads.setWritable(true);
-        mementos.setWritable(true);
         cache.setWritable(true);
     }
 
     @Test
     public void testWriteError2() {
-        final File resource = new File(readonly2, MEMENTO_CACHE);
+        final File resource = new File(readonly2, RESOURCE_QUADS);
         assumeTrue(readonly2.setWritable(true));
         assumeTrue(resource.setWritable(false));
         assertFalse(CachedResource.write(readonly2, identifier, now()));
@@ -142,15 +122,10 @@ public class CachedResourceTest {
     public void testReadError() {
         final Optional<Resource> res = CachedResource.find(readonly2, rdf.createIRI("trellis:repository/ldpnr"));
         assertTrue(res.isPresent());
-        final File mementos = new File(readonly2, MEMENTO_CACHE);
-        assumeTrue(mementos.setReadable(false));
-        assertTrue(res.get().getMementos().isEmpty());
-        mementos.setReadable(true);
 
         final File quads = new File(readonly2, RESOURCE_QUADS);
         assumeTrue(quads.setReadable(false));
         assertEquals(0L, res.get().stream().count());
         quads.setReadable(true);
     }
-
 }

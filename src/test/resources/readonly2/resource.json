@@ -8,6 +8,7 @@
         "size" : 123456,
         "modified" : "2017-02-15T10:05:00Z" } ,
     "type" : [ "http://example.org/types/Foo", "http://example.org/types/Bar" ] ,
+    "generatedAtTime" : [ "2017-02-15T10:05:00Z" , "2017-02-15T11:15:00Z" ] ,
     "inbox" : "http://example.org/receiver/inbox" ,
     "modified" : "2017-02-15T11:15:00Z"
 }

@@ -23,8 +23,6 @@ final class Constants {
 
     public static final String RESOURCE_QUADS = "resource.nq";
 
-    public static final String MEMENTO_CACHE = "memento.cache";
-
     private Constants() {
         // prevent instantiation
     }

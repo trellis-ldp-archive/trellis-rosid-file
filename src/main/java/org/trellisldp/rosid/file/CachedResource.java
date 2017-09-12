@@ -22,12 +22,10 @@ import static java.nio.file.StandardOpenOption.CREATE;
 import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
 import static java.nio.file.StandardOpenOption.WRITE;
 import static java.time.Instant.now;
-import static java.time.Instant.parse;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Objects.isNull;
 import static java.util.stream.Stream.empty;
 import static org.slf4j.LoggerFactory.getLogger;
-import static org.trellisldp.rosid.file.Constants.MEMENTO_CACHE;
 import static org.trellisldp.rosid.file.Constants.RESOURCE_CACHE;
 import static org.trellisldp.rosid.file.Constants.RESOURCE_JOURNAL;
 import static org.trellisldp.rosid.file.Constants.RESOURCE_QUADS;
@@ -184,35 +182,7 @@ public class CachedResource extends AbstractFileResource {
             return false;
         }
 
-        // Write the mementos
-        LOGGER.debug("Writing the Mementos for {}", identifier.getIRIString());
-        try (final BufferedWriter writer = newBufferedWriter(new File(directory, MEMENTO_CACHE).toPath(),
-                    UTF_8, CREATE, WRITE, TRUNCATE_EXISTING)) {
-            final File file = new File(directory, RESOURCE_JOURNAL);
-            final Iterator<VersionRange> iter = RDFPatch.asTimeMap(file).iterator();
-            if (iter.hasNext()) {
-                final VersionRange range = iter.next();
-                writer.write(range.getFrom() + lineSeparator());
-                writer.write(range.getUntil() + lineSeparator());
-            }
-            while (iter.hasNext()) {
-                writer.write(iter.next().getUntil() + lineSeparator());
-            }
-        } catch (final IOException ex) {
-            LOGGER.error("Error writing memento cache for {}: {}", identifier.getIRIString(), ex.getMessage());
-            return false;
-        }
-
         return true;
-    }
-
-    @Override
-    public List<VersionRange> getMementos() {
-        final List<VersionRange> mementos = new ArrayList<>();
-        try (final MementoReader reader = new MementoReader(new File(directory, MEMENTO_CACHE))) {
-            reader.forEachRemaining(mementos::add);
-        }
-        return unmodifiableList(mementos);
     }
 
     @Override
@@ -229,47 +199,43 @@ public class CachedResource extends AbstractFileResource {
         return empty();
     }
 
+    @Override
+    public List<VersionRange> getMementos() {
+        final List<VersionRange> mementos = new ArrayList<>();
+        final MementoReader reader = new MementoReader(data.getGeneratedAtTime());
+        reader.forEachRemaining(mementos::add);
+        return unmodifiableList(mementos);
+    }
+
     /**
      * A class for reading a file of change times
      */
-    static class MementoReader implements Iterator<VersionRange>, AutoCloseable {
-        private final Iterator<String> lineIter;
-        private Stream<String> dateLines;
+    static class MementoReader implements Iterator<VersionRange> {
+        private final Iterator<Instant> dateIter;
         private Instant from = null;
 
         /**
          * Create a new MementoReader
          * @param file the file
          */
-        public MementoReader(final File file) {
-            try {
-                dateLines = lines(file.toPath());
-            } catch (final IOException ex) {
-                LOGGER.warn("Could not read file: {}: {}", file.toPath(), ex.getMessage());
-                dateLines = empty();
-            }
-            lineIter = dateLines.iterator();
-            if (lineIter.hasNext()) {
-                from = parse(lineIter.next());
+        public MementoReader(final List<Instant> times) {
+            dateIter = times.iterator();
+            if (dateIter.hasNext()) {
+                from = dateIter.next();
             }
         }
 
         @Override
         public boolean hasNext() {
-            return lineIter.hasNext();
+            return dateIter.hasNext();
         }
 
         @Override
         public VersionRange next() {
-            final Instant until = parse(lineIter.next());
+            final Instant until = dateIter.next();
             final VersionRange range = new VersionRange(from, until);
             from = until;
             return range;
-        }
-
-        @Override
-        public void close() {
-            dateLines.close();
         }
     }
 }

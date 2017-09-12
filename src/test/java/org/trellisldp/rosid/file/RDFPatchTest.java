@@ -15,6 +15,7 @@ package org.trellisldp.rosid.file;
 
 import static org.trellisldp.rosid.file.Constants.RESOURCE_JOURNAL;
 import static java.time.Instant.now;
+import static java.time.temporal.ChronoUnit.MILLIS;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.empty;
 import static java.util.stream.Stream.of;
@@ -148,8 +149,8 @@ public class RDFPatchTest {
 
         final List<VersionRange> versions = RDFPatch.asTimeMap(file);
         assertEquals(1L, versions.size());
-        assertEquals(time, versions.get(0).getFrom());
-        assertEquals(later, versions.get(0).getUntil());
+        assertEquals(time.truncatedTo(MILLIS), versions.get(0).getFrom().truncatedTo(MILLIS));
+        assertEquals(later.truncatedTo(MILLIS), versions.get(0).getUntil().truncatedTo(MILLIS));
     }
 
     @Test

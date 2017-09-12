@@ -106,7 +106,7 @@ final class RDFPatch {
     public static Boolean write(final File file, final Stream<? extends Quad> delete, final Stream<? extends Quad> add,
             final Instant time) {
         try (final BufferedWriter writer = newBufferedWriter(file.toPath(), UTF_8, CREATE, APPEND)) {
-            writer.write(BEGIN + time + lineSeparator());
+            writer.write(BEGIN + time.truncatedTo(MILLIS) + lineSeparator());
             final Iterator<String> delIter = delete.map(quadToString).iterator();
             while (delIter.hasNext()) {
                 writer.write("D " + delIter.next() + lineSeparator());
@@ -115,7 +115,7 @@ final class RDFPatch {
             while (addIter.hasNext()) {
                 writer.write("A " + addIter.next() + lineSeparator());
             }
-            writer.write(END + time + lineSeparator());
+            writer.write(END + time.truncatedTo(MILLIS) + lineSeparator());
         } catch (final IOException ex) {
             LOGGER.error("Error writing data to resource {}: {}", file, ex.getMessage());
             return false;

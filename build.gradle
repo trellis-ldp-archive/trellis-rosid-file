@@ -37,15 +37,16 @@ ext {
     commonsCodecVersion = '1.10'
     commonsIoVersion = '2.5'
     commonsRdfVersion = '0.3.0-incubating'
-    jacksonVersion = '2.8.5'
+    jacksonVersion = '2.9.1'
     slf4jVersion = '1.7.25'
     jenaVersion = '3.4.0'
 
     /* Testing */
     curatorVersion = '4.0.0'
     junitVersion = '4.12'
-    mockitoVersion = '2.8.47'
+    mockitoVersion = '2.10.0'
     logbackVersion = '1.2.3'
+    jacocoVersion = "0.7.9"
 
     /* OSGi */
     projectOsgiVersion = project.version.replaceAll("-SNAPSHOT", ".SNAPSHOT")
@@ -137,7 +138,7 @@ artifacts {
 }
 
 jacoco {
-    toolVersion = "0.7.9"
+    toolVersion = jacocoVersion
 }
 
 license {

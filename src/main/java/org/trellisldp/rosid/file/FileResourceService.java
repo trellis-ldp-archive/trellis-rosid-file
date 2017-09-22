@@ -23,6 +23,7 @@ import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
 import static java.nio.file.StandardOpenOption.WRITE;
 import static java.time.Instant.now;
 import static java.util.Objects.isNull;
+import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Stream.empty;
 import static java.util.stream.Stream.of;
@@ -72,9 +73,12 @@ public class FileResourceService extends AbstractResourceService {
 
     private static final Logger LOGGER = getLogger(FileResourceService.class);
 
+    private final Map<String, String> partitionData;
+
     /**
      * Create a File-based repository service
-     * @param partitions the partition configuration
+     * @param partitionData the partition data configuration
+     * @param partitionUrls the partition URL configuration
      * @param curator the curator framework
      * @param producer the kafka producer
      * @param notifications the notification service
@@ -82,31 +86,39 @@ public class FileResourceService extends AbstractResourceService {
      * @param async generate cached resources asynchronously if true, synchonously if false
      * @throws IOException if the directory is not writable
      */
-    public FileResourceService(final Map<String, String> partitions, final CuratorFramework curator,
-            final Producer<String, String> producer, final EventService notifications,
+    public FileResourceService(final Map<String, String> partitionData, final Map<String, String> partitionUrls,
+            final CuratorFramework curator, final Producer<String, String> producer, final EventService notifications,
             final Supplier<String> idSupplier, final Boolean async) throws IOException {
-        super(partitions, producer, curator, notifications, idSupplier, async);
+        super(partitionUrls, producer, curator, notifications, idSupplier, async);
+
+        requireNonNull(partitionData, "partition data configuration may not be null!");
+
+        RESERVED_PARTITION_NAMES.stream().filter(partitionData::containsKey).findAny().ifPresent(name -> {
+            throw new IllegalArgumentException("Invalid partition name: " + name);
+        });
+
+        this.partitionData = partitionData;
 
         init();
     }
 
     @Override
     public Optional<Resource> get(final IRI identifier) {
-        return ofNullable(resourceDirectory(partitions, identifier)).filter(File::exists)
+        return ofNullable(resourceDirectory(partitionData, identifier)).filter(File::exists)
             .flatMap(dir -> new File(dir, RESOURCE_CACHE).exists() ?
                     CachedResource.find(dir, identifier) : VersionedResource.find(dir, identifier, now()));
     }
 
     @Override
     public Optional<Resource> get(final IRI identifier, final Instant time) {
-        return ofNullable(resourceDirectory(partitions, identifier)).filter(File::exists)
+        return ofNullable(resourceDirectory(partitionData, identifier)).filter(File::exists)
             .flatMap(dir -> VersionedResource.find(dir, identifier, time));
     }
 
     @Override
     protected Boolean write(final IRI identifier, final Stream<? extends Quad> remove,
             final Stream<? extends Quad> add, final Instant time, final Boolean cacheAsync) {
-        final File dir = resourceDirectory(partitions, identifier);
+        final File dir = resourceDirectory(partitionData, identifier);
         if (isNull(dir)) {
             return false;
         }
@@ -123,7 +135,7 @@ public class FileResourceService extends AbstractResourceService {
     @Override
     public Stream<IRI> tryPurge(final IRI identifier) {
         final List<IRI> binaries = new ArrayList<>();
-        final File directory = resourceDirectory(partitions, identifier);
+        final File directory = resourceDirectory(partitionData, identifier);
 
         try (final Stream<String> lineStream = lines(new File(directory, RESOURCE_JOURNAL).toPath())) {
             lineStream.flatMap(line -> {
@@ -159,9 +171,9 @@ public class FileResourceService extends AbstractResourceService {
 
     @Override
     public Stream<Triple> list(final String partition) {
-        if (partitions.containsKey(partition)) {
+        if (partitionData.containsKey(partition)) {
             try {
-                return walk(new File(partitions.get(partition)).toPath(), FileUtils.MAX + 2)
+                return walk(new File(partitionData.get(partition)).toPath(), FileUtils.MAX + 2)
                     .filter(p -> p.endsWith(RESOURCE_CACHE)).map(Path::getParent).map(Path::toFile)
                     .map(CachedResource::read)
                     // TODO - JDK9 optional to stream
@@ -175,7 +187,7 @@ public class FileResourceService extends AbstractResourceService {
     }
 
     private void init() throws IOException {
-        for (final Map.Entry<String, String> storage : partitions.entrySet()) {
+        for (final Map.Entry<String, String> storage : partitionData.entrySet()) {
             final File data = storage.getValue().startsWith("file:") ?
                  new File(create(storage.getValue())) : new File(storage.getValue());
             LOGGER.info("Using resource data directory for '{}': {}", storage.getKey(), data.getAbsolutePath());
@@ -187,7 +199,7 @@ public class FileResourceService extends AbstractResourceService {
             }
             final IRI identifier = rdf.createIRI(TRELLIS_PREFIX + storage.getKey());
             final IRI authIdentifier = rdf.createIRI(TRELLIS_PREFIX + storage.getKey() + "#auth");
-            final File root = resourceDirectory(partitions, identifier);
+            final File root = resourceDirectory(partitionData, identifier);
             final File rootData = new File(root, RESOURCE_JOURNAL);
 
             if (!root.exists() || !rootData.exists()) {

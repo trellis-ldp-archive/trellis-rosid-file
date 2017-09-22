@@ -81,6 +81,7 @@ public class FileResourceServiceTest {
     private CuratorFramework curator;
     private ResourceService service;
     private Map<String, String> partitions = new HashMap<>();
+    private Map<String, String> partitionUrls = new HashMap<>();
 
     @Mock
     private EventService mockEventService;
@@ -97,9 +98,11 @@ public class FileResourceServiceTest {
     public void setUp() throws Exception {
         partitions.clear();
         partitions.put("repository", getClass().getResource("/root").toURI().toString());
+        partitionUrls.put("repository", "http://localhost/");
         curator = newClient(zkServer.getConnectString(), new RetryNTimes(10, 1000));
         curator.start();
-        service = new FileResourceService(partitions, curator, mockProducer, mockEventService, mockIdSupplier, false);
+        service = new FileResourceService(partitions, partitionUrls, curator, mockProducer, mockEventService,
+                mockIdSupplier, false);
     }
 
     @Test
@@ -109,8 +112,8 @@ public class FileResourceServiceTest {
         config.put("repository", partitions.get("repository") + "/root2/a");
         final File root = new File(URI.create(config.get("repository")));
         assertFalse(root.exists());
-        final ResourceService altService = new FileResourceService(config, curator, mockProducer,
-                mockEventService, mockIdSupplier, false);
+        final ResourceService altService = new FileResourceService(config, partitionUrls, curator,
+                mockProducer, mockEventService, mockIdSupplier, false);
         assertFalse(altService.get(identifier, time).isPresent());
         assertTrue(root.exists());
         assertFalse(altService.get(identifier, time).isPresent());
@@ -123,7 +126,7 @@ public class FileResourceServiceTest {
         final File root = new File(URI.create(config.get("repository")));
         assertTrue(root.mkdir());
         assumeTrue(root.setReadOnly());
-        final ResourceService altService = new FileResourceService(config, curator, mockProducer,
+        final ResourceService altService = new FileResourceService(config, partitionUrls, curator, mockProducer,
                 mockEventService, mockIdSupplier, false);
     }
 
@@ -434,7 +437,9 @@ public class FileResourceServiceTest {
     public void testListInvalidPath() throws Exception {
         final Map<String, String> myPartitions = singletonMap("foo",
                 new File(getClass().getResource("/rootList").toURI()).getAbsolutePath() + separator + "non-existent");
-        service = new FileResourceService(myPartitions, curator, mockProducer, mockEventService, mockIdSupplier, false);
+        final Map<String, String> myUrls = singletonMap("foo", "http://localhost/");
+        service = new FileResourceService(myPartitions, myUrls, curator, mockProducer, mockEventService,
+                mockIdSupplier, false);
         assertEquals(1L, service.list("foo").count());
         assertEquals(of(rdf.createTriple(rdf.createIRI("trellis:foo"), type, LDP.Container)),
                 service.list("foo").findFirst());
@@ -445,7 +450,8 @@ public class FileResourceServiceTest {
     public void testPurge() throws Exception {
         final Map<String, String> myPartitions = singletonMap("repository",
                 new File(getClass().getResource("/purgeable").toURI()).getAbsolutePath());
-        service = new FileResourceService(myPartitions, curator, mockProducer, mockEventService, mockIdSupplier, false);
+        service = new FileResourceService(myPartitions, partitionUrls, curator, mockProducer, mockEventService,
+                mockIdSupplier, false);
         assertTrue(service.get(identifier).isPresent());
         final List<IRI> binaries = service.purge(identifier).collect(toList());
         assertEquals(1L, binaries.size());

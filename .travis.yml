@@ -8,10 +8,14 @@ addons:
     packages:
       - oracle-java8-installer
       - oracle-java9-installer
+  sonarcloud:
+    organization: "trellis-ldp"
+    token:
+      secure: "Cb3JIJRAnbnZR4zxse4qpNnAvxJv75aP/53uVBhbQ8RiHpL7BRoDA7yhmsEjxj+LmZpBYiBD3FnvJO0HcrBYW033vfhoTGHWUR2KOgBPsX5VsEQxe+Y0vdGTf2Ug1h/d3vOU/nnhDXYRqfxbH/GI2ao/4MYDhasRFt/pUJN5wpHtL0fAI5ugLmcR90JhUK+TuX/OzCbi4MLPafHTe3Rd2tYTMV8jenTCa8yQ7BPSh80SY7OPLVwJiN9JJyo3xEfMyD4d9WzbgoXkBp3d5ZWiHzzelFA2OMESRDCvBm9aT8/h+6QjhsPFD0uONYi5DwV3oG9H2M5JsAlTisYfJGVOdGnMYcR99y8iBo9Wm4TJKx4gQk1Qfo9KpMmHPIr/WwcPXyoaWIJulxB59Oro/GJgELxpxUuzHwVGzWIzdwnsgSqKLyXjSkYfT/y+QEM9Z7y1Sszq2rt1hx1U601RzF/cY7GkNSgVw6CMfKbnVu8aotAM20K0tw8CcCAyo3Of1Ti13NO2MIZwsnie4j2c4ULcqKdbbrVhicQiPdNtrG2PJmg1y9y9vOkL6XU5WLgb12qe/9CLtWOhoZWHjc3BS5m6Sj4W5XmAm9GrUEEFV3vftw3hEAWrwIynTAjrpo6JCSK0C/cHAF4qMl09EJ+H0KXasix6SVaQ0dIwBVwJaRnQKto="
 
 jdk:
   - oraclejdk8
   - oraclejdk9
 
 after_success:
-  - ./gradlew jacocoTestReport coveralls
+  - ./gradlew jacocoTestReport coveralls sonarqube

@@ -134,7 +134,9 @@ public class VersionedResource extends AbstractFileResource {
             ranges.stream().map(VersionRange::getUntil).forEach(mementos::add);
 
             try (final Dataset dataset = rdf.createDataset()) {
-                asStream(rdf, file, identifier, time).filter(isResourceTriple).forEach(dataset::add);
+                try (final Stream<Quad> stream = asStream(rdf, file, identifier, time)) {
+                    stream.filter(isResourceTriple).forEach(dataset::add);
+                }
                 return from(identifier, dataset, mementos);
             } catch (final Exception ex) {
                 throw new RuntimeRepositoryException("Error processing dataset", ex);

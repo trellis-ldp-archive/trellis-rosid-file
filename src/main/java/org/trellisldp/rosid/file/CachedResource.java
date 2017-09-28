@@ -116,6 +116,7 @@ public class CachedResource extends AbstractFileResource {
         }
 
         try {
+            LOGGER.debug("Parsing JSON metadata");
             return Optional.of(MAPPER.readValue(new File(directory, RESOURCE_CACHE), ResourceData.class));
         } catch (final IOException ex) {
             LOGGER.warn("Error reading cached resource: {}", ex.getMessage());
@@ -187,6 +188,7 @@ public class CachedResource extends AbstractFileResource {
         final File file = new File(directory, RESOURCE_QUADS);
         if (file.exists()) {
             try {
+                // TODO -- JDK9 shortcut Optional::stream and flatMap
                 return lines(file.toPath()).map(line -> stringToQuad(rdf, line)).filter(Optional::isPresent)
                     .map(Optional::get);
             } catch (final IOException ex) {

@@ -88,6 +88,7 @@ final class RDFPatch {
      * @return a list of VersionRange objects
      */
     public static List<VersionRange> asTimeMap(final File file) {
+        LOGGER.debug("Reading Journal for TimeMap data");
         final List<VersionRange> ranges = new ArrayList<>();
         try (final TimeMapReader reader = new TimeMapReader(file)) {
             reader.forEachRemaining(ranges::add);

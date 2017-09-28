@@ -127,6 +127,7 @@ public class VersionedResource extends AbstractFileResource {
      * @return the resource data, if it exists
      */
     public static Optional<ResourceData> read(final File directory, final IRI identifier, final Instant time) {
+        LOGGER.debug("Reading journal to generate the resource data");
         return of(new File(directory, RESOURCE_JOURNAL)).filter(File::exists).flatMap(file -> {
             final List<Instant> mementos = new ArrayList<>();
             final List<VersionRange> ranges = asTimeMap(file);
@@ -155,7 +156,7 @@ public class VersionedResource extends AbstractFileResource {
             final Instant time) {
         super(directory, identifier, data);
         this.time = time;
-        LOGGER.debug("Creating a Versioned Resource for {}", identifier.getIRIString());
+        LOGGER.debug("Fetching a Versioned Resource for {}", identifier.getIRIString());
     }
 
     @Override
@@ -165,6 +166,7 @@ public class VersionedResource extends AbstractFileResource {
 
     @Override
     public Stream<Quad> stream() {
+        LOGGER.debug("Streaming versioned resource data");
         return of(new File(directory, RESOURCE_JOURNAL)).filter(File::exists)
             .map(file -> asStream(rdf, file, identifier, time).sequential().distinct()).orElseGet(Stream::empty);
     }

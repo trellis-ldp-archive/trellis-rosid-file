@@ -14,6 +14,7 @@
 package org.trellisldp.rosid.file;
 
 import static java.io.File.separator;
+import static java.time.Instant.MAX;
 import static java.time.Instant.now;
 import static java.time.Instant.parse;
 import static java.util.Collections.singleton;
@@ -154,6 +155,70 @@ public class FileResourceServiceTest {
             assertEquals(testResource, r.getIdentifier());
             assertTrue(r.stream().anyMatch(q -> q.getPredicate().equals(DC.title)));
             assertTrue(r.getModified().isBefore(now()));
+        });
+    }
+
+    @Test
+    public void testWriteResourceAsync() throws IOException {
+        final ResourceService service = new FileResourceService(partitions, partitionUrls, curator, mockProducer,
+                mockEventService, mockIdSupplier, false);
+        final IRI testResource2 = rdf.createIRI("trellis:repository/testResource2");
+        final Dataset data = rdf.createDataset();
+        final IRI inbox1 = rdf.createIRI("http://example.org/1/");
+        final IRI inbox2 = rdf.createIRI("http://example.org/2/");
+        data.add(rdf.createQuad(Trellis.PreferUserManaged, testResource2, DC.title, rdf.createLiteral("A title")));
+        data.add(rdf.createQuad(Trellis.PreferUserManaged, testResource2, LDP.inbox, inbox1));
+        data.add(rdf.createQuad(Trellis.PreferServerManaged, testResource2, type, LDP.RDFSource));
+        assertFalse(service.get(testResource2).isPresent());
+        assertFalse(service.get(testResource2, now()).isPresent());
+
+        assertTrue(service.put(testResource2, data));
+        final Optional<Resource> res = service.get(testResource2, now());
+        assertTrue(res.isPresent());
+        res.ifPresent(r -> {
+            assertEquals(LDP.RDFSource, r.getInteractionModel());
+            assertEquals(testResource2, r.getIdentifier());
+            assertTrue(r.stream().anyMatch(q -> q.getPredicate().equals(DC.title)));
+            assertTrue(r.getModified().isBefore(now()));
+            assertEquals(of(inbox1), r.getInbox());
+        });
+        final Optional<Resource> res2 = service.get(testResource2);
+        assertTrue(res2.isPresent());
+        res2.ifPresent(r -> {
+            assertEquals(LDP.RDFSource, r.getInteractionModel());
+            assertEquals(testResource2, r.getIdentifier());
+            assertTrue(r.stream().anyMatch(q -> q.getPredicate().equals(DC.title)));
+            assertTrue(r.getModified().isBefore(now()));
+            assertEquals(of(inbox1), r.getInbox());
+        });
+
+        final ResourceService service2 = new FileResourceService(partitions, partitionUrls, curator, mockProducer,
+                mockEventService, mockIdSupplier, true);
+
+        final Dataset data2 = rdf.createDataset();
+        data.stream().filter(q -> !LDP.inbox.equals(q.getPredicate())).forEach(data2::add);
+        data2.add(rdf.createQuad(Trellis.PreferUserManaged, testResource2, LDP.inbox, inbox2));
+        assertTrue(service2.put(testResource2, data2));
+        final Optional<Resource> res3 = service2.get(testResource2, MAX);
+        assertTrue(res3.isPresent());
+        res3.ifPresent(r -> {
+            assertEquals(LDP.RDFSource, r.getInteractionModel());
+            assertEquals(testResource2, r.getIdentifier());
+            assertTrue(r.stream().anyMatch(q -> q.getPredicate().equals(DC.title)));
+            assertTrue(r.stream().anyMatch(q -> q.getPredicate().equals(LDP.inbox)));
+            assertTrue(r.getModified().isBefore(now()));
+            assertEquals(of(inbox2), r.getInbox());
+        });
+
+        final Optional<Resource> res4 = service2.get(testResource2);
+        assertTrue(res4.isPresent());
+        res4.ifPresent(r -> {
+            assertEquals(LDP.RDFSource, r.getInteractionModel());
+            assertEquals(testResource2, r.getIdentifier());
+            assertTrue(r.stream().anyMatch(q -> q.getPredicate().equals(DC.title)));
+            assertTrue(r.stream().anyMatch(q -> q.getPredicate().equals(LDP.inbox)));
+            assertTrue(r.getModified().isBefore(now()));
+            assertEquals(of(inbox1), r.getInbox());
         });
     }
 
@@ -462,6 +527,14 @@ public class FileResourceServiceTest {
         assertTrue(service.get(testResource).isPresent());
         assertEquals(0L, service.purge(testResource).count());
         assertFalse(service.get(testResource).isPresent());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testInvalidPartitionName() throws Exception {
+        final Map<String, String> myPartitions = singletonMap("admin",
+                new File(getClass().getResource("/rootList").toURI()).getAbsolutePath());
+        new FileResourceService(myPartitions, partitionUrls, curator, mockProducer, mockEventService,
+                mockIdSupplier, false);
     }
 
     @Test(expected = UnsupportedOperationException.class)

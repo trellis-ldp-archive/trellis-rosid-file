@@ -168,10 +168,11 @@ public class CachedResource extends AbstractFileResource {
         try (final BufferedWriter writer = newBufferedWriter(new File(directory, RESOURCE_QUADS).toPath(),
                     UTF_8, CREATE, WRITE, TRUNCATE_EXISTING)) {
             final File file = new File(directory, RESOURCE_JOURNAL);
-            final Iterator<String> lineIter = RDFPatch.asStream(rdf, file, identifier, time)
-                    .map(RDFPatch.quadToString).iterator();
-            while (lineIter.hasNext()) {
-                writer.write(lineIter.next() + lineSeparator());
+            try (final Stream<? extends Quad> stream = RDFPatch.asStream(rdf, file, identifier, time)) {
+                final Iterator<String> lineIter = stream.map(RDFPatch.quadToString).iterator();
+                while (lineIter.hasNext()) {
+                    writer.write(lineIter.next() + lineSeparator());
+                }
             }
         } catch (final IOException ex) {
             LOGGER.error("Error writing resource cache for {}: {}", identifier.getIRIString(), ex.getMessage());

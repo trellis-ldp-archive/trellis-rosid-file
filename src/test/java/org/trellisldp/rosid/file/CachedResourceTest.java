@@ -18,7 +18,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
-import static org.trellisldp.rosid.file.Constants.RESOURCE_CACHE;
 import static org.trellisldp.rosid.file.Constants.RESOURCE_QUADS;
 
 import java.io.File;
@@ -92,21 +91,12 @@ public class CachedResourceTest {
 
     @Test
     public void testWriteErrorResource() throws IOException {
-        final File cache = new File(readonly2, RESOURCE_CACHE);
-        final File quads = new File(readonly2, RESOURCE_QUADS);
+        readonly2.setWritable(true);
+
+        assumeTrue(readonly2.setWritable(false));
+        assertFalse(CachedResource.write(readonly2, ldprsIri, now()));
 
         readonly2.setWritable(true);
-        cache.createNewFile();
-        quads.createNewFile();
-
-        assumeTrue(quads.setWritable(false));
-        assertFalse(CachedResource.write(readonly2, ldprsIri, now()));
-
-        assumeTrue(cache.setWritable(false));
-        assertFalse(CachedResource.write(readonly2, ldprsIri, now()));
-
-        quads.setWritable(true);
-        cache.setWritable(true);
     }
 
     @Test

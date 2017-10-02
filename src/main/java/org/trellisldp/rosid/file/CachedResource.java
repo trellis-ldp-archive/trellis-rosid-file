@@ -16,8 +16,12 @@ package org.trellisldp.rosid.file;
 import static com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS;
 import static java.lang.System.lineSeparator;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.nio.file.Files.deleteIfExists;
 import static java.nio.file.Files.lines;
+import static java.nio.file.Files.move;
 import static java.nio.file.Files.newBufferedWriter;
+import static java.nio.file.StandardCopyOption.ATOMIC_MOVE;
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static java.nio.file.StandardOpenOption.CREATE;
 import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
 import static java.nio.file.StandardOpenOption.WRITE;
@@ -36,6 +40,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.time.Instant;
 import java.util.Iterator;
 import java.util.Optional;
@@ -43,6 +48,7 @@ import java.util.stream.Stream;
 
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Quad;
+import org.apache.commons.text.RandomStringGenerator;
 import org.slf4j.Logger;
 
 import org.trellisldp.api.Resource;
@@ -58,6 +64,9 @@ public class CachedResource extends AbstractFileResource {
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private static final Logger LOGGER = getLogger(CachedResource.class);
+
+    private static final RandomStringGenerator generator = new RandomStringGenerator.Builder()
+        .withinRange('a', 'z').build();
 
     static {
         MAPPER.configure(WRITE_DATES_AS_TIMESTAMPS, false);
@@ -86,6 +95,25 @@ public class CachedResource extends AbstractFileResource {
     }
 
     /**
+     * Read the cached resource from a directory
+     * @param directory the directory
+     * @return the resource data, if present
+     */
+    public static Optional<ResourceData> read(final File directory) {
+        if (isNull(directory)) {
+            return Optional.empty();
+        }
+
+        try {
+            LOGGER.debug("Parsing JSON metadata");
+            return Optional.of(MAPPER.readValue(new File(directory, RESOURCE_CACHE), ResourceData.class));
+        } catch (final IOException ex) {
+            LOGGER.warn("Error reading cached resource: {}", ex.getMessage());
+        }
+        return Optional.empty();
+    }
+
+    /**
      * Write the resource data into a file as JSON
      * @param directory the directory
      * @param identifier the resource identifier
@@ -103,25 +131,6 @@ public class CachedResource extends AbstractFileResource {
      */
     public static Boolean write(final File directory, final IRI identifier) {
         return write(directory, identifier, now());
-    }
-
-    /**
-     * Read the cached resource from a directory
-     * @param directory the directory
-     * @return the resource data, if present
-     */
-    public static Optional<ResourceData> read(final File directory) {
-        if (isNull(directory)) {
-            return Optional.empty();
-        }
-
-        try {
-            LOGGER.debug("Parsing JSON metadata");
-            return Optional.of(MAPPER.readValue(new File(directory, RESOURCE_CACHE), ResourceData.class));
-        } catch (final IOException ex) {
-            LOGGER.warn("Error reading cached resource: {}", ex.getMessage());
-        }
-        return Optional.empty();
     }
 
     /**
@@ -151,9 +160,17 @@ public class CachedResource extends AbstractFileResource {
         // Write the JSON file
         LOGGER.debug("Writing JSON cache for {}", identifier.getIRIString());
         final Optional<ResourceData> data = VersionedResource.read(directory, identifier, time);
+        final File jsonSource = new File(directory, RESOURCE_CACHE + random(16));
         try {
             if (data.isPresent()) {
-                MAPPER.writeValue(new File(directory, RESOURCE_CACHE), data.get());
+                MAPPER.writeValue(jsonSource, data.get());
+                try {
+                    move(jsonSource.toPath(), new File(directory, RESOURCE_CACHE).toPath(), ATOMIC_MOVE);
+                } catch (final AtomicMoveNotSupportedException ex) {
+                    move(jsonSource.toPath(), new File(directory, RESOURCE_CACHE).toPath(), REPLACE_EXISTING);
+                } finally {
+                    deleteIfExists(jsonSource.toPath());
+                }
             } else {
                 LOGGER.error("No resource data to cache for {}", identifier.getIRIString());
                 return false;
@@ -166,8 +183,9 @@ public class CachedResource extends AbstractFileResource {
 
         // Write the quads
         LOGGER.debug("Writing NQuads cache for {}", identifier.getIRIString());
-        try (final BufferedWriter writer = newBufferedWriter(new File(directory, RESOURCE_QUADS).toPath(),
-                    UTF_8, CREATE, WRITE, TRUNCATE_EXISTING)) {
+        final File nquadSource = new File(directory, RESOURCE_QUADS + random(16));
+        try (final BufferedWriter writer = newBufferedWriter(nquadSource.toPath(), UTF_8, CREATE, WRITE,
+                    TRUNCATE_EXISTING)) {
             final File file = new File(directory, RESOURCE_JOURNAL);
             try (final Stream<? extends Quad> stream = RDFPatch.asStream(rdf, file, identifier, time)) {
                 final Iterator<String> lineIter = stream.map(RDFPatch.quadToString).iterator();
@@ -180,6 +198,18 @@ public class CachedResource extends AbstractFileResource {
             return false;
         }
 
+        try {
+            try {
+                move(nquadSource.toPath(), new File(directory, RESOURCE_QUADS).toPath(), ATOMIC_MOVE);
+            } catch (final AtomicMoveNotSupportedException ex) {
+                move(nquadSource.toPath(), new File(directory, RESOURCE_QUADS).toPath(), REPLACE_EXISTING);
+            } finally {
+                deleteIfExists(nquadSource.toPath());
+            }
+        } catch (final IOException ex) {
+            LOGGER.error("Error replacing resource cache: {}", ex.getMessage());
+            return false;
+        }
         return true;
     }
 
@@ -198,4 +228,7 @@ public class CachedResource extends AbstractFileResource {
         return empty();
     }
 
+    private static String random(final Integer length) {
+        return generator.generate(length);
+    }
 }

@@ -36,6 +36,7 @@ ext {
     trellisRosidCommonVersion = '0.1.0-SNAPSHOT'
     commonsCodecVersion = '1.10'
     commonsIoVersion = '2.5'
+    commonsTextVersion = '1.1'
     commonsRdfVersion = '0.3.0-incubating'
     jacksonVersion = '2.9.1'
     slf4jVersion = '1.7.25'
@@ -64,6 +65,7 @@ dependencies {
 
     implementation group: 'commons-codec', name: 'commons-codec', version: commonsCodecVersion
     implementation group: 'commons-io', name: 'commons-io', version: commonsIoVersion
+    implementation group: 'org.apache.commons', name: 'commons-text', version: commonsTextVersion
     implementation group: 'org.apache.commons', name: 'commons-rdf-jena', version: commonsRdfVersion
     implementation group: 'org.apache.jena', name: 'jena-osgi', version: jenaVersion
     implementation group: 'org.slf4j', name: 'slf4j-api', version: slf4jVersion

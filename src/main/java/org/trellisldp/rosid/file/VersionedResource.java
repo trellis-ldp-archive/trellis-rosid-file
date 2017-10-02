@@ -168,6 +168,6 @@ public class VersionedResource extends AbstractFileResource {
     public Stream<Quad> stream() {
         LOGGER.debug("Streaming versioned resource data");
         return of(new File(directory, RESOURCE_JOURNAL)).filter(File::exists)
-            .map(file -> asStream(rdf, file, identifier, time).sequential().distinct()).orElseGet(Stream::empty);
+            .map(file -> asStream(rdf, file, identifier, time)).orElseGet(Stream::empty);
     }
 }

@@ -78,6 +78,7 @@ final class RDFPatch {
      * @return a stream of RDF triples
      */
     public static Stream<Quad> asStream(final RDF rdf, final File file, final IRI identifier, final Instant time) {
+        LOGGER.debug("Reading Journal for {} as quads", identifier);
         final StreamReader reader = new StreamReader(rdf, file, identifier, time);
         return stream(spliteratorUnknownSize(reader, IMMUTABLE | NONNULL | ORDERED), false).onClose(reader::close);
     }
@@ -106,6 +107,7 @@ final class RDFPatch {
      */
     public static Boolean write(final File file, final Stream<? extends Quad> delete, final Stream<? extends Quad> add,
             final Instant time) {
+        LOGGER.debug("Writing Journal at {}", file.getPath());
         try (final BufferedWriter writer = newBufferedWriter(file.toPath(), UTF_8, CREATE, APPEND)) {
             writer.write(BEGIN + time.truncatedTo(MILLIS) + lineSeparator());
             final Iterator<String> delIter = delete.map(quadToString).iterator();
@@ -171,6 +173,7 @@ final class RDFPatch {
 
         @Override
         public void close() {
+            LOGGER.trace("Closing Journal from Timemap");
             lineStream.close();
         }
 
@@ -251,6 +254,7 @@ final class RDFPatch {
 
         @Override
         public void close() {
+            LOGGER.trace("Closing stream reader");
             try {
                 reader.close();
             } catch (final IOException ex) {

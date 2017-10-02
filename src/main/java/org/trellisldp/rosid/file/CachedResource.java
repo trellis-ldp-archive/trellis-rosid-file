@@ -158,7 +158,7 @@ public class CachedResource extends AbstractFileResource {
         }
 
         // Write the JSON file
-        LOGGER.debug("Writing JSON cache for {}", identifier.getIRIString());
+        LOGGER.debug("Writing JSON cache for {}", identifier);
         final Optional<ResourceData> data = VersionedResource.read(directory, identifier, time);
         final File jsonSource = new File(directory, RESOURCE_CACHE + random(16));
         try {
@@ -176,7 +176,7 @@ public class CachedResource extends AbstractFileResource {
         }
 
         // Write the quads
-        LOGGER.debug("Writing NQuads cache for {}", identifier.getIRIString());
+        LOGGER.debug("Writing NQuads cache for {}", identifier);
         final File nquadSource = new File(directory, RESOURCE_QUADS + random(16));
         try (final BufferedWriter writer = newBufferedWriter(nquadSource.toPath(), UTF_8, CREATE, WRITE,
                     TRUNCATE_EXISTING)) {
@@ -193,6 +193,7 @@ public class CachedResource extends AbstractFileResource {
         }
 
         try {
+            LOGGER.trace("Moving NQuad cache into place for {}", identifier);
             moveIntoPlace(nquadSource, new File(directory, RESOURCE_QUADS));
         } catch (final IOException ex) {
             LOGGER.error("Error replacing resource cache: {}", ex.getMessage());
@@ -203,6 +204,7 @@ public class CachedResource extends AbstractFileResource {
 
     @Override
     public Stream<Quad> stream() {
+        LOGGER.trace("Streaming quads for {}", identifier);
         final File file = new File(directory, RESOURCE_QUADS);
         if (file.exists()) {
             try {

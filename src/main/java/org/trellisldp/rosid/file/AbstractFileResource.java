@@ -75,6 +75,7 @@ abstract class AbstractFileResource implements Resource {
 
     @Override
     public List<VersionRange> getMementos() {
+        LOGGER.trace("Getting mementos");
         return ofNullable(data.getGeneratedAtTime()).filter(list -> list.size() > 1)
             .map(dateTimes -> {
                 final List<VersionRange> mementos = new ArrayList<>();

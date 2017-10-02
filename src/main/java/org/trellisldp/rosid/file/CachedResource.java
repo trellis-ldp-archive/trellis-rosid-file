@@ -164,13 +164,7 @@ public class CachedResource extends AbstractFileResource {
         try {
             if (data.isPresent()) {
                 MAPPER.writeValue(jsonSource, data.get());
-                try {
-                    move(jsonSource.toPath(), new File(directory, RESOURCE_CACHE).toPath(), ATOMIC_MOVE);
-                } catch (final AtomicMoveNotSupportedException ex) {
-                    move(jsonSource.toPath(), new File(directory, RESOURCE_CACHE).toPath(), REPLACE_EXISTING);
-                } finally {
-                    deleteIfExists(jsonSource.toPath());
-                }
+                moveIntoPlace(jsonSource, new File(directory, RESOURCE_CACHE));
             } else {
                 LOGGER.error("No resource data to cache for {}", identifier.getIRIString());
                 return false;
@@ -199,13 +193,7 @@ public class CachedResource extends AbstractFileResource {
         }
 
         try {
-            try {
-                move(nquadSource.toPath(), new File(directory, RESOURCE_QUADS).toPath(), ATOMIC_MOVE);
-            } catch (final AtomicMoveNotSupportedException ex) {
-                move(nquadSource.toPath(), new File(directory, RESOURCE_QUADS).toPath(), REPLACE_EXISTING);
-            } finally {
-                deleteIfExists(nquadSource.toPath());
-            }
+            moveIntoPlace(nquadSource, new File(directory, RESOURCE_QUADS));
         } catch (final IOException ex) {
             LOGGER.error("Error replacing resource cache: {}", ex.getMessage());
             return false;
@@ -226,6 +214,16 @@ public class CachedResource extends AbstractFileResource {
             }
         }
         return empty();
+    }
+
+    private static void moveIntoPlace(final File from, final File to) throws IOException {
+        try {
+            move(from.toPath(), to.toPath(), ATOMIC_MOVE);
+        } catch (final AtomicMoveNotSupportedException ex) {
+            move(from.toPath(), to.toPath(), REPLACE_EXISTING);
+        } finally {
+            deleteIfExists(from.toPath());
+        }
     }
 
     private static String random(final Integer length) {

@@ -38,9 +38,9 @@ import org.apache.commons.rdf.api.Quad;
 import org.slf4j.Logger;
 
 import org.trellisldp.api.Resource;
+import org.trellisldp.api.RuntimeRepositoryException;
 import org.trellisldp.api.VersionRange;
 import org.trellisldp.rosid.common.ResourceData;
-import org.trellisldp.spi.RuntimeRepositoryException;
 import org.trellisldp.vocabulary.LDP;
 import org.trellisldp.vocabulary.OA;
 import org.trellisldp.vocabulary.RDF;

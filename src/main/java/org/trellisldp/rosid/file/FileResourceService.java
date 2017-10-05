@@ -170,7 +170,13 @@ public class FileResourceService extends AbstractResourceService {
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public Stream<Triple> list(final String partition) {
+        return scan(partition);
+    }
+
+    @Override
+    public Stream<Triple> scan(final String partition) {
         if (partitionData.containsKey(partition)) {
             try {
                 return walk(new File(partitionData.get(partition)).toPath(), FileUtils.MAX + 2)

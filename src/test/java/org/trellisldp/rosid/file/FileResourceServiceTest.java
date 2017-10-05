@@ -452,7 +452,19 @@ public class FileResourceServiceTest {
     public void testList() throws Exception {
         final String path = new File(getClass().getResource("/rootList").toURI()).getAbsolutePath();
         partitions.put("repository", path);
+        @SuppressWarnings("deprecation")
         final List<Triple> triples = service.list("repository").collect(toList());
+        assertEquals(3L, triples.size());
+        assertTrue(triples.contains(rdf.createTriple(testResource, type, LDP.RDFSource)));
+        assertTrue(triples.contains(rdf.createTriple(identifier, type, LDP.Container)));
+        assertTrue(triples.contains(rdf.createTriple(rdf.createIRI("trellis:repository"), type, LDP.Container)));
+    }
+
+    @Test
+    public void testScan() throws Exception {
+        final String path = new File(getClass().getResource("/rootList").toURI()).getAbsolutePath();
+        partitions.put("repository", path);
+        final List<Triple> triples = service.scan("repository").collect(toList());
         assertEquals(3L, triples.size());
         assertTrue(triples.contains(rdf.createTriple(testResource, type, LDP.RDFSource)));
         assertTrue(triples.contains(rdf.createTriple(identifier, type, LDP.Container)));
@@ -495,7 +507,7 @@ public class FileResourceServiceTest {
 
     @Test
     public void testListNoPartition() {
-        assertEquals(0L, service.list("non-existent").count());
+        assertEquals(0L, service.scan("non-existent").count());
     }
 
     @Test
@@ -505,10 +517,10 @@ public class FileResourceServiceTest {
         final Map<String, String> myUrls = singletonMap("foo", "http://localhost/");
         service = new FileResourceService(myPartitions, myUrls, curator, mockProducer, mockEventService,
                 mockIdSupplier, false);
-        assertEquals(1L, service.list("foo").count());
+        assertEquals(1L, service.scan("foo").count());
         assertEquals(of(rdf.createTriple(rdf.createIRI("trellis:foo"), type, LDP.Container)),
-                service.list("foo").findFirst());
-        assertEquals(0L, service.list("error").count());
+                service.scan("foo").findFirst());
+        assertEquals(0L, service.scan("error").count());
     }
 
     @Test

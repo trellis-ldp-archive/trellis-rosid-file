@@ -449,18 +449,6 @@ public class FileResourceServiceTest {
     }
 
     @Test
-    public void testList() throws Exception {
-        final String path = new File(getClass().getResource("/rootList").toURI()).getAbsolutePath();
-        partitions.put("repository", path);
-        @SuppressWarnings("deprecation")
-        final List<Triple> triples = service.list("repository").collect(toList());
-        assertEquals(3L, triples.size());
-        assertTrue(triples.contains(rdf.createTriple(testResource, type, LDP.RDFSource)));
-        assertTrue(triples.contains(rdf.createTriple(identifier, type, LDP.Container)));
-        assertTrue(triples.contains(rdf.createTriple(rdf.createIRI("trellis:repository"), type, LDP.Container)));
-    }
-
-    @Test
     public void testScan() throws Exception {
         final String path = new File(getClass().getResource("/rootList").toURI()).getAbsolutePath();
         partitions.put("repository", path);

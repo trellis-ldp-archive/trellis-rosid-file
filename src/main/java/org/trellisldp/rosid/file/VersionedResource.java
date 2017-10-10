@@ -55,6 +55,16 @@ public class VersionedResource extends AbstractFileResource {
 
     private static final Logger LOGGER = getLogger(VersionedResource.class);
 
+    private static final Set<IRI> nonContainers = unmodifiableSet(
+            new HashSet<>(asList(LDP.NonRDFSource, LDP.RDFSource)));
+    private static final Set<IRI> containerGraphs = unmodifiableSet(
+            new HashSet<>(asList(LDP.PreferContainment, LDP.PreferMembership)));
+
+    private static Predicate<Quad> filterContainmentMembership(final IRI interactionModel) {
+        return quad -> !nonContainers.contains(interactionModel) || !quad.getGraphName()
+            .filter(containerGraphs::contains).isPresent();
+    }
+
     /* User-controllable properties that become part of the core resource data */
     private static final Set<IRI> specialUserProperties = unmodifiableSet(new HashSet<>(
                 asList(LDP.inbox, LDP.membershipResource, LDP.hasMemberRelation, LDP.isMemberOfRelation,
@@ -168,6 +178,7 @@ public class VersionedResource extends AbstractFileResource {
     public Stream<Quad> stream() {
         LOGGER.debug("Streaming versioned resource data");
         return of(new File(directory, RESOURCE_JOURNAL)).filter(File::exists)
-            .map(file -> asStream(rdf, file, identifier, time)).orElseGet(Stream::empty);
+            .map(file -> asStream(rdf, file, identifier, time)).orElseGet(Stream::empty)
+            .filter(filterContainmentMembership(getInteractionModel()));
     }
 }

@@ -20,4 +20,5 @@ A <trellis:repository/resource> <http://purl.org/dc/terms/isPartOf> <trellis:rep
 END # 2017-02-02T05:20:00Z
 BEGIN # 2017-02-10T15:12:00Z
 D <trellis:repository/resource> <http://purl.org/dc/terms/isPartOf> <trellis:repository/collection> <http://www.trellisldp.org/ns/trellis#PreferUserManaged> .
+A <ex:foo> an unreadable entry
 END # 2017-02-10T15:12:00Z

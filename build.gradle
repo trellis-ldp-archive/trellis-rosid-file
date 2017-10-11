@@ -92,6 +92,10 @@ gradle.projectsEvaluated {
     }
 }
 
+test {
+    maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
+}
+
 jacocoTestReport {
     reports {
         xml.enabled = true

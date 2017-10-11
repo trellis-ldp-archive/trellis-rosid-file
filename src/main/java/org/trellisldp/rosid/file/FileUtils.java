@@ -24,6 +24,7 @@ import static org.apache.commons.rdf.jena.JenaRDF.asQuad;
 import static org.apache.jena.riot.Lang.NQUADS;
 import static org.apache.jena.riot.RDFParser.fromString;
 import static org.apache.jena.sparql.core.DatasetGraphFactory.create;
+import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.File;
 import java.net.URI;
@@ -36,12 +37,16 @@ import java.util.zip.CRC32;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Quad;
 import org.apache.commons.rdf.api.RDF;
+import org.apache.jena.riot.RiotException;
 import org.apache.jena.sparql.core.DatasetGraph;
+import org.slf4j.Logger;
 
 /**
  * @author acoburn
  */
 public final class FileUtils {
+
+    private static final Logger LOGGER = getLogger(FileUtils.class);
 
     // The length of the CRC directory partition
     public static final int LENGTH = 2;
@@ -84,7 +89,12 @@ public final class FileUtils {
      */
     public static Optional<Quad> stringToQuad(final RDF rdf, final String line) {
         final DatasetGraph dataset = create();
-        fromString(line).lang(NQUADS).parse(dataset);
+        try {
+            fromString(line).lang(NQUADS).parse(dataset);
+        } catch (final RiotException ex) {
+            LOGGER.warn("Skipping invalid data value: {}", line);
+            return empty();
+        }
         final Iterator<org.apache.jena.sparql.core.Quad> i = dataset.find();
         if (i.hasNext()) {
             return of(i.next()).map(x -> asQuad(rdf, x));

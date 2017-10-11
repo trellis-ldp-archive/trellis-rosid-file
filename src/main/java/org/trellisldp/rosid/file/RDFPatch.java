@@ -298,13 +298,21 @@ final class RDFPatch {
             };
         }
 
+        private Boolean shouldSetModificationForContainers() {
+            return (hasContainerModificationQuads || hasModificationQuads) && isNull(momentIfContainer);
+        }
+
+        private Boolean shouldSetModificationForNonContainers() {
+            return hasModificationQuads && isNull(momentIfNotContainer);
+        }
+
         private void maybeEmitModifiedQuad(final String line) {
             final Instant moment = parse(line.split(COMMENT_DELIM, 2)[1]);
             if (!time.isBefore(moment.truncatedTo(MILLIS))) {
-                if ((hasContainerModificationQuads || hasModificationQuads) && isNull(momentIfContainer)) {
+                if (shouldSetModificationForContainers()) {
                     momentIfContainer = moment;
                 }
-                if (hasModificationQuads && isNull(momentIfNotContainer)) {
+                if (shouldSetModificationForNonContainers()) {
                     momentIfNotContainer = moment;
                 }
                 if (LDP.RDFSource.equals(interactionModel) || LDP.NonRDFSource.equals(interactionModel)) {

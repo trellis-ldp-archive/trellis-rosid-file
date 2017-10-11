@@ -1,4 +1,5 @@
 BEGIN # 2017-01-15T09:14:00Z
+A <trellis:repository/ldprs> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/ns/ldp#RDFSource> <http://www.trellisldp.org/ns/trellis#PreferServerManaged> .
 A <trellis:repository/resource> <http://purl.org/dc/terms/title> "Some title"@en <http://www.trellisldp.org/ns/trellis#PreferUserManaged> .
 A <trellis:repository/resource> <http://purl.org/dc/terms/description> "A longer description"@en <http://www.trellisldp.org/ns/trellis#PreferUserManaged> .
 A <trellis:repository/resource> <http://purl.org/dc/terms/subject> <http://example.org/subject/foo> <http://www.trellisldp.org/ns/trellis#PreferUserManaged> .

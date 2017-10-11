@@ -25,6 +25,7 @@ import static java.time.temporal.ChronoUnit.MILLIS;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
+import static java.util.Optional.of;
 import static java.util.Spliterator.IMMUTABLE;
 import static java.util.Spliterator.NONNULL;
 import static java.util.Spliterator.ORDERED;
@@ -32,6 +33,7 @@ import static java.util.Spliterators.spliteratorUnknownSize;
 import static java.util.stream.StreamSupport.stream;
 import static org.slf4j.LoggerFactory.getLogger;
 import static org.trellisldp.rosid.file.FileUtils.stringToQuad;
+import static org.trellisldp.vocabulary.RDF.type;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -55,6 +57,7 @@ import org.apache.commons.rdf.api.RDF;
 import org.slf4j.Logger;
 import org.trellisldp.api.VersionRange;
 import org.trellisldp.vocabulary.DC;
+import org.trellisldp.vocabulary.LDP;
 import org.trellisldp.vocabulary.Trellis;
 import org.trellisldp.vocabulary.XSD;
 
@@ -214,8 +217,13 @@ final class RDFPatch {
 
         private Boolean inRegion = false;
         private Boolean hasModified = false;
+        private Boolean hasModificationQuads = false;
+        private Boolean hasContainerModificationQuads = false;
         private Quad buffer = null;
         private String line = null;
+        private IRI interactionModel = null;
+        private Instant momentIfContainer = null;
+        private Instant momentIfNotContainer = null;
 
         /**
          * Create an iterator that reads a file line-by-line in reverse
@@ -272,20 +280,44 @@ final class RDFPatch {
 
         private Consumer<Quad> quadHandler(final String prefix) {
             return quad -> {
+                if (quad.getGraphName().equals(of(LDP.PreferContainment)) ||
+                        quad.getGraphName().equals(of(LDP.PreferMembership))) {
+                    hasContainerModificationQuads = true;
+                } else {
+                    hasModificationQuads = true;
+                }
                 if (prefix.equals("D")) {
                     deleted.add(quad);
                 } else if (prefix.equals("A") && !deleted.contains(quad)) {
+                    if (quad.getGraphName().filter(Trellis.PreferServerManaged::equals).isPresent() &&
+                            quad.getPredicate().equals(type)) {
+                        interactionModel = (IRI) quad.getObject();
+                    }
                     buffer = quad;
                 }
             };
         }
 
-        private void checkIfMovedIntoTarget(final String line) {
+        private void maybeEmitModifiedQuad(final String line) {
             final Instant moment = parse(line.split(COMMENT_DELIM, 2)[1]);
             if (!time.isBefore(moment.truncatedTo(MILLIS))) {
-                buffer = rdf.createQuad(Trellis.PreferServerManaged, identifier, DC.modified,
-                        rdf.createLiteral(moment.toString(), XSD.dateTime));
-                hasModified = true;
+                if ((hasContainerModificationQuads || hasModificationQuads) && isNull(momentIfContainer)) {
+                    momentIfContainer = moment;
+                }
+                if (hasModificationQuads && isNull(momentIfNotContainer)) {
+                    momentIfNotContainer = moment;
+                }
+                if (LDP.RDFSource.equals(interactionModel) || LDP.NonRDFSource.equals(interactionModel)) {
+                    if (nonNull(momentIfNotContainer)) {
+                        buffer = rdf.createQuad(Trellis.PreferServerManaged, identifier, DC.modified,
+                                rdf.createLiteral(momentIfNotContainer.toString(), XSD.dateTime));
+                        hasModified = true;
+                    }
+                } else if (nonNull(interactionModel) && nonNull(momentIfContainer)) {
+                    buffer = rdf.createQuad(Trellis.PreferServerManaged, identifier, DC.modified,
+                            rdf.createLiteral(momentIfContainer.toString(), XSD.dateTime));
+                    hasModified = true;
+                }
             }
         }
 
@@ -301,7 +333,7 @@ final class RDFPatch {
 
                     // If the reader is in the target region and the modified triple hasn't yet been emitted
                     } else if (line.startsWith(BEGIN) && !hasModified) {
-                        checkIfMovedIntoTarget(line);
+                        maybeEmitModifiedQuad(line);
                     }
 
                 // Check if the reader has entered the target region

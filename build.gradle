@@ -37,14 +37,13 @@ ext {
     commonsIoVersion = '2.5'
     commonsTextVersion = '1.1'
     commonsRdfVersion = '0.3.0-incubating'
-    jacksonVersion = '2.9.2'
     slf4jVersion = '1.7.25'
     jenaVersion = '3.4.0'
 
     /* Testing */
     curatorVersion = '4.0.0'
     junitVersion = '4.12'
-    mockitoVersion = '2.10.0'
+    mockitoVersion = '2.11.0'
     logbackVersion = '1.2.3'
     jacocoVersion = "0.7.9"
 

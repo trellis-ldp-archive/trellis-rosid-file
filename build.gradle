@@ -267,7 +267,7 @@ task docs(type: Javadoc) {
         links "http://docs.oracle.com/javase/8/docs/api/"
         links "https://commons.apache.org/proper/commons-rdf/apidocs/"
         links "https://kafka.apache.org/0110/javadoc/"
-        links "http://www.trellisldp.org/apidocs/"
+        links "https://trellis-ldp.github.io/trellis/apidocs/"
     }
     destinationDir = new File(projectDir, "docs/${version}")
 }

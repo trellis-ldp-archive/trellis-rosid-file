@@ -17,16 +17,18 @@ import static java.time.Instant.MAX;
 import static java.time.Instant.now;
 import static java.util.stream.Stream.empty;
 import static java.util.stream.Stream.of;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 import java.util.Optional;
 
 import org.apache.commons.rdf.api.RDF;
 import org.apache.commons.rdf.jena.JenaRDF;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.platform.runner.JUnitPlatform;
+import org.junit.runner.RunWith;
 import org.trellisldp.api.Resource;
 import org.trellisldp.rosid.common.ResourceData;
 import org.trellisldp.vocabulary.RDFS;
@@ -35,13 +37,14 @@ import org.trellisldp.vocabulary.Trellis;
 /**
  * @author acoburn
  */
+@RunWith(JUnitPlatform.class)
 public class VersionedResourceTest {
 
     private static final RDF rdf = new JenaRDF();
 
     private File directory;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         directory = new File(getClass().getResource("/versionable").toURI());
     }

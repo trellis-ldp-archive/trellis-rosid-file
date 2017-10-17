@@ -22,10 +22,12 @@ import static java.util.Collections.singletonMap;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.toList;
 import static org.apache.curator.framework.CuratorFrameworkFactory.newClient;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.Assume.assumeTrue;
+import static org.mockito.MockitoAnnotations.initMocks;
 import static org.trellisldp.vocabulary.RDF.type;
 import static org.trellisldp.rosid.file.TestUtils.rdf;
 
@@ -49,12 +51,12 @@ import org.apache.curator.test.TestingServer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.MockProducer;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.platform.runner.JUnitPlatform;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
 import org.trellisldp.api.EventService;
 import org.trellisldp.api.Resource;
 import org.trellisldp.api.ResourceService;
@@ -68,7 +70,7 @@ import org.trellisldp.vocabulary.XSD;
 /**
  * @author acoburn
  */
-@RunWith(MockitoJUnitRunner.class)
+@RunWith(JUnitPlatform.class)
 public class FileResourceServiceTest {
 
     private static TestingServer zkServer;
@@ -90,13 +92,14 @@ public class FileResourceServiceTest {
     @Mock
     private Supplier<String> mockIdSupplier;
 
-    @BeforeClass
+    @BeforeAll
     public static void initialize() throws Exception {
         zkServer = new TestingServer(true);
     }
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
+        initMocks(this);
         partitions.clear();
         partitions.put("repository", getClass().getResource("/root").toURI().toString());
         partitionUrls.put("repository", "http://localhost/");
@@ -120,15 +123,15 @@ public class FileResourceServiceTest {
         assertFalse(altService.get(identifier, time).isPresent());
     }
 
-    @Test(expected = IOException.class)
+    @Test
     public void testUnwritableRoot() throws IOException {
         final Map<String, String> config = new HashMap<>();
         config.put("repository", partitions.get("repository") + "/root3");
         final File root = new File(URI.create(config.get("repository")));
         assertTrue(root.mkdir());
         assumeTrue(root.setReadOnly());
-        final ResourceService altService = new FileResourceService(config, partitionUrls, curator, mockProducer,
-                mockEventService, mockIdSupplier, false);
+        assertThrows(IOException.class, () -> new FileResourceService(config, partitionUrls, curator, mockProducer,
+                mockEventService, mockIdSupplier, false));
     }
 
     @Test
@@ -529,16 +532,16 @@ public class FileResourceServiceTest {
         assertFalse(service.get(testResource).isPresent());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testInvalidPartitionName() throws Exception {
         final Map<String, String> myPartitions = singletonMap("admin",
                 new File(getClass().getResource("/rootList").toURI()).getAbsolutePath());
-        new FileResourceService(myPartitions, partitionUrls, curator, mockProducer, mockEventService,
-                mockIdSupplier, false);
+        assertThrows(IllegalArgumentException.class, () -> new FileResourceService(myPartitions, partitionUrls, curator,
+                    mockProducer, mockEventService, mockIdSupplier, false));
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test
     public void testCompact() {
-        service.compact(identifier, now(), now());
+        assertThrows(UnsupportedOperationException.class, () -> service.compact(identifier, now(), now()));
     }
 }

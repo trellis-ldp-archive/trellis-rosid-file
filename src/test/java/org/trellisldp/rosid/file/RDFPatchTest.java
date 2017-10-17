@@ -20,10 +20,11 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.empty;
 import static java.util.stream.Stream.of;
 import static java.time.Instant.parse;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.Assume.assumeTrue;
 import static org.trellisldp.vocabulary.RDF.type;
 
@@ -46,12 +47,15 @@ import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Quad;
 import org.apache.commons.rdf.api.RDF;
 import org.apache.commons.rdf.jena.JenaRDF;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.platform.runner.JUnitPlatform;
+import org.junit.runner.RunWith;
 
 /**
  * @author acoburn
  */
+@RunWith(JUnitPlatform.class)
 public class RDFPatchTest {
 
     private static final RDF rdf = new JenaRDF();
@@ -59,7 +63,7 @@ public class RDFPatchTest {
     private File resDir1 = new File("build/data/res1");
     private File resDir10 = new File("build/data/res10");
 
-    @Before
+    @BeforeEach
     public void setUp() throws IOException {
         resDir1.mkdirs();
         resDir10.mkdirs();
@@ -163,7 +167,7 @@ public class RDFPatchTest {
         file.setWritable(true);
     }
 
-    @Test(expected = NoSuchElementException.class)
+    @Test
     public void testStreamReader() throws Exception {
         final File file = new File(getClass().getResource("/journal1.txt").toURI());
         final Instant time = parse("2017-02-11T02:51:35Z");
@@ -171,34 +175,34 @@ public class RDFPatchTest {
             while (reader.hasNext()) {
                 assertNotNull(reader.next());
             }
-            reader.next();
+            assertThrows(NoSuchElementException.class, reader::next);
         }
     }
 
-    @Test(expected = NoSuchElementException.class)
+    @Test
     public void testTimeMapReader() throws Exception {
         final File file = new File(resDir1, RESOURCE_JOURNAL);
         try (final RDFPatch.TimeMapReader reader = new RDFPatch.TimeMapReader(file)) {
             while (reader.hasNext()) {
                 assertNotNull(reader.next());
             }
-            reader.next();
+            assertThrows(NoSuchElementException.class, reader::next);
         }
     }
 
-    @Test(expected = UncheckedIOException.class)
+    @Test
     public void testStreamReaderNoFile() throws Exception {
         final String dir = new File(getClass().getResource("/journal1.txt").toURI()).getParent();
         final File file = new File(dir, "non-existent-resource");
         assertFalse(file.exists());
-        new RDFPatch.StreamReader(rdf, file, identifier, now());
+        assertThrows(UncheckedIOException.class, () -> new RDFPatch.StreamReader(rdf, file, identifier, now()));
     }
 
-    @Test(expected = UncheckedIOException.class)
+    @Test
     public void testTimeMapReaderNoFile() throws Exception {
         final String dir = new File(getClass().getResource("/journal1.txt").toURI()).getParent();
         final File file = new File(dir, "non-existent-resource");
         assertFalse(file.exists());
-        new RDFPatch.TimeMapReader(file);
+        assertThrows(UncheckedIOException.class, () -> new RDFPatch.TimeMapReader(file));
     }
 }

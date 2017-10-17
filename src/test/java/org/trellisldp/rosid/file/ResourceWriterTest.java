@@ -16,9 +16,9 @@ package org.trellisldp.rosid.file;
 import static java.time.Instant.parse;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.toList;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.trellisldp.rosid.file.TestUtils.rdf;
 import static org.trellisldp.vocabulary.RDF.type;
 
@@ -36,19 +36,22 @@ import java.util.Optional;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Quad;
 import org.apache.commons.rdf.api.Triple;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.platform.runner.JUnitPlatform;
+import org.junit.runner.RunWith;
 
 /**
  * @author acoburn
  */
+@RunWith(JUnitPlatform.class)
 public class ResourceWriterTest {
 
     private static final IRI identifier = rdf.createIRI("trellis:repository/resource");
     private File directory2 = null;
     private File directory4 = null;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         directory2 = new File(getClass().getResource("/res2").toURI());
         directory4 = new File(getClass().getResource("/res4").toURI());

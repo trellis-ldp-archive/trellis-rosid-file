@@ -16,9 +16,9 @@ package org.trellisldp.rosid.file;
 import static java.time.Instant.parse;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.toList;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.trellisldp.rosid.file.TestUtils.rdf;
 import static org.trellisldp.vocabulary.RDF.type;
 
@@ -35,12 +35,15 @@ import org.apache.commons.rdf.api.Quad;
 import org.apache.commons.rdf.api.RDF;
 import org.apache.commons.rdf.api.Triple;
 import org.apache.commons.rdf.jena.JenaRDF;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.platform.runner.JUnitPlatform;
+import org.junit.runner.RunWith;
 
 /**
  * @author acoburn
  */
+@RunWith(JUnitPlatform.class)
 public class LdpNonRdfTest {
 
     private static final RDF rdf = new JenaRDF();
@@ -49,7 +52,7 @@ public class LdpNonRdfTest {
     private IRI identifier = rdf.createIRI("trellis:repository/ldpnr");
     private IRI binary = rdf.createIRI("s3://bucket/some-resource");
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         file = new File(getClass().getResource("/ldpnr").toURI());
     }

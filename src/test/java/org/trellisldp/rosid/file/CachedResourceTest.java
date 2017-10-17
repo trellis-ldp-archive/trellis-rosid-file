@@ -14,9 +14,9 @@
 package org.trellisldp.rosid.file;
 
 import static java.time.Instant.now;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.Assume.assumeTrue;
 import static org.trellisldp.rosid.file.Constants.RESOURCE_QUADS;
 
@@ -28,12 +28,15 @@ import org.trellisldp.api.Resource;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.RDF;
 import org.apache.commons.rdf.jena.JenaRDF;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.platform.runner.JUnitPlatform;
+import org.junit.runner.RunWith;
 
 /**
  * @author acoburn
  */
+@RunWith(JUnitPlatform.class)
 public class CachedResourceTest {
 
     private static final RDF rdf = new JenaRDF();
@@ -42,7 +45,7 @@ public class CachedResourceTest {
     private IRI identifier = rdf.createIRI("trellis:repository/resource");
     private IRI ldprsIri = rdf.createIRI("trellis:repository/ldprs");
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         ldprs = new File(getClass().getResource("/ldprs").toURI());
         file5 = new File(getClass().getResource("/res5").toURI());

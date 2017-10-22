@@ -33,7 +33,7 @@ ext {
     trellisApiVersion = '0.3.0'
     trellisVocabularyVersion = '0.1.0'
     trellisRosidCommonVersion = '0.1.1'
-    commonsCodecVersion = '1.10'
+    commonsCodecVersion = '1.11'
     commonsIoVersion = '2.6'
     commonsTextVersion = '1.1'
     commonsRdfVersion = '0.3.0-incubating'

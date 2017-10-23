@@ -1,0 +1,1 @@
+typeSearchIndex = [{"p":"org.trellisldp.rosid.file","l":"CachedResource"},{"p":"org.trellisldp.rosid.file","l":"FileResourceService"},{"p":"org.trellisldp.rosid.file","l":"FileUtils"},{"p":"org.trellisldp.rosid.file","l":"VersionedResource"}]

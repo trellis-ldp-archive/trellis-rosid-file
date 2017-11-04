@@ -184,16 +184,24 @@ final class RDFPatch {
             lineStream.close();
         }
 
+        private static Instant getInstant(final String line) {
+            final String[] parts = line.split(" ");
+            return parts.length == 4 ? parse(parts[2]) : null;
+        }
+
+        private static Boolean isUserTripleQuad(final String line) {
+            return line.endsWith(Trellis.PreferUserManaged + " .") ||
+                        line.endsWith(Trellis.PreferServerManaged + " .");
+        }
+
         private void tryAdvance() {
             Instant time = null;
             while (allLines.hasNext()) {
                 final String line = allLines.next();
                 if (line.startsWith(MODIFIED_HEADER)) {
-                    final String[] parts = line.split(" ");
-                    time = parts.length == 4 ? parse(parts[2]) : null;
+                    time = getInstant(line);
                     hasUserTriples = false;
-                } else if (line.endsWith(Trellis.PreferUserManaged + " .") ||
-                        line.endsWith(Trellis.PreferServerManaged + " .")) {
+                } else if (isUserTripleQuad(line)) {
                     hasUserTriples = true;
                 } else if (line.startsWith(TX_COMMIT) && hasUserTriples && nonNull(time)) {
                     if (nonNull(from)) {
@@ -225,7 +233,6 @@ final class RDFPatch {
         private final RDF rdf;
         private final IRI identifier;
 
-        private Boolean inRegion = false;
         private Boolean hasModified = false;
         private Boolean hasModificationQuads = false;
         private Boolean hasContainerModificationQuads = false;
@@ -281,26 +288,42 @@ final class RDFPatch {
             }
         }
 
+        private static Boolean isDataLine(final String line) {
+            return line.startsWith(ADD) || line.startsWith(DELETE);
+        }
+
+        private static Boolean shouldContinue(final String line, final Boolean complete) {
+            return nonNull(line) && !complete;
+        }
+
+        private Instant getModifiedIfInRange(final String line) {
+            final String[] parts = line.split(" ", 4);
+            if (parts.length == 4) {
+                final Instant modified = parse(parts[2]);
+                if (!time.isBefore(modified.truncatedTo(MILLIS))) {
+                    return modified;
+                }
+            }
+            return null;
+        }
+
         private Iterator<Quad> readPatch() {
             Boolean complete = false;
-            while (nonNull(line) && !complete) {
+            while (shouldContinue(line, complete)) {
                 if (line.startsWith(MODIFIED_HEADER)) {
-                    final String[] parts = line.split(" ", 4);
-                    if (parts.length == 4) {
-                        final Instant modified = parse(parts[2]);
-                        if (!time.isBefore(modified.truncatedTo(MILLIS))) {
-                            deleted.addAll(patchDeleted);
-                            if (!hasModified) {
-                                maybeEmitModifiedQuad(modified);
-                            }
-                            complete = true;
+                    final Instant modified = getModifiedIfInRange(line);
+                    if (nonNull(modified)) {
+                        deleted.addAll(patchDeleted);
+                        if (!hasModified) {
+                            maybeEmitModifiedQuad(modified);
                         }
+                        complete = true;
                     }
                 } else if (line.startsWith(TX_COMMIT)) {
                     // reset
                     patchDeleted.clear();
                     patchAdded.clear();
-                } else if (line.startsWith(ADD) || line.startsWith(DELETE)) {
+                } else if (isDataLine(line)) {
                     final String[] parts = line.split(" ", 2);
                     stringToQuad(rdf, parts[1]).ifPresent(quadHandler(parts[0]));
                 }

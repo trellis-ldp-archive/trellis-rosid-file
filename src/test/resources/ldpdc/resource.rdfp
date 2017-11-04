@@ -1,7 +1,9 @@
-BEGIN # 2017-02-15T10:05:00Z
+H modified 2017-02-15T10:05:00Z .
+TX .
 A <trellis:repository/ldpdc> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/ns/ldp#DirectContainer> <http://www.trellisldp.org/ns/trellis#PreferServerManaged> .
-END # 2017-02-15T10:05:00Z
-BEGIN # 2017-02-15T11:15:00Z
+TC .
+H modified 2017-02-15T11:15:00Z .
+TX .
 A <trellis:repository/ldpdc> <http://www.w3.org/ns/ldp#inbox> <http://example.org/receiver/inbox> <http://www.trellisldp.org/ns/trellis#PreferUserManaged> .
 A <trellis:repository/ldpdc> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://example.org/types/Foo> <http://www.trellisldp.org/ns/trellis#PreferUserManaged> .
 A <trellis:repository/ldpdc> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://example.org/types/Bar> <http://www.trellisldp.org/ns/trellis#PreferUserManaged> .
@@ -10,16 +12,20 @@ A <http://example.org/some/other/resource> <http://www.w3.org/2000/01/rdf-schema
 A <trellis:repository/ldpdc> <http://www.w3.org/ns/ldp#insertedContentRelation> <ex:foo> <http://www.trellisldp.org/ns/trellis#PreferUserManaged> .
 A <trellis:repository/ldpdc> <http://www.w3.org/ns/ldp#membershipResource> <trellis:repository/container> <http://www.trellisldp.org/ns/trellis#PreferUserManaged> .
 A <trellis:repository/ldpdc> <http://www.w3.org/ns/ldp#hasMemberRelation> <http://purl.org/dc/terms/subject> <http://www.trellisldp.org/ns/trellis#PreferUserManaged> .
-END # 2017-02-15T11:15:00Z
-BEGIN # 2017-02-16T11:15:01Z
+TC .
+H modified 2017-02-16T11:15:01Z .
+TX .
 A <trellis:repository/ldpdc> <http://www.w3.org/ns/ldp#contains> <trellis:repository/ldpdc/1> <http://www.w3.org/ns/ldp#PreferContainment> .
-END # 2017-02-16T11:15:01Z
-BEGIN # 2017-02-16T11:15:02Z
+TC .
+H modified 2017-02-16T11:15:02Z .
+TX .
 A <trellis:repository/ldpdc> <http://www.w3.org/ns/ldp#contains> <trellis:repository/ldpdc/2> <http://www.w3.org/ns/ldp#PreferContainment> .
-END # 2017-02-16T11:15:02Z
-BEGIN # 2017-02-16T11:15:03Z
+TC .
+H modified 2017-02-16T11:15:03Z .
+TX .
 A <trellis:repository/ldpdc> <http://www.w3.org/ns/ldp#contains> <trellis:repository/ldpdc/3> <http://www.w3.org/ns/ldp#PreferContainment> .
-END # 2017-02-16T11:15:03Z
-BEGIN # 2017-03-01T15:15:00Z
+TC .
+H modified 2017-03-01T15:15:00Z .
+TX .
 D <trellis:repository/ldpdc> <http://www.w3.org/ns/ldp#insertedContentRelation> <ex:foo> <http://www.trellisldp.org/ns/trellis#PreferUserManaged> .
-END # 2017-03-01T15:15:00Z
+TC .

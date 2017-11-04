@@ -74,6 +74,7 @@ public class RDFPatchTest {
         final File file = new File(getClass().getResource("/journal1.txt").toURI());
         final Instant time = parse("2017-02-11T02:51:35Z");
         final Graph graph = rdf.createGraph();
+        System.out.println("Checking for 3 triples");
         RDFPatch.asStream(rdf, file, identifier, time).map(Quad::asTriple).forEach(graph::add);
         assertEquals(3L, graph.size());
         assertTrue(graph.contains(identifier, rdf.createIRI("http://www.w3.org/2004/02/skos/core#prefLabel"), null));
@@ -84,6 +85,7 @@ public class RDFPatchTest {
         final File file = new File(getClass().getResource("/journal1.txt").toURI());
         final Instant time = parse("2017-02-09T02:51:35Z");
         final Graph graph = rdf.createGraph();
+        System.out.println("Checking for 4 triples");
         RDFPatch.asStream(rdf, file, identifier, time).map(Quad::asTriple).forEach(graph::add);
         assertEquals(4L, graph.size());
         assertTrue(graph.contains(identifier, rdf.createIRI("http://www.w3.org/2004/02/skos/core#prefLabel"), null));
@@ -95,6 +97,7 @@ public class RDFPatchTest {
         final File file = new File(getClass().getResource("/journal1.txt").toURI());
         final Instant time = parse("2017-01-30T02:51:35Z");
         final Graph graph = rdf.createGraph();
+        System.out.println("Checking for 8 triples");
         RDFPatch.asStream(rdf, file, identifier, time).map(Quad::asTriple).forEach(graph::add);
         assertEquals(8L, graph.size());
         assertFalse(graph.contains(identifier, rdf.createIRI("http://www.w3.org/2004/02/skos/core#prefLabel"), null));
@@ -111,6 +114,7 @@ public class RDFPatchTest {
         final File file = new File(getClass().getResource("/journal1.txt").toURI());
         final Instant time = parse("2017-01-15T09:14:00Z");
         final Graph graph = rdf.createGraph();
+        System.out.println("Checking for 6 triples");
         RDFPatch.asStream(rdf, file, identifier, time).map(Quad::asTriple).forEach(graph::add);
         assertEquals(6L, graph.size());
         assertFalse(graph.contains(identifier, rdf.createIRI("http://www.w3.org/2004/02/skos/core#prefLabel"), null));

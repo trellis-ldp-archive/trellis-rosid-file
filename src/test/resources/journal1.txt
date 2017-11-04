@@ -1,15 +1,18 @@
-BEGIN # 2017-01-15T09:14:00Z
+H modified 2017-01-15T09:14:00Z .
+TX .
 A <trellis:repository/ldprs> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/ns/ldp#RDFSource> <http://www.trellisldp.org/ns/trellis#PreferServerManaged> .
 A <trellis:repository/resource> <http://purl.org/dc/terms/title> "Some title"@en <http://www.trellisldp.org/ns/trellis#PreferUserManaged> .
 A <trellis:repository/resource> <http://purl.org/dc/terms/description> "A longer description"@en <http://www.trellisldp.org/ns/trellis#PreferUserManaged> .
 A <trellis:repository/resource> <http://purl.org/dc/terms/subject> <http://example.org/subject/foo> <http://www.trellisldp.org/ns/trellis#PreferUserManaged> .
 A <trellis:repository/resource> <http://purl.org/dc/terms/subject> <http://example.org/subject/bar> <http://www.trellisldp.org/ns/trellis#PreferUserManaged> .
-END # 2017-01-15T09:14:00Z
-BEGIN # 2017-01-27T12:35:00Z
+TC .
+H modified 2017-01-27T12:35:00Z .
+TX .
 A <trellis:repository/resource> <http://purl.org/dc/terms/spatial> <http://example.org/location/foo> <http://www.trellisldp.org/ns/trellis#PreferUserManaged> .
 A <trellis:repository/resource> <http://purl.org/dc/terms/extent> "27 Hectares" <http://www.trellisldp.org/ns/trellis#PreferUserManaged> .
-END # 2017-01-27T12:35:00Z
-BEGIN # 2017-02-02T05:20:00Z
+TC .
+H modified 2017-02-02T05:20:00Z .
+TX .
 D <trellis:repository/resource> <http://purl.org/dc/terms/title> "Some title"@en <http://www.trellisldp.org/ns/trellis#PreferUserManaged> .
 D <trellis:repository/resource> <http://purl.org/dc/terms/description> "A longer description"@en <http://www.trellisldp.org/ns/trellis#PreferUserManaged> .
 D <trellis:repository/resource> <http://purl.org/dc/terms/subject> <http://example.org/subject/foo> <http://www.trellisldp.org/ns/trellis#PreferUserManaged> .
@@ -18,8 +21,9 @@ D <trellis:repository/resource> <http://purl.org/dc/terms/spatial> <http://examp
 D <trellis:repository/resource> <http://purl.org/dc/terms/extent> "27 Hectares" <http://www.trellisldp.org/ns/trellis#PreferUserManaged> .
 A <trellis:repository/resource> <http://www.w3.org/2004/02/skos/core#prefLabel> "A resource"@en <http://www.trellisldp.org/ns/trellis#PreferUserManaged> .
 A <trellis:repository/resource> <http://purl.org/dc/terms/isPartOf> <trellis:repository/collection> <http://www.trellisldp.org/ns/trellis#PreferUserManaged> .
-END # 2017-02-02T05:20:00Z
-BEGIN # 2017-02-10T15:12:00Z
+TC .
+H modified 2017-02-10T15:12:00Z .
+TX .
 D <trellis:repository/resource> <http://purl.org/dc/terms/isPartOf> <trellis:repository/collection> <http://www.trellisldp.org/ns/trellis#PreferUserManaged> .
 A <ex:foo> an unreadable entry
-END # 2017-02-10T15:12:00Z
+TC .

@@ -22,6 +22,7 @@ import static java.nio.file.StandardOpenOption.APPEND;
 import static java.nio.file.StandardOpenOption.CREATE;
 import static java.time.Instant.parse;
 import static java.time.temporal.ChronoUnit.MILLIS;
+import static java.util.Collections.emptyIterator;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
@@ -68,9 +69,11 @@ final class RDFPatch {
 
     private static final Logger LOGGER = getLogger(RDFPatch.class);
 
-    private static final String COMMENT_DELIM = " # ";
-    private static final String BEGIN = "BEGIN" + COMMENT_DELIM;
-    private static final String END = "END" + COMMENT_DELIM;
+    private static final String ADD = "A ";
+    private static final String DELETE = "D ";
+    private static final String TX = "TX .";
+    private static final String TX_COMMIT = "TC .";
+    private static final String MODIFIED_HEADER = "H modified ";
 
     /**
      * Read the triples from the journal that existed up to (and including) the specified time
@@ -112,16 +115,17 @@ final class RDFPatch {
             final Instant time) {
         LOGGER.debug("Writing Journal at {}", file.getPath());
         try (final BufferedWriter writer = newBufferedWriter(file.toPath(), UTF_8, CREATE, APPEND)) {
-            writer.write(BEGIN + time.truncatedTo(MILLIS) + lineSeparator());
+            writer.write(MODIFIED_HEADER + time.truncatedTo(MILLIS) + " ." + lineSeparator());
+            writer.write(TX + lineSeparator());
             final Iterator<String> delIter = delete.map(quadToString).iterator();
             while (delIter.hasNext()) {
-                writer.write("D " + delIter.next() + lineSeparator());
+                writer.write(DELETE + delIter.next() + lineSeparator());
             }
             final Iterator<String> addIter = add.map(quadToString).iterator();
             while (addIter.hasNext()) {
-                writer.write("A " + addIter.next() + lineSeparator());
+                writer.write(ADD + addIter.next() + lineSeparator());
             }
-            writer.write(END + time.truncatedTo(MILLIS) + lineSeparator());
+            writer.write(TX_COMMIT + lineSeparator());
         } catch (final IOException ex) {
             LOGGER.error("Error writing data to resource {}: {}", file, ex.getMessage());
             return false;
@@ -181,15 +185,17 @@ final class RDFPatch {
         }
 
         private void tryAdvance() {
+            Instant time = null;
             while (allLines.hasNext()) {
                 final String line = allLines.next();
-                if (line.startsWith(BEGIN)) {
+                if (line.startsWith(MODIFIED_HEADER)) {
+                    final String[] parts = line.split(" ");
+                    time = parts.length == 4 ? parse(parts[2]) : null;
                     hasUserTriples = false;
                 } else if (line.endsWith(Trellis.PreferUserManaged + " .") ||
                         line.endsWith(Trellis.PreferServerManaged + " .")) {
                     hasUserTriples = true;
-                } else if (line.startsWith(END) && hasUserTriples) {
-                    final Instant time = parse(line.split(COMMENT_DELIM)[1]);
+                } else if (line.startsWith(TX_COMMIT) && hasUserTriples && nonNull(time)) {
                     if (nonNull(from)) {
                         if (time.isAfter(from.truncatedTo(MILLIS))) {
                             buffer = new VersionRange(from, time);
@@ -210,6 +216,10 @@ final class RDFPatch {
     static class StreamReader implements Iterator<Quad>, AutoCloseable {
 
         private final Set<Quad> deleted = new HashSet<>();
+
+        private final Set<Quad> patchDeleted = new HashSet<>();
+        private final Set<Quad> patchAdded = new HashSet<>();
+
         private final ReversedLinesFileReader reader;
         private final Instant time;
         private final RDF rdf;
@@ -219,7 +229,9 @@ final class RDFPatch {
         private Boolean hasModified = false;
         private Boolean hasModificationQuads = false;
         private Boolean hasContainerModificationQuads = false;
-        private Quad buffer = null;
+
+        private Iterator<Quad> bufferIter = null;
+
         private String line = null;
         private IRI interactionModel = null;
         private Instant momentIfContainer = null;
@@ -242,22 +254,21 @@ final class RDFPatch {
             } catch (final IOException ex) {
                 throw new UncheckedIOException(ex);
             }
-            tryAdvance();
+            bufferIter = readPatch();
         }
 
         @Override
         public boolean hasNext() {
-            return nonNull(buffer);
+            return bufferIter.hasNext();
         }
 
         @Override
         public Quad next() {
-            final Quad quad = buffer;
-            tryAdvance();
-            if (nonNull(quad)) {
-                return quad;
+            final Quad quad = bufferIter.next();
+            if (!bufferIter.hasNext()) {
+                bufferIter = readPatch();
             }
-            throw new NoSuchElementException();
+            return quad;
         }
 
         @Override
@@ -270,12 +281,42 @@ final class RDFPatch {
             }
         }
 
-        private Boolean isRDFPatchLine(final String line) {
-            return line.startsWith("A ") || line.startsWith("D ");
-        }
-
-        private Boolean shouldProceed(final String line, final Quad buffer) {
-            return nonNull(line) && isNull(buffer);
+        private Iterator<Quad> readPatch() {
+            Boolean complete = false;
+            while (nonNull(line) && !complete) {
+                if (line.startsWith(MODIFIED_HEADER)) {
+                    final String[] parts = line.split(" ", 4);
+                    if (parts.length == 4) {
+                        final Instant modified = parse(parts[2]);
+                        if (!time.isBefore(modified.truncatedTo(MILLIS))) {
+                            deleted.addAll(patchDeleted);
+                            if (!hasModified) {
+                                maybeEmitModifiedQuad(modified);
+                            }
+                            complete = true;
+                        }
+                    }
+                } else if (line.startsWith(TX_COMMIT)) {
+                    // reset
+                    patchDeleted.clear();
+                    patchAdded.clear();
+                } else if (line.startsWith(ADD) || line.startsWith(DELETE)) {
+                    final String[] parts = line.split(" ", 2);
+                    stringToQuad(rdf, parts[1]).ifPresent(quadHandler(parts[0]));
+                }
+                try {
+                    line = reader.readLine();
+                } catch (final IOException ex) {
+                    throw new UncheckedIOException(ex);
+                }
+            }
+            if (complete && !patchAdded.isEmpty()) {
+                return patchAdded.iterator();
+            } else if (isNull(line)) {
+                return emptyIterator();
+            } else {
+                return readPatch();
+            }
         }
 
         private Consumer<Quad> quadHandler(final String prefix) {
@@ -287,13 +328,13 @@ final class RDFPatch {
                     hasModificationQuads = true;
                 }
                 if (prefix.equals("D")) {
-                    deleted.add(quad);
+                    patchDeleted.add(quad);
                 } else if (prefix.equals("A") && !deleted.contains(quad)) {
                     if (quad.getGraphName().filter(Trellis.PreferServerManaged::equals).isPresent() &&
                             quad.getPredicate().equals(type)) {
                         interactionModel = (IRI) quad.getObject();
                     }
-                    buffer = quad;
+                    patchAdded.add(quad);
                 }
             };
         }
@@ -306,8 +347,7 @@ final class RDFPatch {
             return hasModificationQuads && isNull(momentIfNotContainer);
         }
 
-        private void maybeEmitModifiedQuad(final String line) {
-            final Instant moment = parse(line.split(COMMENT_DELIM, 2)[1]);
+        private void maybeEmitModifiedQuad(final Instant moment) {
             if (!time.isBefore(moment.truncatedTo(MILLIS))) {
                 if (shouldSetModificationForContainers()) {
                     momentIfContainer = moment;
@@ -317,44 +357,14 @@ final class RDFPatch {
                 }
                 if (LDP.RDFSource.equals(interactionModel) || LDP.NonRDFSource.equals(interactionModel)) {
                     if (nonNull(momentIfNotContainer)) {
-                        buffer = rdf.createQuad(Trellis.PreferServerManaged, identifier, DC.modified,
-                                rdf.createLiteral(momentIfNotContainer.toString(), XSD.dateTime));
+                        patchAdded.add(rdf.createQuad(Trellis.PreferServerManaged, identifier, DC.modified,
+                                rdf.createLiteral(momentIfNotContainer.toString(), XSD.dateTime)));
                         hasModified = true;
                     }
                 } else if (nonNull(interactionModel) && nonNull(momentIfContainer)) {
-                    buffer = rdf.createQuad(Trellis.PreferServerManaged, identifier, DC.modified,
-                            rdf.createLiteral(momentIfContainer.toString(), XSD.dateTime));
+                    patchAdded.add(rdf.createQuad(Trellis.PreferServerManaged, identifier, DC.modified,
+                            rdf.createLiteral(momentIfContainer.toString(), XSD.dateTime)));
                     hasModified = true;
-                }
-            }
-        }
-
-        private void tryAdvance() {
-            buffer = null;
-            while (shouldProceed(line, buffer)) {
-                // Determine if the reader is within the target region
-                if (inRegion) {
-                    // If the reader is in the target region, output any valid "A" quads and record any "D" quads
-                    if (isRDFPatchLine(line)) {
-                        final String[] parts = line.split(" ", 2);
-                        stringToQuad(rdf, parts[1]).ifPresent(quadHandler(parts[0]));
-
-                    // If the reader is in the target region and the modified triple hasn't yet been emitted
-                    } else if (line.startsWith(BEGIN) && !hasModified) {
-                        maybeEmitModifiedQuad(line);
-                    }
-
-                // Check if the reader has entered the target region
-                } else if (line.startsWith(END) && !time.isBefore(parse(line.split(COMMENT_DELIM, 2)[1])
-                            .truncatedTo(MILLIS))) {
-                    inRegion = true;
-                }
-
-                // Advance the reader
-                try {
-                    line = reader.readLine();
-                } catch (final IOException ex) {
-                    throw new UncheckedIOException(ex);
                 }
             }
         }

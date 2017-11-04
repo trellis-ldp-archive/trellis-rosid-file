@@ -314,9 +314,7 @@ final class RDFPatch {
                     final Instant modified = getModifiedIfInRange(line);
                     if (nonNull(modified)) {
                         deleted.addAll(patchDeleted);
-                        if (!hasModified) {
-                            maybeEmitModifiedQuad(modified);
-                        }
+                        maybeEmitModifiedQuad(modified);
                         complete = true;
                     }
                 } else if (line.startsWith(TX_COMMIT)) {
@@ -371,7 +369,7 @@ final class RDFPatch {
         }
 
         private void maybeEmitModifiedQuad(final Instant moment) {
-            if (!time.isBefore(moment.truncatedTo(MILLIS))) {
+            if (!hasModified && !time.isBefore(moment.truncatedTo(MILLIS))) {
                 if (shouldSetModificationForContainers()) {
                     momentIfContainer = moment;
                 }

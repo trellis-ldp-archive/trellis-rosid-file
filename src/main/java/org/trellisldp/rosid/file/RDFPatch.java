@@ -32,6 +32,7 @@ import static java.util.Spliterator.NONNULL;
 import static java.util.Spliterator.ORDERED;
 import static java.util.Spliterators.spliteratorUnknownSize;
 import static java.util.stream.StreamSupport.stream;
+import static org.apache.jena.riot.tokens.TokenizerFactory.makeTokenizerString;
 import static org.slf4j.LoggerFactory.getLogger;
 import static org.trellisldp.rosid.file.FileUtils.stringToQuad;
 import static org.trellisldp.vocabulary.RDF.type;
@@ -55,6 +56,8 @@ import org.apache.commons.io.input.ReversedLinesFileReader;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Quad;
 import org.apache.commons.rdf.api.RDF;
+import org.apache.jena.graph.Node;
+import org.apache.jena.riot.tokens.Tokenizer;
 import org.slf4j.Logger;
 import org.trellisldp.api.VersionRange;
 import org.trellisldp.vocabulary.DC;
@@ -115,7 +118,8 @@ final class RDFPatch {
             final Instant time) {
         LOGGER.debug("Writing Journal at {}", file.getPath());
         try (final BufferedWriter writer = newBufferedWriter(file.toPath(), UTF_8, CREATE, APPEND)) {
-            writer.write(MODIFIED_HEADER + time.truncatedTo(MILLIS) + " ." + lineSeparator());
+            writer.write(MODIFIED_HEADER + "\"" + time.truncatedTo(MILLIS) + "\"^^" + XSD.dateTimeStamp + " ." +
+                    lineSeparator());
             writer.write(TX + lineSeparator());
             final Iterator<String> delIter = delete.map(quadToString).iterator();
             while (delIter.hasNext()) {
@@ -138,6 +142,23 @@ final class RDFPatch {
                 quad.getSubject().ntriplesString(), quad.getPredicate().ntriplesString(),
                 quad.getObject().ntriplesString(),
                 quad.getGraphName().orElse(Trellis.PreferUserManaged).ntriplesString(), ".");
+
+    /**
+     * Convert a "modified" header field into an Instant
+     * @param line the line
+     * @return the instant
+     */
+    private static Instant modifiedToInstant(final String line) {
+        final String[] parts = line.split(" ", 3);
+        final Tokenizer tokenizer = makeTokenizerString(parts[2]);
+        if (tokenizer.hasNext()) {
+            final Node n = tokenizer.next().asNode();
+            if (nonNull(n) && n.isLiteral()) {
+                return parse(n.getLiteralLexicalForm());
+            }
+        }
+        return null;
+    }
 
     /**
      * A class for reading an RDF Patch file into a VersionRange Iterator
@@ -184,11 +205,6 @@ final class RDFPatch {
             lineStream.close();
         }
 
-        private static Instant getInstant(final String line) {
-            final String[] parts = line.split(" ");
-            return parts.length == 4 ? parse(parts[2]) : null;
-        }
-
         private static Boolean isUserTripleQuad(final String line) {
             return line.endsWith(Trellis.PreferUserManaged + " .") ||
                         line.endsWith(Trellis.PreferServerManaged + " .");
@@ -199,7 +215,7 @@ final class RDFPatch {
             while (allLines.hasNext()) {
                 final String line = allLines.next();
                 if (line.startsWith(MODIFIED_HEADER)) {
-                    time = getInstant(line);
+                    time = modifiedToInstant(line);
                     hasUserTriples = false;
                 } else if (isUserTripleQuad(line)) {
                     hasUserTriples = true;
@@ -297,12 +313,9 @@ final class RDFPatch {
         }
 
         private Instant getModifiedIfInRange(final String line) {
-            final String[] parts = line.split(" ", 4);
-            if (parts.length == 4) {
-                final Instant modified = parse(parts[2]);
-                if (!time.isBefore(modified.truncatedTo(MILLIS))) {
-                    return modified;
-                }
+            final Instant modified = modifiedToInstant(line);
+            if (nonNull(modified) && !time.isBefore(modified.truncatedTo(MILLIS))) {
+                return modified;
             }
             return null;
         }

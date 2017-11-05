@@ -1,4 +1,4 @@
-H modified 2017-09-05T13:49:58.012Z .
+H modified "2017-09-05T13:49:58.012Z"^^<http://www.w3.org/2001/XMLSchema#dateTimeStamp> .
 TX .
 A <trellis:repository> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/ns/ldp#Container> <http://www.trellisldp.org/ns/trellis#PreferServerManaged> .
 A <trellis:repository#auth> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/ns/auth/acl#Authorization> <http://www.trellisldp.org/ns/trellis#PreferAccessControl> .

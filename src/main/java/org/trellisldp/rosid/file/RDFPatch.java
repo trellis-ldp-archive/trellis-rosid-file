@@ -149,13 +149,18 @@ final class RDFPatch {
      * @return the instant
      */
     private static Instant modifiedToInstant(final String line) {
-        final String[] parts = line.split(" ", 3);
-        final Tokenizer tokenizer = makeTokenizerString(parts[2]);
-        if (tokenizer.hasNext()) {
-            final Node n = tokenizer.next().asNode();
-            if (nonNull(n) && n.isLiteral()) {
-                return parse(n.getLiteralLexicalForm());
+        final Tokenizer tokenizer = makeTokenizerString(line);
+        try {
+            tokenizer.next(); // H
+            tokenizer.next(); // modified
+            if (tokenizer.hasNext()) {
+                final Node n = tokenizer.next().asNode();
+                if (nonNull(n) && n.isLiteral()) {
+                    return parse(n.getLiteralLexicalForm());
+                }
             }
+        } finally {
+            tokenizer.close();
         }
         return null;
     }

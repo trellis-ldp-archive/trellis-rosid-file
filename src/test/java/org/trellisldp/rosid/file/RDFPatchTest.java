@@ -20,6 +20,7 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.empty;
 import static java.util.stream.Stream.of;
 import static java.time.Instant.parse;
+import static org.apache.commons.io.FileUtils.deleteDirectory;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -47,6 +48,7 @@ import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Quad;
 import org.apache.commons.rdf.api.RDF;
 import org.apache.commons.rdf.jena.JenaRDF;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.platform.runner.JUnitPlatform;
@@ -60,8 +62,8 @@ public class RDFPatchTest {
 
     private static final RDF rdf = new JenaRDF();
     private static final IRI identifier = rdf.createIRI("trellis:repository/resource");
-    private File resDir1 = new File("build/data/res1");
-    private File resDir10 = new File("build/data/res10");
+    private static File resDir1 = new File("build/data/res1");
+    private static File resDir10 = new File("build/data/res10");
 
     @BeforeEach
     public void setUp() throws IOException {
@@ -69,12 +71,21 @@ public class RDFPatchTest {
         resDir10.mkdirs();
     }
 
+    @AfterAll
+    public static void tearDown() {
+        try {
+            deleteDirectory(resDir1);
+            deleteDirectory(resDir10);
+        } catch (final IOException ex) {
+            // ignore errors
+        }
+    }
+
     @Test
     public void testStream1() throws Exception {
         final File file = new File(getClass().getResource("/journal1.txt").toURI());
         final Instant time = parse("2017-02-11T02:51:35Z");
         final Graph graph = rdf.createGraph();
-        System.out.println("Checking for 3 triples");
         RDFPatch.asStream(rdf, file, identifier, time).map(Quad::asTriple).forEach(graph::add);
         assertEquals(3L, graph.size());
         assertTrue(graph.contains(identifier, rdf.createIRI("http://www.w3.org/2004/02/skos/core#prefLabel"), null));
@@ -85,7 +96,6 @@ public class RDFPatchTest {
         final File file = new File(getClass().getResource("/journal1.txt").toURI());
         final Instant time = parse("2017-02-09T02:51:35Z");
         final Graph graph = rdf.createGraph();
-        System.out.println("Checking for 4 triples");
         RDFPatch.asStream(rdf, file, identifier, time).map(Quad::asTriple).forEach(graph::add);
         assertEquals(4L, graph.size());
         assertTrue(graph.contains(identifier, rdf.createIRI("http://www.w3.org/2004/02/skos/core#prefLabel"), null));
@@ -97,7 +107,6 @@ public class RDFPatchTest {
         final File file = new File(getClass().getResource("/journal1.txt").toURI());
         final Instant time = parse("2017-01-30T02:51:35Z");
         final Graph graph = rdf.createGraph();
-        System.out.println("Checking for 8 triples");
         RDFPatch.asStream(rdf, file, identifier, time).map(Quad::asTriple).forEach(graph::add);
         assertEquals(8L, graph.size());
         assertFalse(graph.contains(identifier, rdf.createIRI("http://www.w3.org/2004/02/skos/core#prefLabel"), null));
@@ -114,7 +123,6 @@ public class RDFPatchTest {
         final File file = new File(getClass().getResource("/journal1.txt").toURI());
         final Instant time = parse("2017-01-15T09:14:00Z");
         final Graph graph = rdf.createGraph();
-        System.out.println("Checking for 6 triples");
         RDFPatch.asStream(rdf, file, identifier, time).map(Quad::asTriple).forEach(graph::add);
         assertEquals(6L, graph.size());
         assertFalse(graph.contains(identifier, rdf.createIRI("http://www.w3.org/2004/02/skos/core#prefLabel"), null));

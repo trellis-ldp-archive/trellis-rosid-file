@@ -21,6 +21,7 @@ import static java.util.Collections.singleton;
 import static java.util.Collections.singletonMap;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.io.FileUtils.deleteDirectory;
 import static org.apache.curator.framework.CuratorFrameworkFactory.newClient;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -51,6 +52,7 @@ import org.apache.curator.test.TestingServer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.MockProducer;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -107,6 +109,18 @@ public class FileResourceServiceTest {
         curator.start();
         service = new FileResourceService(partitions, partitionUrls, curator, mockProducer, mockEventService,
                 mockIdSupplier, false);
+    }
+
+    @AfterAll
+    public static void tearDown() {
+        try {
+            deleteDirectory(new File("build/resources/test/root/root2"));
+            deleteDirectory(new File("build/resources/test/root/root3"));
+            deleteDirectory(new File("build/resources/test/root/3c/5c/4e/b9093f3ec0b7ddcdd17238f65c82069f"));
+            deleteDirectory(new File("build/resources/test/root/e6/50/6a/ab34e43eaed0238d4c256ec7e6c7879a"));
+        } catch (final IOException ex) {
+            // ignore
+        }
     }
 
     @Test

@@ -25,6 +25,7 @@ import static java.time.Instant.now;
 import static java.util.Objects.isNull;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.empty;
 import static java.util.stream.Stream.of;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -40,7 +41,6 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -134,11 +134,11 @@ public class FileResourceService extends AbstractResourceService {
 
     @Override
     public Stream<IRI> tryPurge(final IRI identifier) {
-        final List<IRI> binaries = new ArrayList<>();
+        final List<IRI> binaries;
         final File directory = resourceDirectory(partitionData, identifier);
 
         try (final Stream<String> lineStream = lines(new File(directory, RESOURCE_JOURNAL).toPath())) {
-            lineStream.flatMap(line -> {
+            binaries = lineStream.flatMap(line -> {
                 final String[] parts = line.split(" ", 6);
                 if (parts.length == 6 && parts[0].equals("A") &&
                         parts[1].equals(identifier.toString()) &&
@@ -147,7 +147,7 @@ public class FileResourceService extends AbstractResourceService {
                     return of(parts[3]);
                 }
                 return empty();
-            }).map(iri -> iri.substring(1, iri.length() - 1)).map(rdf::createIRI).forEach(binaries::add);
+            }).map(iri -> iri.substring(1, iri.length() - 1)).map(rdf::createIRI).collect(toList());
         } catch (final IOException ex) {
             LOGGER.error("Error processing journal file: {}", ex.getMessage());
             throw new UncheckedIOException(ex);

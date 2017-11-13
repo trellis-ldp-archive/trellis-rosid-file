@@ -142,11 +142,11 @@ public class VersionedResource extends AbstractFileResource {
             final List<Instant> mementos = new ArrayList<>();
             final List<VersionRange> ranges = asTimeMap(file);
             ranges.stream().map(VersionRange::getFrom).findFirst().ifPresent(mementos::add);
-            ranges.stream().map(VersionRange::getUntil).forEach(mementos::add);
+            ranges.stream().map(VersionRange::getUntil).forEachOrdered(mementos::add);
 
             try (final Dataset dataset = rdf.createDataset()) {
                 try (final Stream<Quad> stream = asStream(rdf, file, identifier, time)) {
-                    stream.filter(isResourceTriple).forEach(dataset::add);
+                    stream.filter(isResourceTriple).forEachOrdered(dataset::add);
                 }
                 LOGGER.debug("Creating resource: {} at {}", identifier, time);
                 return from(identifier, dataset, mementos);

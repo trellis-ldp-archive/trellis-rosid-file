@@ -4,10 +4,6 @@ dist: trusty
 group: edge
 
 addons:
-  apt:
-    packages:
-      - oracle-java8-installer
-      - oracle-java9-installer
   sonarcloud:
     organization: "trellis-ldp"
     token:

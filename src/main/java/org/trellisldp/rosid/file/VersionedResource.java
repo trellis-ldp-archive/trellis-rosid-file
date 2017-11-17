@@ -17,6 +17,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableSet;
 import static java.util.Optional.of;
 import static org.slf4j.LoggerFactory.getLogger;
+import static org.trellisldp.api.RDFUtils.toDataset;
 import static org.trellisldp.rosid.common.ResourceData.from;
 import static org.trellisldp.rosid.file.Constants.RESOURCE_JOURNAL;
 import static org.trellisldp.rosid.file.RDFPatch.asStream;
@@ -144,14 +145,13 @@ public class VersionedResource extends AbstractFileResource {
             ranges.stream().map(VersionRange::getFrom).findFirst().ifPresent(mementos::add);
             ranges.stream().map(VersionRange::getUntil).forEachOrdered(mementos::add);
 
-            try (final Dataset dataset = rdf.createDataset()) {
-                try (final Stream<Quad> stream = asStream(rdf, file, identifier, time)) {
-                    stream.filter(isResourceTriple).forEachOrdered(dataset::add);
+            try (final Stream<Quad> stream = asStream(rdf, file, identifier, time)) {
+                try (final Dataset dataset = stream.filter(isResourceTriple).collect(toDataset())) {
+                    LOGGER.debug("Creating resource: {} at {}", identifier, time);
+                    return from(identifier, dataset, mementos);
+                } catch (final Exception ex) {
+                    throw new RuntimeRepositoryException("Error processing dataset", ex);
                 }
-                LOGGER.debug("Creating resource: {} at {}", identifier, time);
-                return from(identifier, dataset, mementos);
-            } catch (final Exception ex) {
-                throw new RuntimeRepositoryException("Error processing dataset", ex);
             }
         });
     }

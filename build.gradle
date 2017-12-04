@@ -30,9 +30,9 @@ ext {
     license = 'Apache 2'
 
     /* Dependencies */
-    trellisApiVersion = '0.4.0-SNAPSHOT'
-    trellisVocabularyVersion = '0.1.0'
-    trellisRosidCommonVersion = '0.1.2'
+    trellisApiVersion = '0.4.0'
+    trellisVocabularyVersion = '0.2.0'
+    trellisRosidCommonVersion = '0.2.0'
     commonsCodecVersion = '1.11'
     commonsIoVersion = '2.6'
     commonsTextVersion = '1.1'
@@ -50,8 +50,8 @@ ext {
     jacocoVersion = "0.7.9"
 
     /* OSGi */
-    trellisApiVersionRange = '[0.3,1)'
-    trellisVocabularyVersionRange = '[0.1,1)'
+    trellisApiVersionRange = '[0.4,1)'
+    trellisVocabularyVersionRange = '[0.2,1)'
     projectOsgiVersion = project.version.replaceAll("-SNAPSHOT", ".SNAPSHOT")
 }
 

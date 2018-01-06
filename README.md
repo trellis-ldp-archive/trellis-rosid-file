@@ -1,6 +1,6 @@
 # trellis-rosid-file
 
-**NOTE**: this project has been migrated into the [Trellis/Rosid repository])https://github.com/trellis-ldp/trellis-rosid).
+**NOTE**: this project has been migrated into the [Trellis/Rosid repository](https://github.com/trellis-ldp/trellis-rosid).
 
 A file-based implementation of the Trellis API, based on Kafka and a distributed data store.
 

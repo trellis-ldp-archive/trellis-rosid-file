@@ -1,10 +1,6 @@
 # trellis-rosid-file
 
-[![Build Status](https://travis-ci.org/trellis-ldp/trellis-rosid-file.png?branch=master)](https://travis-ci.org/trellis-ldp/trellis-rosid-file)
-[![Build status](https://ci.appveyor.com/api/projects/status/w04a5ssibajvcuui?svg=true)](https://ci.appveyor.com/project/acoburn/trellis-rosid-file)
-[![Coverage Status](https://coveralls.io/repos/github/trellis-ldp/trellis-rosid-file/badge.svg?branch=master)](https://coveralls.io/github/trellis-ldp/trellis-rosid-file?branch=master)
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.trellisldp/trellis-rosid-file/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.trellisldp/trellis-rosid-file/)
-[![Code Climate](https://codeclimate.com/github/trellis-ldp/trellis-rosid-file/badges/gpa.svg)](https://codeclimate.com/github/trellis-ldp/trellis-rosid-file)
+**NOTE**: this project has been migrated into the [Trellis/Rosid repository])https://github.com/trellis-ldp/trellis-rosid).
 
 A file-based implementation of the Trellis API, based on Kafka and a distributed data store.
 
